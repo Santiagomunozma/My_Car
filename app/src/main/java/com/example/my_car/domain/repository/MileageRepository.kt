@@ -1,3 +1,5 @@
+package com.example.my_car.domain.repository
+
 import com.example.my_car.domain.model.MileageRecord
 import kotlinx.coroutines.flow.Flow
 
