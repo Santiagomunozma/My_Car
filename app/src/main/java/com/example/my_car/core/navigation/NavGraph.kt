@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.my_car.feature.history.presentation.HistoryScreen
 
 @Composable
 fun MiCarroNavGraph(navController: NavHostController) {
@@ -27,9 +28,7 @@ fun MiCarroNavGraph(navController: NavHostController) {
         }
 
         composable(route = Screen.History.route) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Historial y Costos")
-            }
+            HistoryScreen()
         }
 
         // --- SECCIÓN COMPAÑERO 1 ---
