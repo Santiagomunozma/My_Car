@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.my_car.feature.history.presentation.HistoryScreen
+import com.example.my_car.feature.settings.presentation.SettingsScreen
 
 @Composable
 fun MiCarroNavGraph(navController: NavHostController) {
@@ -29,6 +30,10 @@ fun MiCarroNavGraph(navController: NavHostController) {
 
         composable(route = Screen.History.route) {
             HistoryScreen()
+        }
+
+        composable(route = Screen.Settings.route) {
+            SettingsScreen()
         }
 
         // --- SECCIÓN COMPAÑERO 1 ---

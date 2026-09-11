@@ -6,6 +6,7 @@ sealed class Screen(val route: String) {
     // Nuestras rutas (Fase 2 y 5)
     object Dashboard : Screen("dashboard_screen")
     object History : Screen("history_screen")
+    object Settings : Screen("settings_screen")
 
     // Rutas del Compañero 1 (Vehículos, Km, Documentos)
     object VehicleList : Screen("vehicle_list_screen")
