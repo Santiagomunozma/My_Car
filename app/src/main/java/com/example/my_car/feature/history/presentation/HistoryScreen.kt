@@ -3,14 +3,20 @@ package com.example.my_car.feature.history.presentation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.my_car.core.util.FileExportHelper
 import com.example.my_car.domain.model.MaintenanceHistoryItem
+import com.example.my_car.domain.usecase.ExportHistoryToCsvUseCase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,10 +24,25 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val exportUseCase = remember { ExportHistoryToCsvUseCase() }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Historial de Mantenimientos") })
+            TopAppBar(
+                title = { Text("Historial de Mantenimientos") },
+                actions = {
+                    IconButton(onClick = {
+                        val csvData = exportUseCase(state.items)
+                        FileExportHelper.shareCsvFile(context, csvData)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Exportar a CSV"
+                        )
+                    }
+                }
+            )
         }
     ) { paddingValues ->
         Column(
