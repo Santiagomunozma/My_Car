@@ -1,0 +1,5 @@
+- [ ] Downgrade compileSdk and targetSdk to 34 in `app/build.gradle.kts`
+- [ ] Run Gradle Sync
+- [ ] Fix Hilt `SingletonComponent` error in `DatabaseModule.kt`
+- [ ] Fix warnings in `MainActivity.kt`
+- [ ] Verify build with `app:assembleDebug`

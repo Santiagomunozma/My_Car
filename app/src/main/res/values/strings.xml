@@ -1,3 +1,104 @@
 <resources>
-    <string name="app_name">My_Car</string>
+    <string name="app_name">MiCarro</string>
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_vehicles">Vehículos</string>
+    <string name="nav_maintenance">Mantenimiento</string>
+    <string name="nav_alerts">Alertas</string>
+    <string name="status_up_to_date">Al día</string>
+    <string name="status_upcoming">Próxima</string>
+    <string name="status_overdue">Vencida</string>
+    <string name="status_unscheduled">Sin programación</string>
+
+    <string name="action_add">Agregar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_back">Volver</string>
+    <string name="action_select_date">Seleccionar fecha</string>
+    <string name="module_in_progress">Este módulo está en desarrollo</string>
+    <string name="mileage_km_format">%1$,d km</string>
+
+    <string name="dashboard_no_primary">Aún no tienes un vehículo principal</string>
+    <string name="dashboard_add_first">Registra tu primer vehículo para comenzar</string>
+    <string name="dashboard_vehicle_count">%1$d vehículo(s) registrado(s)</string>
+    <string name="dashboard_mileage">Kilometraje: %1$,d km</string>
+
+    <string name="vehicles_empty_title">Sin vehículos</string>
+    <string name="vehicles_empty_message">Registra tu primer vehículo para comenzar</string>
+    <string name="vehicle_add">Agregar vehículo</string>
+    <string name="vehicle_edit">Editar vehículo</string>
+    <string name="vehicle_detail_title">Detalle del vehículo</string>
+    <string name="vehicle_set_primary">Marcar como principal</string>
+    <string name="vehicle_archive">Archivar</string>
+    <string name="vehicle_reactivate">Reactivar</string>
+    <string name="vehicle_primary_badge">Principal</string>
+    <string name="vehicle_archived_badge">Archivado</string>
+    <string name="vehicle_filter_active">Activos</string>
+    <string name="vehicle_filter_archived">Archivados</string>
+    <string name="vehicle_archive_confirm_title">Archivar vehículo</string>
+    <string name="vehicle_archive_confirm_message">El vehículo conservará su historial y podrás reactivarlo después.</string>
+    <string name="vehicle_section_data">Datos del vehículo</string>
+    <string name="vehicle_section_optional">Información opcional</string>
+
+    <string name="field_plate">Placa</string>
+    <string name="field_vehicle_type">Tipo de vehículo</string>
+    <string name="field_brand">Marca</string>
+    <string name="field_line">Línea</string>
+    <string name="field_model">Modelo</string>
+    <string name="field_year">Año</string>
+    <string name="field_mileage">Kilometraje actual</string>
+    <string name="field_color">Color (opcional)</string>
+    <string name="field_vin">VIN (opcional)</string>
+    <string name="field_fuel_type">Combustible</string>
+    <string name="field_engine_cc">Cilindraje cc (opcional)</string>
+
+    <string name="type_car">Automóvil</string>
+    <string name="type_truck">Camioneta</string>
+    <string name="type_motorcycle">Motocicleta</string>
+    <string name="fuel_gasoline">Gasolina</string>
+    <string name="fuel_diesel">Diésel</string>
+    <string name="fuel_electric">Eléctrico</string>
+    <string name="fuel_hybrid">Híbrido</string>
+    <string name="fuel_gas">Gas</string>
+
+    <string name="error_required">Campo obligatorio</string>
+    <string name="error_plate_taken">Ya existe un vehículo con esta placa</string>
+    <string name="error_year_invalid">Ingresa un año válido</string>
+    <string name="error_mileage_negative">El kilometraje no puede ser negativo</string>
+    <string name="error_vin_invalid">El VIN debe tener entre 8 y 17 caracteres</string>
+    <string name="error_generic">No se pudo completar la acción</string>
+
+    <string name="mileage_title">Kilometraje</string>
+    <string name="mileage_current">Kilometraje actual</string>
+    <string name="mileage_history">Historial de lecturas</string>
+    <string name="mileage_new_reading">Nueva lectura (km)</string>
+    <string name="mileage_register">Registrar lectura</string>
+    <string name="mileage_empty">Aún no hay lecturas registradas</string>
+    <string name="mileage_lower_title">Lectura menor a la anterior</string>
+    <string name="mileage_lower_message">La lectura (%1$,d km) es menor que el kilometraje registrado (%2$,d km). ¿Deseas registrarla de todos modos?</string>
+
+    <string name="documents_title">Documentos</string>
+    <string name="documents_empty_title">Sin documentos</string>
+    <string name="documents_empty_message">Registra el SOAT, la técnico-mecánica, el seguro u otros documentos del vehículo</string>
+    <string name="document_add">Agregar documento</string>
+    <string name="document_edit">Editar documento</string>
+    <string name="document_type">Tipo de documento</string>
+    <string name="document_name">Nombre del documento</string>
+    <string name="document_expiry">Fecha de vencimiento</string>
+    <string name="document_notes">Notas (opcional)</string>
+    <string name="document_alerts">Alertas de vencimiento</string>
+    <string name="document_delete_title">Eliminar documento</string>
+    <string name="document_delete_message">Esta acción no se puede deshacer.</string>
+    <string name="doc_soat">SOAT</string>
+    <string name="doc_technical_review">Técnico-mecánica</string>
+    <string name="doc_insurance">Seguro</string>
+    <string name="doc_other">Otro</string>
+    <string name="doc_status_valid">Vigente</string>
+    <string name="doc_status_expiring">Próximo a vencer</string>
+    <string name="doc_status_expired">Vencido</string>
+    <string name="doc_expires_today">Vence hoy</string>
+    <string name="doc_days_remaining">Vence en %1$d días</string>
+    <string name="doc_expired_since">Venció hace %1$d días</string>
 </resources>
