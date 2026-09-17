@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">My_Car</string>
+    <!-- Mantenimiento -->
+    <string name="title_maintenance">Mantenimiento</string>
+    <string name="title_add_maintenance">Agregar Mantenimiento</string>
+    <string name="label_date">Fecha</string>
+    <string name="label_mileage">Kilometraje</string>
+    <string name="label_description">Descripción</string>
+    <string name="label_type">Tipo de Mantenimiento</string>
+    <string name="status_pending">Pendiente</string>
+    <string name="status_completed">Completado</string>
+    <string name="status_in_progress">En curso</string>
+
+    <!-- Repuestos -->
+    <string name="title_spare_parts">Repuestos</string>
+    <string name="label_part_name">Nombre del Repuesto</string>
+    <string name="label_part_price">Precio</string>
+    <string name="label_quantity">Cantidad</string>
+
+    <!-- Alertas -->
+    <string name="title_alerts">Alertas</string>
+    <string name="alert_maintenance_due">Mantenimiento próximo</string>
+    <string name="alert_oil_change">Cambio de aceite necesario</string>
+    <string name="alert_tire_rotation">Rotación de llantas necesaria</string>
+
+    <!-- Validaciones y Alertas -->
+    <string name="error_required_field">Este campo es obligatorio</string>
+    <string name="error_invalid_date">Fecha no válida</string>
+    <string name="confirm_delete">¿Estás seguro de que deseas eliminar este registro?</string>
+    <string name="success_save">Guardado exitosamente</string>
 </resources>
