@@ -1,9 +1,7 @@
 package com.example.my_car.core.di
 
-import com.example.my_car.data.repository.FakeMaintenanceRepositoryImpl
-import com.example.my_car.data.repository.FakeVehicleRepositoryImpl
-import com.example.my_car.domain.repository.MaintenanceRepository
-import com.example.my_car.domain.repository.VehicleRepository
+import com.example.my_car.data.repository.*
+import com.example.my_car.domain.repository.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +23,16 @@ abstract class RepositoryModule {
     abstract fun bindVehicleRepository(
         impl: FakeVehicleRepositoryImpl
     ): VehicleRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMileageRepository(
+        impl: FakeMileageRepositoryImpl
+    ): MileageRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPartRepository(
+        impl: FakePartRepositoryImpl
+    ): PartRepository
 }
