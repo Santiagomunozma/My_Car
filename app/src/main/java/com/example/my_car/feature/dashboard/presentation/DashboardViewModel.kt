@@ -19,7 +19,7 @@ class DashboardViewModel @Inject constructor(
         .map { summary ->
             DashboardUiState(
                 isLoading = false,
-                mainVehicleName = summary.mainVehicle?.let { "${it.brand} ${it.line} (${it.plate})" } ?: "Sin vehículos registrados",
+                mainVehicleName = summary.mainVehicle?.let { "${it.brand} ${it.line} (${it.plate})" },
                 upcomingMaintenances = summary.upcomingMaintenances,
                 recentExpensesTotal = summary.recentExpensesTotal,
                 activeAlerts = summary.activeAlertsCount

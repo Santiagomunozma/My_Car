@@ -31,6 +31,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -54,11 +55,14 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
-    val room_version = "2.6.1"
+    val room_version = "2.7.2"
     implementation("androidx.room:room-ktx:$room_version")
     implementation("androidx.room:room-runtime:$room_version")
-// Necesitarás el plugin KSP o KAPT configurado arriba para el compilador
-// ksp("androidx.room:room-compiler:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     androidTestImplementation(platform(libs.androidx.compose.bom))

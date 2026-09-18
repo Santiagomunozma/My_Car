@@ -1,31 +1,151 @@
 <resources>
-    <string name="app_name">My_Car</string>
-    <!-- Mantenimiento -->
-    <string name="title_maintenance">Mantenimiento</string>
-    <string name="title_add_maintenance">Agregar Mantenimiento</string>
-    <string name="label_date">Fecha</string>
-    <string name="label_mileage">Kilometraje</string>
-    <string name="label_description">Descripción</string>
-    <string name="label_type">Tipo de Mantenimiento</string>
+    <string name="app_name">My Car</string>
+
+    <!-- Navegación inferior -->
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_vehicles">Vehículos</string>
+    <string name="nav_maintenance">Mantenimiento</string>
+    <string name="nav_history">Historial</string>
+    <string name="nav_settings">Ajustes</string>
+
+    <!-- Acciones comunes -->
+    <string name="action_save">Guardar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_accept">Aceptar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_back">Volver</string>
+    <string name="action_confirm">Confirmar</string>
+
+    <!-- Vehículos -->
+    <string name="vehicles_title">Mis vehículos</string>
+    <string name="vehicles_add">Agregar vehículo</string>
+    <string name="vehicles_edit_title">Editar vehículo</string>
+    <string name="vehicles_empty_title">Sin vehículos</string>
+    <string name="vehicles_empty_message">Registra tu primer vehículo para empezar a gestionar kilometraje y documentos.</string>
+    <string name="vehicles_show_archived">Mostrar archivados</string>
+    <string name="vehicles_filter_active">Activos</string>
+    <string name="vehicles_filter_archived">Archivados</string>
+    <string name="vehicle_main_badge">Principal</string>
+    <string name="vehicle_archived_badge">Archivado</string>
+    <string name="vehicle_set_main">Marcar como principal</string>
+    <string name="vehicle_archive">Archivar</string>
+    <string name="vehicle_reactivate">Reactivar</string>
+    <string name="vehicle_archive_confirm_title">Archivar vehículo</string>
+    <string name="vehicle_archive_confirm_message">El vehículo se ocultará de la lista activa. Su historial de kilometraje, documentos y mantenimientos se conserva.</string>
+    <string name="vehicle_mileage_button">Kilometraje</string>
+    <string name="vehicle_documents_button">Documentos</string>
+    <string name="vehicle_mileage_value">%1$,d km</string>
+    <string name="vehicle_photo">Foto del vehículo</string>
+    <string name="vehicle_photo_pick">Seleccionar foto</string>
+    <string name="vehicle_photo_remove">Quitar foto</string>
+    <string name="vehicle_photo_error">No se pudo importar la imagen</string>
+    <string name="vehicle_alerts_icon">Alertas documentales</string>
+
+    <!-- Formulario de vehículo -->
+    <string name="field_plate">Placa</string>
+    <string name="field_type">Tipo de vehículo</string>
+    <string name="field_brand">Marca</string>
+    <string name="field_line">Línea</string>
+    <string name="field_model">Modelo</string>
+    <string name="field_year">Año</string>
+    <string name="field_mileage">Kilometraje actual</string>
+    <string name="field_mileage_readonly_hint">El kilometraje se actualiza registrando lecturas en Kilometraje</string>
+    <string name="field_color">Color (opcional)</string>
+    <string name="field_vin">VIN (opcional)</string>
+    <string name="field_fuel_type">Tipo de combustible (opcional)</string>
+    <string name="field_engine_cc">Cilindraje en cc (opcional)</string>
+    <string name="field_none">Sin especificar</string>
+
+    <string name="vehicle_type_car">Automóvil</string>
+    <string name="vehicle_type_truck">Camioneta</string>
+    <string name="vehicle_type_motorcycle">Motocicleta</string>
+
+    <string name="fuel_type_gasoline">Gasolina</string>
+    <string name="fuel_type_diesel">Diésel</string>
+    <string name="fuel_type_gas">Gas</string>
+    <string name="fuel_type_electric">Eléctrico</string>
+    <string name="fuel_type_hybrid">Híbrido</string>
+
+    <!-- Errores de validación -->
+    <string name="error_required">Campo obligatorio</string>
+    <string name="error_plate_format">Usa de 3 a 10 caracteres alfanuméricos o guiones</string>
+    <string name="error_plate_duplicate">Ya existe un vehículo con esta placa</string>
+    <string name="error_year_invalid">Año fuera de rango</string>
+    <string name="error_number_invalid">Ingresa un número entero válido</string>
+    <string name="error_mileage_negative">El kilometraje no puede ser negativo</string>
+    <string name="error_vin_invalid">El VIN debe tener 17 caracteres alfanuméricos</string>
+    <string name="error_engine_cc_invalid">El cilindraje debe ser mayor que cero</string>
+    <string name="error_save_failed">No se pudo guardar. Inténtalo de nuevo.</string>
+    <string name="error_vehicle_gone">El vehículo ya no existe</string>
+
+    <!-- Kilometraje -->
+    <string name="mileage_title">Kilometraje</string>
+    <string name="mileage_new_reading">Nueva lectura</string>
+    <string name="mileage_odometer_field">Odómetro (km)</string>
+    <string name="mileage_date_field">Fecha de la lectura</string>
+    <string name="mileage_note_field">Nota (opcional)</string>
+    <string name="mileage_register">Registrar lectura</string>
+    <string name="mileage_history">Historial de lecturas</string>
+    <string name="mileage_empty_title">Sin lecturas</string>
+    <string name="mileage_empty_message">Registra la primera lectura del odómetro para llevar el historial.</string>
+    <string name="mileage_reading_value">%1$,d km</string>
+    <string name="mileage_lower_warning_title">Lectura menor</string>
+    <string name="mileage_lower_warning_message">La lectura %1$,d km es menor que la registrada anteriormente (%2$,d km). Confirma solo si es una corrección o un odómetro reemplazado.</string>
+    <string name="mileage_lower_confirm">Registrar de todas formas</string>
+    <string name="error_future_date">La fecha no puede ser futura</string>
+
+    <!-- Documentos -->
+    <string name="documents_title">Documentos</string>
+    <string name="documents_of_vehicle">Documentos de %1$s</string>
+    <string name="documents_add">Agregar documento</string>
+    <string name="documents_edit">Editar documento</string>
+    <string name="documents_empty_title">Sin documentos</string>
+    <string name="documents_empty_message">Registra el SOAT, la revisión técnico-mecánica u otros documentos del vehículo.</string>
+    <string name="document_type">Tipo de documento</string>
+    <string name="document_name">Nombre del documento</string>
+    <string name="document_expiration">Fecha de vencimiento</string>
+    <string name="document_issuer">Expedido por (opcional)</string>
+    <string name="document_notes">Notas (opcional)</string>
+    <string name="document_alerts_switch">Alertas de vencimiento</string>
+    <string name="document_delete_confirm_title">Eliminar documento</string>
+    <string name="document_delete_confirm_message">Esta acción no se puede deshacer.</string>
+
+    <string name="document_type_soat">SOAT</string>
+    <string name="document_type_technical">Revisión técnico-mecánica</string>
+    <string name="document_type_insurance">Seguro</string>
+    <string name="document_type_other">Otro</string>
+
+    <string name="doc_status_valid">Vigente</string>
+    <string name="doc_status_expiring">Próximo a vencer</string>
+    <string name="doc_status_expired">Vencido</string>
+
+    <!-- Bandeja de alertas documentales -->
+    <string name="alerts_title">Alertas documentales</string>
+    <string name="alerts_empty_title">Todo en orden</string>
+    <string name="alerts_empty_message">No hay documentos vencidos ni próximos a vencer.</string>
+    <string name="alerts_global_switch">Alertas de vencimiento</string>
+    <string name="alerts_anticipation_label">Anticipación: %1$d días</string>
+    <string name="alert_expires_today">Vence hoy</string>
+    <plurals name="alert_days_remaining">
+        <item quantity="one">Falta %1$d día</item>
+        <item quantity="other">Faltan %1$d días</item>
+    </plurals>
+    <plurals name="alert_days_expired">
+        <item quantity="one">Vencido hace %1$d día</item>
+        <item quantity="other">Vencido hace %1$d días</item>
+    </plurals>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">MiCarro</string>
+    <string name="dashboard_main_vehicle">Vehículo principal</string>
+    <string name="dashboard_no_vehicle">Aún no tienes un vehículo principal</string>
+    <string name="dashboard_add_first">Registrar mi primer vehículo</string>
+    <string name="dashboard_alerts_count">Alertas documentales pendientes: %1$d</string>
+
+    <!-- Existentes del repo -->
+    <string name="status_ok">OK</string>
     <string name="status_pending">Pendiente</string>
-    <string name="status_completed">Completado</string>
-    <string name="status_in_progress">En curso</string>
-
-    <!-- Repuestos -->
-    <string name="title_spare_parts">Repuestos</string>
-    <string name="label_part_name">Nombre del Repuesto</string>
-    <string name="label_part_price">Precio</string>
-    <string name="label_quantity">Cantidad</string>
-
-    <!-- Alertas -->
-    <string name="title_alerts">Alertas</string>
-    <string name="alert_maintenance_due">Mantenimiento próximo</string>
-    <string name="alert_oil_change">Cambio de aceite necesario</string>
-    <string name="alert_tire_rotation">Rotación de llantas necesaria</string>
-
-    <!-- Validaciones y Alertas -->
-    <string name="error_required_field">Este campo es obligatorio</string>
-    <string name="error_invalid_date">Fecha no válida</string>
-    <string name="confirm_delete">¿Estás seguro de que deseas eliminar este registro?</string>
-    <string name="success_save">Guardado exitosamente</string>
+    <string name="status_overdue">Vencido</string>
+    <string name="cd_vehicle_photo">Foto del vehículo</string>
 </resources>

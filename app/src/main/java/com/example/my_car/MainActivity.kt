@@ -1,126 +1,118 @@
 package com.example.my_car
 
 import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import com.example.my_car.core.worker.AlertScheduler
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.my_car.core.navigation.MiCarroNavGraph
+import com.example.my_car.core.navigation.Screen
 import com.example.my_car.ui.theme.MyCarTheme
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var alertScheduler: AlertScheduler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyCarTheme {
+                val permissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission()
+                ) {}
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TestDevPanel(
-                        onTestAlert = {
-                            alertScheduler.scheduleAlert(
-                                delayInMinutes = 1,
-                                title = "My Car - Mantenimiento",
-                                message = "¡WorkManager está funcionando al pelo!"
-                            )
-                        }
-                    )
+                    MiCarroAppShell()
                 }
             }
         }
     }
 }
 
+private data class BottomNavItem(
+    val screen: Screen,
+    val labelRes: Int,
+    val icon: ImageVector
+)
+
+private val bottomNavItems = listOf(
+    BottomNavItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Home),
+    BottomNavItem(Screen.VehicleList, R.string.nav_vehicles, Icons.Filled.DirectionsCar),
+    BottomNavItem(Screen.MaintenancePlan, R.string.nav_maintenance, Icons.Filled.Build),
+    BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
+    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
+)
+
 @Composable
-fun TestDevPanel(onTestAlert: () -> Unit) {
-    val context = LocalContext.current
-    var alertScheduled by remember { mutableStateOf(false) }
+fun MiCarroAppShell() {
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
-    // Launcher para pedir el permiso de notificaciones en Android 13+
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            onTestAlert()
-            alertScheduled = true
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "My Car - Core Dev Panel",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Infraestructura base lista: Room, WorkManager, Theme y Tests.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = {
-                // Si es Android 13 o superior, verificamos permisos
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    val hasPermission = ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) == PackageManager.PERMISSION_GRANTED
-
-                    if (hasPermission) {
-                        onTestAlert()
-                        alertScheduled = true
-                    } else {
-                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                } else {
-                    // Si es Android 12 o menor, no se necesita pedir permiso en tiempo de ejecución
-                    onTestAlert()
-                    alertScheduled = true
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                bottomNavItems.forEach { item ->
+                    NavigationBarItem(
+                        selected = currentRoute == item.screen.route,
+                        onClick = {
+                            navController.navigate(item.screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = stringResource(item.labelRes)
+                            )
+                        },
+                        label = { Text(stringResource(item.labelRes)) }
+                    )
                 }
             }
-        ) {
-            Text("Probar Alerta WorkManager (1 min)")
         }
-
-        if (alertScheduled) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "¡Alerta programada! Bloquea tu pantalla o minimiza la app y espera.",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodySmall
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Nota: WorkManager gestiona la batería, puede tardar entre 1 y 2 minutos reales.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+    ) { padding ->
+        MiCarroNavGraph(
+            navController = navController,
+            modifier = Modifier.padding(padding)
+        )
     }
 }
