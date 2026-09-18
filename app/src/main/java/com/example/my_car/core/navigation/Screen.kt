@@ -1,23 +1,39 @@
 package com.example.my_car.core.navigation
 
-// Usamos una sealed class para tener seguridad de tipos y evitar errores de tipeo en las rutas
 sealed class Screen(val route: String) {
-
-    // Nuestras rutas (Fase 2 y 5)
+    // Rutas del Orquestador (Main)
     object Dashboard : Screen("dashboard_screen")
     object History : Screen("history_screen")
     object Settings : Screen("settings_screen")
 
-    // Rutas del Compañero 1 (Vehículos, Km, Documentos)
+    // Rutas del Compañero 1 (Vehículos, Kilometraje y Documentos)
     object VehicleList : Screen("vehicle_list_screen")
-    object AddVehicle : Screen("add_vehicle_screen")
+    object AddVehicle : Screen("add_vehicle_screen?vehicleId={vehicleId}") {
+        fun createRoute(vehicleId: String? = null) =
+            if (vehicleId != null) "add_vehicle_screen?vehicleId=$vehicleId"
+            else "add_vehicle_screen"
+    }
 
-    // Rutas del Compañero 2 (Mantenimiento, Repuestos, Alertas)
+    object Mileage : Screen("mileage_screen/{vehicleId}") {
+        fun createRoute(vehicleId: String) = "mileage_screen/$vehicleId"
+    }
+
+    object Documents : Screen("documents_screen/{vehicleId}") {
+        fun createRoute(vehicleId: String) = "documents_screen/$vehicleId"
+    }
+
+    object DocumentsAlerts : Screen("documents/alerts")
+
+    // Rutas del Compañero 2 (Mantenimiento)
     object MaintenancePlan : Screen("maintenance_plan_screen")
-    object AddMaintenance : Screen("add_maintenance_screen")
+    object MaintenanceForm : Screen("maintenance_form_screen/{vehicleId}") {
+        fun createRoute(vehicleId: String) = "maintenance_form_screen/$vehicleId"
+    }
 
-    // Si necesitamos pasar argumentos (ej: un ID de vehículo), podemos hacer algo así:
-    // object VehicleDetail : Screen("vehicle_detail_screen/{vehicleId}") {
-    //     fun createRoute(vehicleId: String) = "vehicle_detail_screen/$vehicleId"
-    // }
+    object ServiceForm : Screen(
+        "service_form_screen/{vehicleId}?planId={planId}&lastMileage={lastMileage}"
+    ) {
+        fun createRoute(vehicleId: String, planId: String?, lastMileage: Int) =
+            "service_form_screen/$vehicleId?planId=${planId ?: ""}&lastMileage=$lastMileage"
+    }
 }

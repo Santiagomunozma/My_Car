@@ -4,7 +4,7 @@
 
 Aplicación nativa de Android para el seguimiento de vehículos: kilometraje, historial de mantenimientos, exportación de datos y alertas preventivas.
 
-> **Nota:** el proyecto está en desarrollo activo. Algunas pantallas aún son placeholders y la persistencia Room se conectará cuando se integren los módulos de vehículos y mantenimiento.
+> **Nota:** el proyecto está en desarrollo activo. El módulo de vehículos, kilometraje y documentos (Compañero 1) ya está integrado con Room.
 
 ---
 
@@ -12,13 +12,16 @@ Aplicación nativa de Android para el seguimiento de vehículos: kilometraje, hi
 
 | Módulo | Estado | Descripción |
 | --- | --- | --- |
-| Dashboard | En construcción | Resumen del vehículo principal, próximos mantenimientos y alertas |
+| Dashboard | Disponible | Vehículo principal y conteo de alertas documentales |
+| Vehículos | Disponible | Alta, edición, foto, archivar/reactivar, vehículo principal único |
+| Kilometraje | Disponible | Registro de lecturas con confirmación de lecturas menores |
+| Documentos | Disponible | SOAT, técnico-mecánica, seguro y otros con estado calculado |
+| Alertas documentales | Disponible | Bandeja de vencimientos, switch global/por documento, anticipación 1–180 días |
 | Historial | Disponible | Búsqueda de servicios/talleres y listado de mantenimientos |
 | Exportación CSV | Disponible | Comparte el historial con `FileProvider` |
 | Configuración | Disponible | Borrado irreversible de todos los datos locales |
-| Alertas | Infraestructura lista | Notificaciones programadas con WorkManager |
-| Vehículos | Pendiente | Lista y alta de vehículos (rutas definidas) |
-| Plan de mantenimiento | Pendiente | Planificación de servicios (ruta definida) |
+| Alertas (notificaciones) | Infraestructura lista | Notificaciones programadas con WorkManager |
+| Plan de mantenimiento | Disponible | Planificación y registro de servicios (Compañero 2) |
 
 Tipos de vehículo soportados en el modelo de dominio: **automóvil**, **camión** y **motocicleta**.
 
@@ -32,7 +35,8 @@ Tipos de vehículo soportados en el modelo de dominio: **automóvil**, **camión
 | UI | Jetpack Compose + Material 3 | BOM 2026.02.01 |
 | Arquitectura | Clean Architecture + MVVM | — |
 | DI | Hilt | 2.60.1 |
-| Persistencia | Room | 2.6.1 |
+| Persistencia | Room (con KSP) | 2.7.2 |
+| Imágenes | Coil | 2.7.0 |
 | Asincronía | Coroutines + Flow | 1.7.3 |
 | Navegación | Navigation Compose | 2.7.7 |
 | Trabajo en segundo plano | WorkManager | 2.9.0 |
@@ -60,9 +64,9 @@ El código sigue **Clean Architecture** y la guía oficial de Android con **MVVM
 ```
 
 - **UI:** pantallas Compose, `UiState` inmutable y ViewModels con Hilt (`@HiltViewModel`).
-- **Domain:** casos de uso puros (`GetDashboardSummaryUseCase`, `ExportHistoryToCsvUseCase`, `ClearAllDataUseCase`) y contratos de repositorio.
-- **Data:** implementaciones inyectadas. Hoy Hilt enlaza `FakeVehicleRepositoryImpl` y `FakeMaintenanceRepositoryImpl`; Room (`micarro_db`) y las entidades ya existen para la integración posterior.
-- **Core:** navegación, DI, WorkManager, tema y utilidades compartidas.
+- **Domain:** reglas de negocio en objetos `*Rules` y casos de uso puros (`SaveVehicleUseCase`, `AddMileageReadingUseCase`, `ObserveDocumentAlertsUseCase`, `GetDashboardSummaryUseCase`, `ExportHistoryToCsvUseCase`, `ClearAllDataUseCase`) y contratos de repositorio.
+- **Data:** vehículos, kilometraje y documentos persisten en Room (`my_car_db`) vía `VehicleRepositoryImpl`, `MileageRepositoryImpl` y `DocumentRepositoryImpl` dentro de cada `feature/*/data`. Mantenimiento y repuestos siguen con implementaciones `Fake*Impl` hasta que el Compañero 2 registre sus entidades.
+- **Core:** navegación, DI, Room, WorkManager, `SharedPreferencesAlertSettingsRepository`, tema y utilidades compartidas.
 
 ---
 
@@ -90,11 +94,17 @@ Rutas de navegación (`Screen`):
 
 | Ruta | Destino |
 | --- | --- |
-| `dashboard_screen` | Inicio (placeholder) |
+| `dashboard_screen` | Inicio |
+| `vehicle_list_screen` | Lista de vehículos (con `BadgedBox` de alertas) |
+| `add_vehicle_screen?vehicleId=` | Alta / edición de vehículo |
+| `mileage_screen/{vehicleId}` | Kilometraje de un vehículo |
+| `documents_screen/{vehicleId}` | Documentos de un vehículo |
+| `documents/alerts` | Bandeja de alertas documentales |
+| `maintenance_plan_screen` | Plan de mantenimiento |
+| `maintenance_form_screen/{vehicleId}` | Alta de plan |
+| `service_form_screen/{vehicleId}?planId=&lastMileage=` | Registro de servicio |
 | `history_screen` | Historial |
 | `settings_screen` | Configuración |
-| `vehicle_list_screen` | Lista de vehículos (placeholder) |
-| `maintenance_plan_screen` | Plan de mantenimiento (placeholder) |
 
 ---
 
@@ -157,10 +167,15 @@ El `applicationId` es `com.example.my_car` y la versión actual es **1.0** (`ver
 .\gradlew.bat connectedAndroidTest
 ```
 
-Pruebas unitarias actuales:
+Pruebas unitarias actuales (62 en total):
 
-- `GetDashboardSummaryUseCaseTest` — resumen del dashboard sin vehículos
-- `HistoryViewModelTest` — el filtro de búsqueda refleja el texto ingresado
+- `GetDashboardSummaryUseCaseTest`, `HistoryViewModelTest`, `MaintenanceRulesTest` — base del equipo
+- `VehicleRulesTest` — normalización de placa, año, kilometraje, VIN, cilindraje
+- `VehicleUseCasesTest` — alta/edición, placa duplicada, archivar/reactivar, vehículo principal único, foto (guardar/quitar/reemplazar), vehículo desaparecido
+- `MileageUseCasesTest` — lectura mayor/menor/confirmada, fecha futura, entradas inválidas, actualización del odómetro y notificador
+- `DocumentStatusRulesTest` — estados documentales y límites de anticipación (vence hoy, límite exacto, cambio de día)
+- `DocumentUseCasesTest` — bandeja de alertas (identifica vehículo/documento/causa, archivados, switches) y alta/eliminación
+- `VehicleFormViewModelTest` — doble guardado bloqueado y fallo de importación de foto
 
 ---
 
@@ -196,19 +211,28 @@ Guía completa para el equipo: [`app/src/main/java/com/example/my_car/GUIA_DISEN
 **Listo**
 
 - Capas domain / data / UI y Hilt
-- Navegación tipada
+- Navegación tipada con bottom bar (Inicio, Vehículos, Mantenimiento, Historial, Ajustes)
+- **Compañero 1:** vehículos (RF-01…RF-05), kilometraje (RF-06…RF-09) y documentos (RF-32…RF-33) con Room real
+- Fotografía de vehículo con `PickVisualMedia` + `VehiclePhotoStore` (sin permisos)
+- Bandeja de alertas documentales con `AlertSettingsRepository` (SharedPreferences)
 - Historial, exportación CSV y borrado de datos
 - `AlertScheduler` + `MaintenanceAlertWorker`
-- Tema Material 3 (claro/oscuro) y `StatusChip`
+- Tema Material 3 con la paleta oficial y `StatusChip`/`MiCarroCard`/botones/`MiCarroTextField`/`DateField` compartidos
 - CI con tests unitarios
 
 **Pendiente de integración**
 
-- Conectar Room (`VehicleEntity`, `MaintenanceEntity`) y registrar DAOs en `AppDatabase`
-- Sustituir los repositorios fake por implementaciones reales
-- Implementar `DashboardScreen` (el `DashboardViewModel` ya existe)
-- Pantallas de vehículos y plan de mantenimiento
-- Compilador de Room (KSP) cuando se activen las entidades en la base de datos
+- Registrar las entidades de mantenimiento/repuestos en `AppDatabase` y enlazar sus repositorios Room (Compañero 2)
+- Implementar `MileageAlertNotifier` real (hoy `NoOpMileageAlertNotifier`) para recalcular alertas por km tras cada lectura (RF-09)
+- Notificaciones push del sistema para vencimientos documentales (módulo de alertas)
+- Pruebas de emulador/UI (`connectedAndroidTest`) y de release
+
+**Puntos de integración para el orquestador**
+
+- `domain/alerts/MileageAlertNotifier` — contrato `suspend fun onMileageUpdated(vehicleId, odometer)`; el binding NoOp está en `core/di/RepositoryModule.kt`.
+- `AppDatabase` (`core/database`) — registrar aquí las entidades de otros módulos; ya incluye `VehicleEntity`, `MileageEntity`, `DocumentEntity` (v1).
+- `domain/repository/AlertSettingsRepository` — configuración compartida de alertas (switch global + anticipación en días); implementación en `core/settings`.
+- `VehicleRepository.observeAllVehicles()` — incluye archivados (usado por la bandeja de alertas); `observeVehicles()` sigue devolviendo solo activos.
 
 ---
 

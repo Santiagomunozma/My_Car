@@ -11,6 +11,11 @@ data class Vehicle(
     val year: Int,
     val currentMileage: Int,
     val isArchived: Boolean = false,
-    val isMainVehicle: Boolean = false
-    // Los campos opcionales (color, vin, etc.) los podemos agregar después.
+    val isMainVehicle: Boolean = false,
+    val model: String = "",
+    val color: String? = null,
+    val vin: String? = null,
+    val fuelType: FuelType? = null,
+    val engineCc: Int? = null,
+    val photoUri: String? = null
 )
