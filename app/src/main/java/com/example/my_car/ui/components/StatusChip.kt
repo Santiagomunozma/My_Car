@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.example.my_car.ui.theme.AppShapes
 
 @Composable
 fun StatusChip(
@@ -19,7 +18,7 @@ fun StatusChip(
 ) {
     Surface(
         color = containerColor,
-        shape = AppShapes.large,
+        shape = MaterialTheme.shapes.large,
         modifier = modifier
     ) {
         Row(

@@ -10,9 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.my_car.ui.theme.PrimaryBlue
-import com.example.my_car.ui.theme.StatusError
-import com.example.my_car.ui.theme.SurfaceWhite
 
 @Composable
 fun PrimaryButton(
@@ -26,11 +23,11 @@ fun PrimaryButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(52.dp),
         shape = MaterialTheme.shapes.small,
         colors = ButtonDefaults.buttonColors(
-            containerColor = PrimaryBlue,
-            contentColor = SurfaceWhite
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
         )
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)
@@ -49,9 +46,11 @@ fun SecondaryButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(52.dp),
         shape = MaterialTheme.shapes.small,
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.primary
+        )
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
@@ -69,11 +68,11 @@ fun DestructiveButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(52.dp),
         shape = MaterialTheme.shapes.small,
         colors = ButtonDefaults.buttonColors(
-            containerColor = StatusError,
-            contentColor = SurfaceWhite
+            containerColor = MaterialTheme.colorScheme.error,
+            contentColor = MaterialTheme.colorScheme.onError
         )
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)

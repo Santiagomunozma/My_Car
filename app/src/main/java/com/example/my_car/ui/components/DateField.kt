@@ -1,9 +1,13 @@
 package com.example.my_car.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
@@ -12,8 +16,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,10 +48,16 @@ fun DateField(
     errorMessage: String? = null
 ) {
     var showPicker by remember { mutableStateOf(false) }
+    val scheme = MaterialTheme.colorScheme
 
     OutlinedButton(
         onClick = { showPicker = true },
         shape = MaterialTheme.shapes.small,
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = scheme.surfaceVariant,
+            contentColor = scheme.onSurface
+        ),
+        border = BorderStroke(1.dp, scheme.outline),
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
@@ -61,18 +69,20 @@ fun DateField(
         ) {
             Icon(
                 imageVector = Icons.Filled.DateRange,
-                contentDescription = null
+                contentDescription = null,
+                tint = scheme.onSurfaceVariant
             )
             Text(
                 text = selectedDateMillis?.let(::formatUtcMillis) ?: label,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (selectedDateMillis == null) scheme.onSurfaceVariant else scheme.onSurface
             )
         }
     }
     if (errorMessage != null) {
         Text(
             text = errorMessage,
-            color = MaterialTheme.colorScheme.error,
+            color = scheme.error,
             style = MaterialTheme.typography.bodySmall
         )
     }

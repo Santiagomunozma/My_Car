@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.my_car.ui.theme.TextSecondary
 
 @Composable
 fun EmptyState(
@@ -23,6 +22,7 @@ fun EmptyState(
     message: String,
     modifier: Modifier = Modifier
 ) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -33,7 +33,7 @@ fun EmptyState(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = TextSecondary,
+            tint = muted,
             modifier = Modifier.size(64.dp)
         )
         Text(
@@ -44,7 +44,7 @@ fun EmptyState(
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
+            color = muted,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp)
         )

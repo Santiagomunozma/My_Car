@@ -19,15 +19,29 @@ class SettingsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    fun showDeleteDialog(show: Boolean) {
-        _uiState.update { it.copy(showDeleteDialog = show) }
+    fun clearAllData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeleting = true, errorMessage = null) }
+
+            // runCatching envuelve la llamada suspend y genera el Result<Unit> para onSuccess/onFailure
+            runCatching {
+                clearAllDataUseCase()
+            }.onSuccess {
+                _uiState.update {
+                    it.copy(isDeleting = false, isDataCleared = true)
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isDeleting = false,
+                        errorMessage = "Error al eliminar datos: ${error.message}"
+                    )
+                }
+            }
+        }
     }
 
-    fun deleteAllData() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isDeleting = true, showDeleteDialog = false) }
-            clearAllDataUseCase()
-            _uiState.update { it.copy(isDeleting = false, message = "Datos eliminados correctamente") }
-        }
+    fun onNavigationHandled() {
+        _uiState.update { it.copy(isDataCleared = false) }
     }
 }

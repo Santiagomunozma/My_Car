@@ -1,22 +1,44 @@
 package com.example.my_car.feature.maintenance.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.my_car.domain.model.MaintenanceService
 import com.example.my_car.domain.model.Part
 import com.example.my_car.feature.maintenance.domain.MaintenanceRules
 import com.example.my_car.feature.parts.presentation.PartFormScreen
-import com.example.my_car.ui.theme.*
-import java.util.*
+import com.example.my_car.ui.components.MiCarroTextField
+import com.example.my_car.ui.components.PrimaryButton
+import com.example.my_car.ui.theme.StatusError
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,29 +54,24 @@ fun ServiceFormScreen(
     var mileage by remember { mutableStateOf(lastMileage.toString()) }
     var laborCost by remember { mutableStateOf("") }
     var parts = remember { mutableStateListOf<Part>() }
-    
+
     val currentMileage = mileage.toIntOrNull() ?: 0
     val currentTime = System.currentTimeMillis()
-    
-    // RN-05 Validation
-    val isDateValid = true // Simplificado: Asumimos fecha actual para el registro
-    
-    // RN-06 Validation
+
     val isMileageValid = MaintenanceRules.isMileageValid(currentMileage, lastMileage)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Registrar Servicio", color = TextPrimary) },
+                title = { Text("Registrar Servicio") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)
+                }
             )
         },
-        containerColor = BackgroundLight
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -82,37 +99,40 @@ fun ServiceFormScreen(
                 }
             }
 
-            OutlinedTextField(
+            MiCarroTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Descripción del servicio") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Descripción del servicio",
+                placeholder = "Cambio de aceite y filtros"
             )
 
-            OutlinedTextField(
+            MiCarroTextField(
                 value = workshop,
                 onValueChange = { workshop = it },
-                label = { Text("Taller / Establecimiento") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Taller / Establecimiento",
+                placeholder = "Nombre del taller"
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
+                MiCarroTextField(
                     value = mileage,
                     onValueChange = { mileage = it },
-                    label = { Text("Kilometraje") },
+                    label = "Kilometraje",
+                    keyboardType = KeyboardType.Number,
                     modifier = Modifier.weight(1f),
                     isError = !isMileageValid
                 )
-                OutlinedTextField(
+                MiCarroTextField(
                     value = laborCost,
                     onValueChange = { laborCost = it },
-                    label = { Text("Costo Mano de Obra") },
+                    label = "Costo Mano de Obra",
+                    placeholder = "0.00",
+                    keyboardType = KeyboardType.Decimal,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            Divider(color = BorderGray)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
             PartFormScreen(
                 parts = parts,
@@ -132,11 +152,13 @@ fun ServiceFormScreen(
             Text(
                 text = "Costo Total: $${String.format("%.2f", totalCost)}",
                 style = MaterialTheme.typography.headlineSmall,
-                color = PrimaryBlue,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Button(
+            PrimaryButton(
+                text = "Confirmar Registro",
+                enabled = isMileageValid && title.isNotBlank(),
                 onClick = {
                     if (title.isNotBlank() && isMileageValid) {
                         onSave(
@@ -144,7 +166,7 @@ fun ServiceFormScreen(
                                 vehicleId = vehicleId,
                                 planId = planId,
                                 title = title,
-                                category = "General", // O inferir del plan
+                                category = "General",
                                 date = currentTime,
                                 mileage = currentMileage,
                                 totalCost = totalCost,
@@ -153,13 +175,8 @@ fun ServiceFormScreen(
                             parts.toList()
                         )
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = isMileageValid && title.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-            ) {
-                Text("Confirmar Registro", color = Color.White)
-            }
+                }
+            )
         }
     }
 }

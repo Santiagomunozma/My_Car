@@ -32,7 +32,6 @@ import com.example.my_car.ui.components.MiCarroCard
 import com.example.my_car.ui.components.PrimaryButton
 import com.example.my_car.ui.components.StatusChip
 import com.example.my_car.ui.theme.StatusWarning
-import com.example.my_car.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +71,7 @@ fun DashboardScreen(
                         Text(
                             stringResource(R.string.dashboard_main_vehicle),
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             state.mainVehicleName

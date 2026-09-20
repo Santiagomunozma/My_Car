@@ -52,7 +52,6 @@ import com.example.my_car.ui.components.EmptyState
 import com.example.my_car.ui.components.MiCarroCard
 import com.example.my_car.ui.components.StatusChip
 import com.example.my_car.ui.theme.StatusSuccess
-import com.example.my_car.ui.theme.TextSecondary
 import java.io.File
 
 fun vehicleTypeLabel(type: VehicleType): Int = when (type) {
@@ -212,7 +211,7 @@ private fun VehicleCard(
                 Icon(
                     imageVector = vehicleTypeIcon(vehicle.type),
                     contentDescription = null,
-                    tint = TextSecondary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(56.dp)
                 )
             }
@@ -221,12 +220,12 @@ private fun VehicleCard(
                 Text(
                     "${vehicle.brand} ${vehicle.line} ${vehicle.model}".trim(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     stringResource(R.string.vehicle_mileage_value, vehicle.currentMileage),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -245,7 +244,7 @@ private fun VehicleCard(
             if (vehicle.isArchived) {
                 StatusChip(
                     text = stringResource(R.string.vehicle_archived_badge),
-                    containerColor = TextSecondary,
+                    containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     icon = Icons.Filled.Archive
                 )
             }
