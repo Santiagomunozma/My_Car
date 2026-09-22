@@ -1,7 +1,7 @@
 package com.micarro.feature.mileage.domain
 
 import com.micarro.domain.alerts.MileageAlertNotifier
-import com.micarro.domain.model.MileageRecord
+import com.micarro.domain.model.MileageReading
 import com.micarro.domain.repository.MileageRepository
 import com.micarro.domain.repository.VehicleRepository
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +35,7 @@ object MileageRules {
 class ObserveMileageUseCase @Inject constructor(
     private val repository: MileageRepository
 ) {
-    operator fun invoke(vehicleId: Long): Flow<List<MileageRecord>> =
+    operator fun invoke(vehicleId: Long): Flow<List<MileageReading>> =
         repository.observeMileage(vehicleId)
 }
 
@@ -74,7 +74,7 @@ class AddMileageReadingUseCase @Inject constructor(
             }
 
             mileageRepository.addMileage(
-                MileageRecord(
+                MileageReading(
                     id = System.currentTimeMillis(),
                     vehicleId = vehicleId,
                     date = MileageRules.millisToDate(dateMillis),

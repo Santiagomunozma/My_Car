@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.micarro.domain.model.MileageRecord
+import com.micarro.domain.model.MileageReading
 import com.micarro.feature.mileage.domain.MileageRules
 
 @Entity(
@@ -19,7 +19,7 @@ data class MileageEntity(
     val note: String?
 )
 
-fun MileageEntity.toDomain() = MileageRecord(
+fun MileageEntity.toDomain() = MileageReading(
     id = id,
     vehicleId = vehicleId,
     date = MileageRules.millisToDate(date),
@@ -27,7 +27,7 @@ fun MileageEntity.toDomain() = MileageRecord(
     note = note
 )
 
-fun MileageRecord.toEntity() = MileageEntity(
+fun MileageReading.toEntity() = MileageEntity(
     id = id,
     vehicleId = vehicleId,
     date = MileageRules.dateToMillis(date),

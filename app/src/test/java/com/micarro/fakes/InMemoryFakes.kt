@@ -2,7 +2,7 @@ package com.micarro.fakes
 
 import com.micarro.domain.alerts.MileageAlertNotifier
 import com.micarro.domain.model.AlertSettings
-import com.micarro.domain.model.MileageRecord
+import com.micarro.domain.model.MileageReading
 import com.micarro.domain.model.Vehicle
 import com.micarro.domain.model.VehicleDocument
 import com.micarro.domain.repository.AlertSettingsRepository
@@ -64,21 +64,21 @@ class InMemoryVehicleRepository : VehicleRepository {
 }
 
 class InMemoryMileageRepository : MileageRepository {
-    private val readings = MutableStateFlow<List<MileageRecord>>(emptyList())
+    private val readings = MutableStateFlow<List<MileageReading>>(emptyList())
 
-    override fun observeMileage(vehicleId: Long): Flow<List<MileageRecord>> =
+    override fun observeMileage(vehicleId: Long): Flow<List<MileageReading>> =
         readings.map { list ->
             list.filter { it.vehicleId == vehicleId }
-                .sortedWith(compareByDescending<MileageRecord> { it.date }.thenByDescending { it.id })
+                .sortedWith(compareByDescending<MileageReading> { it.date }.thenByDescending { it.id })
         }
 
-    override suspend fun addMileage(reading: MileageRecord) {
+    override suspend fun addMileage(reading: MileageReading) {
         readings.update { it + reading }
     }
 
-    override suspend fun getLatestMileage(vehicleId: Long): MileageRecord? =
+    override suspend fun getLatestMileage(vehicleId: Long): MileageReading? =
         readings.value.filter { it.vehicleId == vehicleId }
-            .maxWithOrNull(compareBy<MileageRecord> { it.date }.thenBy { it.id })
+            .maxWithOrNull(compareBy<MileageReading> { it.date }.thenBy { it.id })
 }
 
 class InMemoryDocumentRepository : DocumentRepository {

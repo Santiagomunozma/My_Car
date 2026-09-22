@@ -3,7 +3,7 @@ package com.micarro.feature.mileage.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.micarro.domain.model.MileageRecord
+import com.micarro.domain.model.MileageReading
 import com.micarro.domain.model.Vehicle
 import com.micarro.feature.mileage.domain.AddMileageReadingUseCase
 import com.micarro.feature.mileage.domain.AddReadingResult
@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 data class MileageUiState(
     val vehicle: Vehicle? = null,
-    val readings: List<MileageRecord> = emptyList(),
+    val readings: List<MileageReading> = emptyList(),
     val odometerInput: String = "",
     val dateMillis: Long = MileageRules.dateToMillis(LocalDate.now()),
     val noteInput: String = "",
