@@ -1,10 +1,8 @@
 package com.micarro.domain.model
 
-import java.util.UUID
-
 data class MileageRecord(
-    val id: String = UUID.randomUUID().toString(),
-    val vehicleId: String,
+    val id: Long = 0L,
+    val vehicleId: Long,
     val date: Long, // Representado en Milisegundos (EpochMillis)
     val reading: Int,
     val note: String? = null

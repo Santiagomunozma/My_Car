@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
-import java.util.UUID
 import javax.inject.Inject
 
 enum class MileageError {
@@ -36,7 +35,7 @@ object MileageRules {
 class ObserveMileageUseCase @Inject constructor(
     private val repository: MileageRepository
 ) {
-    operator fun invoke(vehicleId: String): Flow<List<MileageRecord>> =
+    operator fun invoke(vehicleId: Long): Flow<List<MileageRecord>> =
         repository.observeMileage(vehicleId)
 }
 
@@ -46,7 +45,7 @@ class AddMileageReadingUseCase @Inject constructor(
     private val alertNotifier: MileageAlertNotifier
 ) {
     suspend operator fun invoke(
-        vehicleId: String,
+        vehicleId: Long,
         odometerText: String,
         dateMillis: Long,
         note: String?,
@@ -64,11 +63,8 @@ class AddMileageReadingUseCase @Inject constructor(
         if (errors.isNotEmpty()) return AddReadingResult.Invalid(errors)
 
         return try {
-            val vehicleIdLong = vehicleId.toLongOrNull()
-                ?: return AddReadingResult.Failure(IllegalStateException("invalid_vehicle_id"))
-
             // Se usa el estado más reciente de los repositorios, no una copia del UiState.
-            val vehicle = vehicleRepository.getVehicleById(vehicleIdLong)
+            val vehicle = vehicleRepository.getVehicleById(vehicleId)
                 ?: return AddReadingResult.Failure(IllegalStateException("vehicle_gone"))
             val latest = mileageRepository.getLatestMileage(vehicleId)
             val previousReference = maxOf(latest?.reading?.toLong() ?: 0L, vehicle.currentMileage)
@@ -82,7 +78,7 @@ class AddMileageReadingUseCase @Inject constructor(
 
             mileageRepository.addMileage(
                 MileageRecord(
-                    id = UUID.randomUUID().toString(),
+                    id = System.currentTimeMillis(),
                     vehicleId = vehicleId,
                     date = dateMillis,
                     reading = reading,
@@ -93,9 +89,9 @@ class AddMileageReadingUseCase @Inject constructor(
             // El kilometraje actual se deriva de la última lectura cronológica.
             val newLatest = mileageRepository.getLatestMileage(vehicleId)
             if (newLatest != null && newLatest.reading.toLong() != vehicle.currentMileage) {
-                vehicleRepository.updateCurrentMileage(vehicleIdLong, newLatest.reading.toLong())
+                vehicleRepository.updateCurrentMileage(vehicleId, newLatest.reading.toLong())
             }
-            alertNotifier.onMileageUpdated(vehicleId, newLatest?.reading ?: reading)
+            alertNotifier.onMileageUpdated(vehicleId.toString(), newLatest?.reading ?: reading)
             AddReadingResult.Success
         } catch (e: Exception) {
             AddReadingResult.Failure(e)

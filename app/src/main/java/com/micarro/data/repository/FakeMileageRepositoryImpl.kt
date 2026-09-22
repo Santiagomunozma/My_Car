@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 class FakeMileageRepositoryImpl @Inject constructor() : MileageRepository {
-    override fun observeMileage(vehicleId: String): Flow<List<MileageRecord>> = flowOf(emptyList())
+    override fun observeMileage(vehicleId: Long): Flow<List<MileageRecord>> = flowOf(emptyList())
     override suspend fun addMileage(reading: MileageRecord) {}
-    override suspend fun getLatestMileage(vehicleId: String): MileageRecord? = null
+    override suspend fun getLatestMileage(vehicleId: Long): MileageRecord? = null
 }

@@ -90,19 +90,18 @@ class MaintenanceViewModel @Inject constructor(
 
     fun selectVehicle(vehicle: Vehicle) {
         _uiState.update { it.copy(selectedVehicle = vehicle) }
-        observePlans(vehicle.plate)
+        observePlans(vehicle)
     }
 
-    private fun observePlans(vehicleId: String) {
+    private fun observePlans(vehicle: Vehicle) {
         plansJob?.cancel()
         plansJob = combine(
-            maintenanceUseCases.observePlans(vehicleId),
-            maintenanceUseCases.observeServices(vehicleId).onStart { emit(emptyList()) },
-            mileageRepository.observeMileage(vehicleId).onStart { emit(emptyList()) }
+            maintenanceUseCases.observePlans(vehicle.plate),
+            maintenanceUseCases.observeServices(vehicle.plate).onStart { emit(emptyList()) },
+            mileageRepository.observeMileage(vehicle.id).onStart { emit(emptyList()) }
         ) { plans, services, mileageRecords ->
             val currentMileage = mileageRecords.firstOrNull()?.reading
-                ?: _uiState.value.selectedVehicle?.currentMileage?.toInt()
-                ?: 0
+                ?: vehicle.currentMileage.toInt()
             val currentTime = System.currentTimeMillis()
 
             plans.map { plan ->

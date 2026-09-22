@@ -12,11 +12,11 @@ class MileageRepositoryImpl @Inject constructor(
     private val dao: MileageDao
 ) : MileageRepository {
 
-    override fun observeMileage(vehicleId: String): Flow<List<MileageRecord>> =
+    override fun observeMileage(vehicleId: Long): Flow<List<MileageRecord>> =
         dao.observeByVehicle(vehicleId).map { list -> list.map(MileageEntity::toDomain) }
 
     override suspend fun addMileage(reading: MileageRecord) = dao.insert(reading.toEntity())
 
-    override suspend fun getLatestMileage(vehicleId: String): MileageRecord? =
+    override suspend fun getLatestMileage(vehicleId: Long): MileageRecord? =
         dao.getLatest(vehicleId)?.toDomain()
 }

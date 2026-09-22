@@ -66,7 +66,7 @@ class InMemoryVehicleRepository : VehicleRepository {
 class InMemoryMileageRepository : MileageRepository {
     private val readings = MutableStateFlow<List<MileageRecord>>(emptyList())
 
-    override fun observeMileage(vehicleId: String): Flow<List<MileageRecord>> =
+    override fun observeMileage(vehicleId: Long): Flow<List<MileageRecord>> =
         readings.map { list ->
             list.filter { it.vehicleId == vehicleId }
                 .sortedWith(compareByDescending<MileageRecord> { it.date }.thenByDescending { it.id })
@@ -76,7 +76,7 @@ class InMemoryMileageRepository : MileageRepository {
         readings.update { it + reading }
     }
 
-    override suspend fun getLatestMileage(vehicleId: String): MileageRecord? =
+    override suspend fun getLatestMileage(vehicleId: Long): MileageRecord? =
         readings.value.filter { it.vehicleId == vehicleId }
             .maxWithOrNull(compareBy<MileageRecord> { it.date }.thenBy { it.id })
 }

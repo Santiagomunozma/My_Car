@@ -43,7 +43,7 @@ class MileageViewModel @Inject constructor(
     private val addReading: AddMileageReadingUseCase
 ) : ViewModel() {
 
-    private val vehicleId: String = checkNotNull(savedStateHandle["vehicleId"])
+    private val vehicleId: Long = checkNotNull(savedStateHandle.get<String>("vehicleId")?.toLongOrNull())
 
     private val vehicle = MutableStateFlow<Vehicle?>(null)
     private val form = MutableStateFlow(FormState())
@@ -78,7 +78,7 @@ class MileageViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MileageUiState())
 
     init {
-        viewModelScope.launch { vehicle.value = getVehicle(vehicleId.toLongOrNull() ?: -1L) }
+        viewModelScope.launch { vehicle.value = getVehicle(vehicleId) }
     }
 
     fun onOdometerChange(value: String) {

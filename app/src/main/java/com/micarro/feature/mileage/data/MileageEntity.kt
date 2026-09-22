@@ -11,8 +11,8 @@ import com.micarro.domain.model.MileageRecord
     indices = [Index(value = ["vehicle_id"])]
 )
 data class MileageEntity(
-    @PrimaryKey val id: String,
-    @ColumnInfo(name = "vehicle_id") val vehicleId: String,
+    @PrimaryKey val id: Long,
+    @ColumnInfo(name = "vehicle_id") val vehicleId: Long,
     val date: Long,
     val reading: Int,
     val note: String?
