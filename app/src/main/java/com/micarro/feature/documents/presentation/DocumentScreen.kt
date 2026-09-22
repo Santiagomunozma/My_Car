@@ -152,7 +152,7 @@ fun DocumentScreen(
     if (state.showForm) {
         DocumentFormDialog(
             editing = state.editingDocument,
-            vehicleId = state.vehicle?.id.orEmpty(),
+            vehicleId = state.vehicle?.id?.toString().orEmpty(),
             isSaving = state.isSaving,
             saveFailed = state.saveFailed,
             errors = state.formErrors,

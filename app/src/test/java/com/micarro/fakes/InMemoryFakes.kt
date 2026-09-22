@@ -24,7 +24,7 @@ class InMemoryVehicleRepository : VehicleRepository {
 
     override fun observeAllVehicles(): Flow<List<Vehicle>> = vehicles
 
-    override suspend fun getVehicleById(id: String): Vehicle? =
+    override suspend fun getVehicleById(id: Long): Vehicle? =
         vehicles.value.firstOrNull { it.id == id }
 
     override suspend fun createVehicle(vehicle: Vehicle) {
@@ -35,24 +35,24 @@ class InMemoryVehicleRepository : VehicleRepository {
         vehicles.update { list -> list.map { if (it.id == vehicle.id) vehicle else it } }
     }
 
-    override suspend fun archiveVehicle(id: String) {
+    override suspend fun archiveVehicle(id: Long) {
         vehicles.update { list -> list.map { if (it.id == id) it.copy(isArchived = true) else it } }
     }
 
-    override suspend fun reactivateVehicle(id: String) {
+    override suspend fun reactivateVehicle(id: Long) {
         vehicles.update { list -> list.map { if (it.id == id) it.copy(isArchived = false) else it } }
     }
 
-    override suspend fun isPlateAvailable(plate: String, excludingId: String?): Boolean =
+    override suspend fun isPlateAvailable(plate: String, excludingId: Long?): Boolean =
         vehicles.value.none { it.plate == plate && it.id != excludingId }
 
-    override suspend fun setMainVehicle(id: String) {
+    override suspend fun setMainVehicle(id: Long) {
         vehicles.update { list ->
             list.map { it.copy(isMainVehicle = it.id == id) }
         }
     }
 
-    override suspend fun updateCurrentMileage(id: String, mileage: Int) {
+    override suspend fun updateCurrentMileage(id: Long, mileage: Int) {
         vehicles.update { list ->
             list.map { if (it.id == id) it.copy(currentMileage = mileage) else it }
         }

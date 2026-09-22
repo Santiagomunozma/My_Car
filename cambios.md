@@ -88,7 +88,7 @@ Revisión contra el archivo `# MiCarro — Sistema móvil para el control del ma
 ### Diferencias pendientes (por integrar)
 
 - [x] Renombrar paquete `com.example.my_car` a `com.micarro` y `applicationId` a `com.micarro`.
-- [ ] Cambiar `Vehicle.id` de `String` a `Long` (guía: `Long`).
+- [x] Cambiar `Vehicle.id` de `String` a `Long` (guía: `Long`).
 - [ ] Cambiar `Vehicle.currentMileage` de `Int` a `Long`.
 - [ ] Renombrar `Vehicle.isMainVehicle` a `Vehicle.isPrimary`.
 - [ ] Cambiar `MileageRecord` (`id`, `vehicleId`) de `String` a `Long`.

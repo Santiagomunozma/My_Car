@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
     indices = [Index(value = ["plate"], unique = true)]
 )
 data class VehicleEntity(
-    @PrimaryKey val id: String,
+    @PrimaryKey val id: Long,
     val plate: String,
     val type: String,
     val brand: String,

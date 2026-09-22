@@ -6,12 +6,12 @@ import kotlinx.coroutines.flow.Flow
 interface VehicleRepository {
     fun observeVehicles(): Flow<List<Vehicle>>
     fun observeAllVehicles(): Flow<List<Vehicle>>
-    suspend fun getVehicleById(id: String): Vehicle?
+    suspend fun getVehicleById(id: Long): Vehicle?
     suspend fun createVehicle(vehicle: Vehicle)
     suspend fun updateVehicle(vehicle: Vehicle)
-    suspend fun archiveVehicle(id: String)
-    suspend fun reactivateVehicle(id: String)
-    suspend fun isPlateAvailable(plate: String, excludingId: String?): Boolean
-    suspend fun setMainVehicle(id: String)
-    suspend fun updateCurrentMileage(id: String, mileage: Int)
+    suspend fun archiveVehicle(id: Long)
+    suspend fun reactivateVehicle(id: Long)
+    suspend fun isPlateAvailable(plate: String, excludingId: Long?): Boolean
+    suspend fun setMainVehicle(id: Long)
+    suspend fun updateCurrentMileage(id: Long, mileage: Int)
 }

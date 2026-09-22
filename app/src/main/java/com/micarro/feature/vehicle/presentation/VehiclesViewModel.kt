@@ -79,11 +79,11 @@ class VehiclesViewModel @Inject constructor(
         viewModelScope.launch { archiveVehicle(vehicle.id) }
     }
 
-    fun reactivate(vehicleId: String) {
+    fun reactivate(vehicleId: Long) {
         viewModelScope.launch { reactivateVehicle(vehicleId) }
     }
 
-    fun setMain(vehicleId: String) {
+    fun setMain(vehicleId: Long) {
         viewModelScope.launch { setMainVehicle(vehicleId) }
     }
 }

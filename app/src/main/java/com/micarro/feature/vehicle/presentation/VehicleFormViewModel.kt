@@ -40,7 +40,7 @@ class VehicleFormViewModel @Inject constructor(
     private val photoStore: VehiclePhotoStore
 ) : ViewModel() {
 
-    private val vehicleId: String? = savedStateHandle.get<String>("vehicleId")
+    private val vehicleId: Long? = savedStateHandle.get<String>("vehicleId")?.toLongOrNull()
 
     private val _uiState = MutableStateFlow(VehicleFormUiState())
     val uiState: StateFlow<VehicleFormUiState> = _uiState.asStateFlow()

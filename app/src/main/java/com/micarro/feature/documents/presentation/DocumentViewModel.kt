@@ -80,7 +80,7 @@ class DocumentViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DocumentUiState())
 
     init {
-        viewModelScope.launch { vehicle.value = getVehicle(vehicleId) }
+        viewModelScope.launch { vehicle.value = getVehicle(vehicleId.toLongOrNull() ?: -1L) }
     }
 
     fun openAddForm() {

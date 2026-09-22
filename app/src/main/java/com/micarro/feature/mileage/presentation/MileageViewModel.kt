@@ -78,7 +78,7 @@ class MileageViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MileageUiState())
 
     init {
-        viewModelScope.launch { vehicle.value = getVehicle(vehicleId) }
+        viewModelScope.launch { vehicle.value = getVehicle(vehicleId.toLongOrNull() ?: -1L) }
     }
 
     fun onOdometerChange(value: String) {

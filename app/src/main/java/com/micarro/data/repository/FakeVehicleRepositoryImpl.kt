@@ -9,12 +9,12 @@ import javax.inject.Inject
 class FakeVehicleRepositoryImpl @Inject constructor() : VehicleRepository {
     override fun observeVehicles(): Flow<List<Vehicle>> = flowOf(emptyList())
     override fun observeAllVehicles(): Flow<List<Vehicle>> = flowOf(emptyList())
-    override suspend fun getVehicleById(id: String): Vehicle? = null
+    override suspend fun getVehicleById(id: Long): Vehicle? = null
     override suspend fun createVehicle(vehicle: Vehicle) {}
     override suspend fun updateVehicle(vehicle: Vehicle) {}
-    override suspend fun archiveVehicle(id: String) {}
-    override suspend fun reactivateVehicle(id: String) {}
-    override suspend fun isPlateAvailable(plate: String, excludingId: String?): Boolean = true
-    override suspend fun setMainVehicle(id: String) {}
-    override suspend fun updateCurrentMileage(id: String, mileage: Int) {}
+    override suspend fun archiveVehicle(id: Long) {}
+    override suspend fun reactivateVehicle(id: Long) {}
+    override suspend fun isPlateAvailable(plate: String, excludingId: Long?): Boolean = true
+    override suspend fun setMainVehicle(id: Long) {}
+    override suspend fun updateCurrentMileage(id: Long, mileage: Int) {}
 }

@@ -5,11 +5,10 @@ import com.micarro.domain.model.Vehicle
 import com.micarro.domain.model.VehicleType
 import com.micarro.domain.repository.VehicleRepository
 import kotlinx.coroutines.flow.Flow
-import java.util.UUID
 import javax.inject.Inject
 
 data class VehicleDraft(
-    val id: String? = null,
+    val id: Long? = null,
     val plate: String = "",
     val type: VehicleType = VehicleType.CAR,
     val brand: String = "",
@@ -40,7 +39,7 @@ class ObserveVehiclesUseCase @Inject constructor(
 class GetVehicleUseCase @Inject constructor(
     private val repository: VehicleRepository
 ) {
-    suspend operator fun invoke(id: String): Vehicle? = repository.getVehicleById(id)
+    suspend operator fun invoke(id: Long): Vehicle? = repository.getVehicleById(id)
 }
 
 class SaveVehicleUseCase @Inject constructor(
@@ -62,7 +61,7 @@ class SaveVehicleUseCase @Inject constructor(
             if (draft.id == null) {
                 repository.createVehicle(
                     Vehicle(
-                        id = UUID.randomUUID().toString(),
+                        id = System.nanoTime(),
                         plate = normalizedPlate,
                         type = draft.type,
                         brand = draft.brand.trim(),
@@ -156,17 +155,17 @@ class SaveVehicleUseCase @Inject constructor(
 class ArchiveVehicleUseCase @Inject constructor(
     private val repository: VehicleRepository
 ) {
-    suspend operator fun invoke(id: String) = repository.archiveVehicle(id)
+    suspend operator fun invoke(id: Long) = repository.archiveVehicle(id)
 }
 
 class ReactivateVehicleUseCase @Inject constructor(
     private val repository: VehicleRepository
 ) {
-    suspend operator fun invoke(id: String) = repository.reactivateVehicle(id)
+    suspend operator fun invoke(id: Long) = repository.reactivateVehicle(id)
 }
 
 class SetMainVehicleUseCase @Inject constructor(
     private val repository: VehicleRepository
 ) {
-    suspend operator fun invoke(id: String) = repository.setMainVehicle(id)
+    suspend operator fun invoke(id: Long) = repository.setMainVehicle(id)
 }

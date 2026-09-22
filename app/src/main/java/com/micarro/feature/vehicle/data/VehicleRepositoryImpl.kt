@@ -18,21 +18,21 @@ class VehicleRepositoryImpl @Inject constructor(
     override fun observeAllVehicles(): Flow<List<Vehicle>> =
         dao.observeAll().map { list -> list.map(VehicleEntity::toDomain) }
 
-    override suspend fun getVehicleById(id: String): Vehicle? = dao.getById(id)?.toDomain()
+    override suspend fun getVehicleById(id: Long): Vehicle? = dao.getById(id)?.toDomain()
 
     override suspend fun createVehicle(vehicle: Vehicle) = dao.insert(vehicle.toEntity())
 
     override suspend fun updateVehicle(vehicle: Vehicle) = dao.update(vehicle.toEntity())
 
-    override suspend fun archiveVehicle(id: String) = dao.archive(id)
+    override suspend fun archiveVehicle(id: Long) = dao.archive(id)
 
-    override suspend fun reactivateVehicle(id: String) = dao.reactivate(id)
+    override suspend fun reactivateVehicle(id: Long) = dao.reactivate(id)
 
-    override suspend fun isPlateAvailable(plate: String, excludingId: String?): Boolean =
-        dao.countPlate(plate, excludingId ?: "") == 0
+    override suspend fun isPlateAvailable(plate: String, excludingId: Long?): Boolean =
+        dao.countPlate(plate, excludingId ?: -1L) == 0
 
-    override suspend fun setMainVehicle(id: String) = dao.setMainVehicle(id)
+    override suspend fun setMainVehicle(id: Long) = dao.setMainVehicle(id)
 
-    override suspend fun updateCurrentMileage(id: String, mileage: Int) =
+    override suspend fun updateCurrentMileage(id: Long, mileage: Int) =
         dao.updateCurrentMileage(id, mileage)
 }

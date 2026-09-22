@@ -161,7 +161,7 @@ class ObserveDocumentAlertsUseCase @Inject constructor(
             today: LocalDate
         ): List<DocumentAlert> {
             if (!settings.globalAlertsEnabled) return emptyList()
-            val vehiclesById = vehicles.associateBy { it.id }
+            val vehiclesById = vehicles.associateBy { it.id.toString() }
             return documents
                 .filter { it.alertsEnabled }
                 .mapNotNull { document ->
@@ -171,7 +171,7 @@ class ObserveDocumentAlertsUseCase @Inject constructor(
                     )
                     if (status == DocumentStatus.UP_TO_DATE) return@mapNotNull null
                     DocumentAlert(
-                        vehicleId = vehicle.id,
+                        vehicleId = vehicle.id.toString(),
                         vehiclePlate = vehicle.plate,
                         documentId = document.id,
                         documentType = document.type,

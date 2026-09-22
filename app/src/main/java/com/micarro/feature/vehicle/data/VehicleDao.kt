@@ -16,7 +16,7 @@ interface VehicleDao {
     fun observeAll(): Flow<List<VehicleEntity>>
 
     @Query("SELECT * FROM vehicles WHERE id = :id")
-    suspend fun getById(id: String): VehicleEntity?
+    suspend fun getById(id: Long): VehicleEntity?
 
     @Insert
     suspend fun insert(vehicle: VehicleEntity)
@@ -25,26 +25,26 @@ interface VehicleDao {
     suspend fun update(vehicle: VehicleEntity)
 
     @Query("UPDATE vehicles SET is_archived = 1 WHERE id = :id")
-    suspend fun archive(id: String)
+    suspend fun archive(id: Long)
 
     @Query("UPDATE vehicles SET is_archived = 0 WHERE id = :id")
-    suspend fun reactivate(id: String)
+    suspend fun reactivate(id: Long)
 
     @Query("SELECT COUNT(*) FROM vehicles WHERE plate = :plate AND id != :excludingId")
-    suspend fun countPlate(plate: String, excludingId: String): Int
+    suspend fun countPlate(plate: String, excludingId: Long): Int
 
     @Query("UPDATE vehicles SET is_main_vehicle = 0 WHERE is_main_vehicle = 1")
     suspend fun clearMainVehicle()
 
     @Query("UPDATE vehicles SET is_main_vehicle = 1 WHERE id = :id")
-    suspend fun setMain(id: String)
+    suspend fun setMain(id: Long)
 
     @Transaction
-    suspend fun setMainVehicle(id: String) {
+    suspend fun setMainVehicle(id: Long) {
         clearMainVehicle()
         setMain(id)
     }
 
     @Query("UPDATE vehicles SET current_mileage = :mileage WHERE id = :id")
-    suspend fun updateCurrentMileage(id: String, mileage: Int)
+    suspend fun updateCurrentMileage(id: Long, mileage: Int)
 }

@@ -149,9 +149,9 @@ fun VehicleListScreen(
                     items(state.vehicles, key = { it.id }) { vehicle ->
                         VehicleCard(
                             vehicle = vehicle,
-                            onEdit = { onEditVehicle(vehicle.id) },
-                            onMileage = { onOpenMileage(vehicle.id) },
-                            onDocuments = { onOpenDocuments(vehicle.id) },
+                            onEdit = { onEditVehicle(vehicle.id.toString()) },
+                            onMileage = { onOpenMileage(vehicle.id.toString()) },
+                            onDocuments = { onOpenDocuments(vehicle.id.toString()) },
                             onSetMain = { viewModel.setMain(vehicle.id) },
                             onArchive = { viewModel.requestArchive(vehicle) },
                             onReactivate = { viewModel.reactivate(vehicle.id) }

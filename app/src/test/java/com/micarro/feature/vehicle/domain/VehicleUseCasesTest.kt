@@ -141,7 +141,7 @@ class VehicleUseCasesTest {
 
     @Test
     fun `edicion de vehiculo desaparecido falla`() = runTest {
-        val result = saveVehicle(validDraft().copy(id = "inexistente"))
+        val result = saveVehicle(validDraft().copy(id = 999L))
         assertTrue(result is SaveVehicleResult.Failure)
     }
 
@@ -167,7 +167,7 @@ class VehicleUseCasesTest {
     @Test
     fun `solo un vehiculo principal`() = runTest {
         val a = Vehicle(plate = "A1", type = VehicleType.CAR, brand = "a", line = "a", model = "a", year = 2020, currentMileage = 0)
-        val b = a.copy(id = "otro", plate = "B2")
+        val b = a.copy(id = 2L, plate = "B2")
         repository.seed(a, b)
         val setMain = SetMainVehicleUseCase(repository)
 

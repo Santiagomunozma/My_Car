@@ -1,9 +1,7 @@
 package com.micarro.domain.model
 
-import java.util.UUID
-
 data class Vehicle(
-    val id: String = UUID.randomUUID().toString(),
+    val id: Long = 0L,
     val plate: String,
     val type: VehicleType, // Enum: CAR, TRUCK, MOTORCYCLE
     val brand: String,
