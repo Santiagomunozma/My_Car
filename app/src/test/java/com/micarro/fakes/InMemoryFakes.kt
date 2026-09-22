@@ -52,7 +52,7 @@ class InMemoryVehicleRepository : VehicleRepository {
         }
     }
 
-    override suspend fun updateCurrentMileage(id: Long, mileage: Int) {
+    override suspend fun updateCurrentMileage(id: Long, mileage: Long) {
         vehicles.update { list ->
             list.map { if (it.id == id) it.copy(currentMileage = mileage) else it }
         }

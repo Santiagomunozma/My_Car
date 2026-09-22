@@ -13,5 +13,5 @@ interface VehicleRepository {
     suspend fun reactivateVehicle(id: Long)
     suspend fun isPlateAvailable(plate: String, excludingId: Long?): Boolean
     suspend fun setMainVehicle(id: Long)
-    suspend fun updateCurrentMileage(id: Long, mileage: Int)
+    suspend fun updateCurrentMileage(id: Long, mileage: Long)
 }

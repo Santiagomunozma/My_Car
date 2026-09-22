@@ -36,9 +36,9 @@ class VehicleRulesTest {
 
     @Test
     fun `kilometraje no negativo`() {
-        assertTrue(VehicleRules.isMileageValid(0))
-        assertTrue(VehicleRules.isMileageValid(15000))
-        assertFalse(VehicleRules.isMileageValid(-1))
+        assertTrue(VehicleRules.isMileageValid(0L))
+        assertTrue(VehicleRules.isMileageValid(15000L))
+        assertFalse(VehicleRules.isMileageValid(-1L))
     }
 
     @Test

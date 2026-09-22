@@ -24,7 +24,7 @@ object VehicleRules {
     fun isYearValid(year: Int, currentYear: Int = Year.now().value): Boolean =
         year in MIN_YEAR..(currentYear + 1)
 
-    fun isMileageValid(mileage: Int): Boolean = mileage >= 0
+    fun isMileageValid(mileage: Long): Boolean = mileage >= 0
 
     fun isVinValid(vin: String): Boolean = VIN_PATTERN.matches(vin.trim().uppercase())
 

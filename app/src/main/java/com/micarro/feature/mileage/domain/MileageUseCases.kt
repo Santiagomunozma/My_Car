@@ -71,11 +71,13 @@ class AddMileageReadingUseCase @Inject constructor(
             val vehicle = vehicleRepository.getVehicleById(vehicleIdLong)
                 ?: return AddReadingResult.Failure(IllegalStateException("vehicle_gone"))
             val latest = mileageRepository.getLatestMileage(vehicleId)
-            val previousReference = maxOf(latest?.reading ?: 0, vehicle.currentMileage)
+            val previousReference = maxOf(latest?.reading?.toLong() ?: 0L, vehicle.currentMileage)
 
             val reading = odometer!!.toInt()
             if (reading < previousReference && !confirmedLowerReading) {
-                return AddReadingResult.RequiresConfirmation(previousReference)
+                return AddReadingResult.RequiresConfirmation(
+                    previousReference.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                )
             }
 
             mileageRepository.addMileage(
@@ -90,8 +92,8 @@ class AddMileageReadingUseCase @Inject constructor(
 
             // El kilometraje actual se deriva de la última lectura cronológica.
             val newLatest = mileageRepository.getLatestMileage(vehicleId)
-            if (newLatest != null && newLatest.reading != vehicle.currentMileage) {
-                vehicleRepository.updateCurrentMileage(vehicleIdLong, newLatest.reading)
+            if (newLatest != null && newLatest.reading.toLong() != vehicle.currentMileage) {
+                vehicleRepository.updateCurrentMileage(vehicleIdLong, newLatest.reading.toLong())
             }
             alertNotifier.onMileageUpdated(vehicleId, newLatest?.reading ?: reading)
             AddReadingResult.Success

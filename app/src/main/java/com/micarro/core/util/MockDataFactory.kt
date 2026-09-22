@@ -12,7 +12,7 @@ object MockDataFactory {
             line = "Mazda 3",
             type = VehicleType.CAR,
             year = 2021,
-            currentMileage = 45000
+            currentMileage = 45000L
         ),
         Vehicle(
             plate = "XYZ-789",
@@ -20,7 +20,7 @@ object MockDataFactory {
             line = "MT-07",
             type = VehicleType.MOTORCYCLE,
             year = 2023,
-            currentMileage = 12000
+            currentMileage = 12000L
         )
     )
 

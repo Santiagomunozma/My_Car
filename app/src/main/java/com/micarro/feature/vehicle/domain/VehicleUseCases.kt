@@ -68,7 +68,7 @@ class SaveVehicleUseCase @Inject constructor(
                         line = draft.line.trim(),
                         model = draft.model.trim(),
                         year = draft.year.trim().toInt(),
-                        currentMileage = draft.mileage.trim().toInt(),
+                        currentMileage = draft.mileage.trim().toLong(),
                         color = draft.color.trim().ifEmpty { null },
                         vin = draft.vin.trim().uppercase().ifEmpty { null },
                         fuelType = draft.fuelType,
@@ -127,7 +127,7 @@ class SaveVehicleUseCase @Inject constructor(
 
         // El kilometraje solo es editable en el alta; en edición se conserva el actual.
         if (draft.id == null) {
-            val mileage = draft.mileage.trim().toIntOrNull()
+            val mileage = draft.mileage.trim().toLongOrNull()
             when {
                 draft.mileage.isBlank() -> errors[VehicleField.MILEAGE] = VehicleError.REQUIRED
                 mileage == null -> errors[VehicleField.MILEAGE] = VehicleError.INVALID_FORMAT

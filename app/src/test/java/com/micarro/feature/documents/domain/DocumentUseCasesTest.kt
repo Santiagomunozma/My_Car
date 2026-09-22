@@ -64,7 +64,7 @@ class DocumentUseCasesTest {
 
     private fun vehicle(id: String, archived: Boolean = false) = Vehicle(
         id = id.toLongOrNull() ?: 0L, plate = "PLATE-$id", type = VehicleType.CAR, brand = "M",
-        line = "L", model = "M", year = 2020, currentMileage = 0, isArchived = archived
+        line = "L", model = "M", year = 2020, currentMileage = 0L, isArchived = archived
     )
 
     private fun doc(vehicleId: String, daysFromToday: Long, alertsEnabled: Boolean = true) =

@@ -100,7 +100,9 @@ class MaintenanceViewModel @Inject constructor(
             maintenanceUseCases.observeServices(vehicleId).onStart { emit(emptyList()) },
             mileageRepository.observeMileage(vehicleId).onStart { emit(emptyList()) }
         ) { plans, services, mileageRecords ->
-            val currentMileage = mileageRecords.firstOrNull()?.reading ?: _uiState.value.selectedVehicle?.currentMileage ?: 0
+            val currentMileage = mileageRecords.firstOrNull()?.reading
+                ?: _uiState.value.selectedVehicle?.currentMileage?.toInt()
+                ?: 0
             val currentTime = System.currentTimeMillis()
 
             plans.map { plan ->

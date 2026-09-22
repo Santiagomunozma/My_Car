@@ -23,7 +23,7 @@ class MileageUseCasesTest {
 
     private val vehicle = Vehicle(
         id = 1L, plate = "ABC123", type = VehicleType.CAR, brand = "M",
-        line = "L", model = "M", year = 2020, currentMileage = 50000
+        line = "L", model = "M", year = 2020, currentMileage = 50000L
     )
 
     private val todayMillis = MileageRules.dateToMillis(LocalDate.now())
@@ -41,7 +41,7 @@ class MileageUseCasesTest {
     fun `lectura mayor se guarda y actualiza el kilometraje`() = runTest {
         val result = addReading("1", "51000", todayMillis, null, false)
         assertTrue(result is AddReadingResult.Success)
-        assertEquals(51000, vehicleRepo.getVehicleById(1L)!!.currentMileage)
+        assertEquals(51000L, vehicleRepo.getVehicleById(1L)!!.currentMileage)
         assertEquals(1, mileageRepo.observeMileage("1").first().size)
         assertEquals(listOf("1" to 51000), notifier.calls)
     }
@@ -52,7 +52,7 @@ class MileageUseCasesTest {
         assertTrue(result is AddReadingResult.RequiresConfirmation)
         assertEquals(50000, (result as AddReadingResult.RequiresConfirmation).previousReading)
         assertTrue(mileageRepo.observeMileage("1").first().isEmpty())
-        assertEquals(50000, vehicleRepo.getVehicleById(1L)!!.currentMileage)
+        assertEquals(50000L, vehicleRepo.getVehicleById(1L)!!.currentMileage)
         assertTrue(notifier.calls.isEmpty())
     }
 
@@ -92,18 +92,18 @@ class MileageUseCasesTest {
     @Test
     fun `lectura con fecha antigua no pisa el kilometraje actual`() = runTest {
         mileageRepo.addMileage(MileageRecord(vehicleId = "1", date = todayMillis, reading = 60000))
-        vehicleRepo.updateCurrentMileage(1L, 60000)
+        vehicleRepo.updateCurrentMileage(1L, 60000L)
         val oldDate = MileageRules.dateToMillis(LocalDate.now().minusDays(10))
         val result = addReading("1", "61000", oldDate, null, false)
         // 61000 > referencia 60000 → éxito, pero la última cronológica sigue siendo 60000
         assertTrue(result is AddReadingResult.Success)
-        assertEquals(60000, vehicleRepo.getVehicleById(1L)!!.currentMileage)
+        assertEquals(60000L, vehicleRepo.getVehicleById(1L)!!.currentMileage)
     }
 
     @Test
     fun `notifier recibe la ultima lectura cronologica`() = runTest {
         mileageRepo.addMileage(MileageRecord(vehicleId = "1", date = todayMillis, reading = 60000))
-        vehicleRepo.updateCurrentMileage(1L, 60000)
+        vehicleRepo.updateCurrentMileage(1L, 60000L)
         val oldDate = MileageRules.dateToMillis(LocalDate.now().minusDays(10))
         addReading("1", "61000", oldDate, null, false)
         assertEquals(listOf("1" to 60000), notifier.calls)

@@ -33,6 +33,6 @@ class VehicleRepositoryImpl @Inject constructor(
 
     override suspend fun setMainVehicle(id: Long) = dao.setMainVehicle(id)
 
-    override suspend fun updateCurrentMileage(id: Long, mileage: Int) =
+    override suspend fun updateCurrentMileage(id: Long, mileage: Long) =
         dao.updateCurrentMileage(id, mileage)
 }

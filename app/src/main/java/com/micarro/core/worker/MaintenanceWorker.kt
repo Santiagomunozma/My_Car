@@ -29,10 +29,10 @@ class MaintenanceWorker @AssistedInject constructor(
                 if (plan.intervalMileage <= 0) continue
 
                 // Cálculo del kilometraje restante para el próximo ciclo
-                val remainingKm = plan.intervalMileage - (vehicle.currentMileage % plan.intervalMileage)
+                val remainingKm = plan.intervalMileage.toLong() - (vehicle.currentMileage % plan.intervalMileage.toLong())
 
                 // Si faltan 500 km o menos (y aún no se ha pasado)
-                if (remainingKm in 1..500) {
+                if (remainingKm in 1L..500L) {
                     NotificationHelper.sendNotification(
                         context = applicationContext,
                         title = "Próximo Mantenimiento (${vehicle.plate})",

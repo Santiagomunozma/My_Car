@@ -16,5 +16,5 @@ class FakeVehicleRepositoryImpl @Inject constructor() : VehicleRepository {
     override suspend fun reactivateVehicle(id: Long) {}
     override suspend fun isPlateAvailable(plate: String, excludingId: Long?): Boolean = true
     override suspend fun setMainVehicle(id: Long) {}
-    override suspend fun updateCurrentMileage(id: Long, mileage: Int) {}
+    override suspend fun updateCurrentMileage(id: Long, mileage: Long) {}
 }

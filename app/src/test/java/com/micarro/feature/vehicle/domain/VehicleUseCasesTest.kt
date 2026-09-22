@@ -42,7 +42,7 @@ class VehicleUseCasesTest {
         assertTrue(result is SaveVehicleResult.Success)
         val saved = repository.observeAllVehicles().first().single()
         assertEquals("ABC123", saved.plate)
-        assertEquals(45000, saved.currentMileage)
+        assertEquals(45000L, saved.currentMileage)
         assertEquals("Mazda", saved.brand)
     }
 
@@ -124,7 +124,7 @@ class VehicleUseCasesTest {
     fun `edicion conserva kilometraje archivado y principal`() = runTest {
         val vehicle = Vehicle(
             plate = "ABC123", type = VehicleType.CAR, brand = "Mazda", line = "3",
-            model = "Touring", year = 2020, currentMileage = 80000,
+            model = "Touring", year = 2020, currentMileage = 80000L,
             isArchived = true, isMainVehicle = true
         )
         repository.seed(vehicle)
@@ -134,7 +134,7 @@ class VehicleUseCasesTest {
         assertTrue(result is SaveVehicleResult.Success)
         val updated = repository.getVehicleById(vehicle.id)!!
         assertEquals("Mazda Editada", updated.brand)
-        assertEquals(80000, updated.currentMileage)
+        assertEquals(80000L, updated.currentMileage)
         assertTrue(updated.isArchived)
         assertTrue(updated.isMainVehicle)
     }
@@ -149,7 +149,7 @@ class VehicleUseCasesTest {
     fun `archivar y reactivar conservan el vehiculo`() = runTest {
         val vehicle = Vehicle(
             plate = "ABC123", type = VehicleType.CAR, brand = "M", line = "L",
-            model = "M", year = 2020, currentMileage = 10
+            model = "M", year = 2020, currentMileage = 10L
         )
         repository.seed(vehicle)
         val archive = ArchiveVehicleUseCase(repository)
@@ -166,7 +166,7 @@ class VehicleUseCasesTest {
 
     @Test
     fun `solo un vehiculo principal`() = runTest {
-        val a = Vehicle(plate = "A1", type = VehicleType.CAR, brand = "a", line = "a", model = "a", year = 2020, currentMileage = 0)
+        val a = Vehicle(plate = "A1", type = VehicleType.CAR, brand = "a", line = "a", model = "a", year = 2020, currentMileage = 0L)
         val b = a.copy(id = 2L, plate = "B2")
         repository.seed(a, b)
         val setMain = SetMainVehicleUseCase(repository)
@@ -184,7 +184,7 @@ class VehicleUseCasesTest {
     fun `reemplazar foto borra la anterior gestionada`() = runTest {
         val vehicle = Vehicle(
             plate = "ABC123", type = VehicleType.CAR, brand = "M", line = "L",
-            model = "M", year = 2020, currentMileage = 0, photoUri = "/photos/vieja.jpg"
+            model = "M", year = 2020, currentMileage = 0L, photoUri = "/photos/vieja.jpg"
         )
         repository.seed(vehicle)
         saveVehicle(validDraft().copy(id = vehicle.id, photoUri = "/photos/nueva.jpg"))
@@ -195,7 +195,7 @@ class VehicleUseCasesTest {
     fun `quitar foto borra el archivo gestionado`() = runTest {
         val vehicle = Vehicle(
             plate = "ABC123", type = VehicleType.CAR, brand = "M", line = "L",
-            model = "M", year = 2020, currentMileage = 0, photoUri = "/photos/vieja.jpg"
+            model = "M", year = 2020, currentMileage = 0L, photoUri = "/photos/vieja.jpg"
         )
         repository.seed(vehicle)
         saveVehicle(validDraft().copy(id = vehicle.id, photoUri = null))
@@ -207,7 +207,7 @@ class VehicleUseCasesTest {
     fun `mantener foto no borra el archivo`() = runTest {
         val vehicle = Vehicle(
             plate = "ABC123", type = VehicleType.CAR, brand = "M", line = "L",
-            model = "M", year = 2020, currentMileage = 0, photoUri = "/photos/vieja.jpg"
+            model = "M", year = 2020, currentMileage = 0L, photoUri = "/photos/vieja.jpg"
         )
         repository.seed(vehicle)
         saveVehicle(validDraft().copy(id = vehicle.id, photoUri = "/photos/vieja.jpg"))

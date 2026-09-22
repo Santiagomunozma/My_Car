@@ -17,7 +17,7 @@ data class VehicleEntity(
     val line: String,
     val model: String,
     val year: Int,
-    @ColumnInfo(name = "current_mileage") val currentMileage: Int,
+    @ColumnInfo(name = "current_mileage") val currentMileage: Long,
     val color: String?,
     val vin: String?,
     @ColumnInfo(name = "fuel_type") val fuelType: String?,

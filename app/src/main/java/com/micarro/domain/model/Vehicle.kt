@@ -7,7 +7,7 @@ data class Vehicle(
     val brand: String,
     val line: String,
     val year: Int,
-    val currentMileage: Int,
+    val currentMileage: Long,
     val isArchived: Boolean = false,
     val isMainVehicle: Boolean = false,
     val model: String = "",

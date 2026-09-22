@@ -110,7 +110,7 @@ fun MiCarroNavGraph(
                             Screen.ServiceForm.createRoute(
                                 vehicleId = vehicle.id.toString(),
                                 planId = planId,
-                                lastMileage = vehicle.currentMileage
+                                lastMileage = vehicle.currentMileage.toInt()
                             )
                         )
                     }

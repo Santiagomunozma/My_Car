@@ -46,5 +46,5 @@ interface VehicleDao {
     }
 
     @Query("UPDATE vehicles SET current_mileage = :mileage WHERE id = :id")
-    suspend fun updateCurrentMileage(id: Long, mileage: Int)
+    suspend fun updateCurrentMileage(id: Long, mileage: Long)
 }
