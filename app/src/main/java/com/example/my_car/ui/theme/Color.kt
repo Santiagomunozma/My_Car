@@ -2,16 +2,27 @@ package com.example.my_car.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryBlue = Color(0xFF2563EB)      // Acciones principales
-val PrimaryDarkBlue = Color(0xFF1D4ED8)  // Pressed/Interacción
-val BackgroundLight = Color(0xFFF8FAFC)  // Fondo general[cite: 3]
-val SurfaceWhite = Color(0xFFFFFFFF)     // Cards y formularios[cite: 3]
-val TextPrimary = Color(0xFF111827)      // Títulos[cite: 3]
-val TextSecondary = Color(0xFF6B7280)    // Metadatos y ayudas[cite: 3]
-val BorderGray = Color(0xFFE5E7EB)       // Divisores y bordes[cite: 3]
+val PrimaryRed = Color(0xFFC41E3A)
+val PrimaryRedBright = Color(0xFFE11D48)
+val OnPrimary = Color(0xFFFFFFFF)
 
-// Estados de mantenimiento y alertas[cite: 3]
-val StatusSuccess = Color(0xFF16A34A)    // Al día[cite: 3]
-val StatusWarning = Color(0xFFD97706)    // Próxima[cite: 3]
-val StatusError = Color(0xFFDC2626)      // Vencida / Destructivo[cite: 3]
-val StatusInfo = Color(0xFF0891B2)       // Mensajes informativos
+val BackgroundLight = Color(0xFFF3F4F6)
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceVariantLight = Color(0xFFECEFF3)
+val OnSurfaceLight = Color(0xFF1A1D23)
+val OnSurfaceVariantLight = Color(0xFF6B7280)
+val OutlineLight = Color(0xFFD1D5DB)
+val PrimaryContainerLight = Color(0xFFFDE8EC)
+
+val BackgroundDark = Color(0xFF10141D)
+val SurfaceDark = Color(0xFF1B2230)
+val SurfaceVariantDark = Color(0xFF252D3C)
+val OnSurfaceDark = Color(0xFFF3F4F6)
+val OnSurfaceVariantDark = Color(0xFFA0AEC0)
+val OutlineDark = Color(0xFF3D4658)
+val PrimaryContainerDark = Color(0xFF4A1520)
+
+val StatusSuccess = Color(0xFF16A34A)
+val StatusWarning = Color(0xFFD97706)
+val StatusError = Color(0xFFDC2626)
+val StatusInfo = Color(0xFF0891B2)

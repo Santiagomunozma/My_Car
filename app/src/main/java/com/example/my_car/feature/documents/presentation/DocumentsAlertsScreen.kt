@@ -42,7 +42,6 @@ import com.example.my_car.ui.components.MiCarroCard
 import com.example.my_car.ui.components.StatusChip
 import com.example.my_car.ui.theme.StatusError
 import com.example.my_car.ui.theme.StatusWarning
-import com.example.my_car.ui.theme.TextSecondary
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,7 +95,7 @@ fun DocumentsAlertsScreen(
                                 state.settings.anticipationDays
                             ),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Slider(
@@ -167,7 +166,7 @@ private fun AlertCard(alert: DocumentAlert, onClick: () -> Unit) {
                 Text(
                     alert.vehiclePlate,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     cause,

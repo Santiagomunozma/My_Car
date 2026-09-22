@@ -17,24 +17,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,11 +42,11 @@ import com.example.my_car.domain.model.FuelType
 import com.example.my_car.domain.model.VehicleType
 import com.example.my_car.feature.vehicle.domain.VehicleError
 import com.example.my_car.feature.vehicle.domain.VehicleField
+import com.example.my_car.ui.components.MiCarroDropdownField
 import com.example.my_car.ui.components.MiCarroTextField
 import com.example.my_car.ui.components.PrimaryButton
 import com.example.my_car.ui.components.SecondaryButton
 import com.example.my_car.ui.theme.StatusError
-import com.example.my_car.ui.theme.TextSecondary
 import java.io.File
 
 fun fuelTypeLabel(type: FuelType): Int = when (type) {
@@ -138,7 +130,7 @@ fun VehicleFormScreen(
                         Icon(
                             imageVector = Icons.Filled.DirectionsCar,
                             contentDescription = null,
-                            tint = TextSecondary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxSize(0.4f)
                         )
                     }
@@ -172,7 +164,7 @@ fun VehicleFormScreen(
                     )
                 }
 
-                EnumDropdown(
+                MiCarroDropdownField(
                     label = stringResource(R.string.field_type),
                     options = VehicleType.entries,
                     selected = state.draft.type,
@@ -242,7 +234,7 @@ fun VehicleFormScreen(
                     errorMessage = state.errors[VehicleField.MILEAGE]?.let { errorText(it) }
                 )
 
-                EnumDropdown(
+                MiCarroDropdownField(
                     label = stringResource(R.string.field_fuel_type),
                     options = listOf<FuelType?>(null) + FuelType.entries,
                     selected = state.draft.fuelType,
@@ -310,45 +302,3 @@ private fun errorText(error: VehicleError): String = stringResource(
         VehicleError.DUPLICATE_PLATE -> R.string.error_plate_duplicate
     }
 )
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun <T> EnumDropdown(
-    label: String,
-    options: List<T>,
-    selected: T,
-    optionLabel: @Composable (T) -> String,
-    onSelected: (T) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        OutlinedTextField(
-            value = optionLabel(selected),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            shape = MaterialTheme.shapes.small,
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(optionLabel(option)) },
-                    onClick = {
-                        onSelected(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}

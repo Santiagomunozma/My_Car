@@ -54,6 +54,7 @@ import com.example.my_car.feature.documents.domain.DocumentWithStatus
 import com.example.my_car.ui.components.DateField
 import com.example.my_car.ui.components.EmptyState
 import com.example.my_car.ui.components.MiCarroCard
+import com.example.my_car.ui.components.MiCarroDropdownField
 import com.example.my_car.ui.components.MiCarroTextField
 import com.example.my_car.ui.components.PrimaryButton
 import com.example.my_car.ui.components.StatusChip
@@ -61,7 +62,6 @@ import com.example.my_car.ui.components.formatUtcMillis
 import com.example.my_car.ui.theme.StatusError
 import com.example.my_car.ui.theme.StatusSuccess
 import com.example.my_car.ui.theme.StatusWarning
-import com.example.my_car.ui.theme.TextSecondary
 
 fun documentTypeLabel(type: DocumentType): Int = when (type) {
     DocumentType.SOAT -> R.string.document_type_soat
@@ -214,7 +214,7 @@ private fun DocumentCard(
                     Text(
                         formatUtcMillis(item.document.expirationDate),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 StatusChip(text = statusText, containerColor = statusColor, icon = statusIcon)
@@ -224,7 +224,7 @@ private fun DocumentCard(
                 Text(
                     it,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
@@ -283,7 +283,6 @@ private fun DocumentFormDialog(
     var issuer by remember { mutableStateOf(editing?.issuer.orEmpty()) }
     var notes by remember { mutableStateOf(editing?.notes.orEmpty()) }
     var alertsEnabled by remember { mutableStateOf(editing?.alertsEnabled ?: true) }
-    var typeExpanded by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -301,29 +300,13 @@ private fun DocumentFormDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box {
-                    androidx.compose.material3.OutlinedButton(
-                        onClick = { typeExpanded = true },
-                        shape = MaterialTheme.shapes.small,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(documentTypeLabel(type)))
-                    }
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = typeExpanded,
-                        onDismissRequest = { typeExpanded = false }
-                    ) {
-                        DocumentType.entries.forEach { option ->
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(stringResource(documentTypeLabel(option))) },
-                                onClick = {
-                                    type = option
-                                    typeExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
+                MiCarroDropdownField(
+                    label = stringResource(R.string.document_type),
+                    options = DocumentType.entries,
+                    selected = type,
+                    optionLabel = { stringResource(documentTypeLabel(it)) },
+                    onSelected = { type = it }
+                )
 
                 MiCarroTextField(
                     value = name,

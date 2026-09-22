@@ -1,5 +1,6 @@
 package com.example.my_car.domain.repository
 
+import com.example.my_car.domain.model.CategoryExpenseDto
 import com.example.my_car.domain.model.HistoryFilter
 import com.example.my_car.domain.model.MaintenanceHistoryItem
 import com.example.my_car.domain.model.MaintenancePlan
@@ -16,4 +17,5 @@ interface MaintenanceRepository {
     suspend fun deletePlanIfWithoutHistory(planId: String): Boolean
     suspend fun registerService(service: MaintenanceService, parts: List<Part>)
     fun observeServices(vehicleId: String): Flow<List<MaintenanceService>>
+    fun observeExpensesByCategory(vehicleId: String, startDateTimestamp: Long): Flow<List<CategoryExpenseDto>>
 }

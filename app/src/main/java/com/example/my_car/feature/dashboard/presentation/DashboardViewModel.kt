@@ -2,32 +2,36 @@ package com.example.my_car.feature.dashboard.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.my_car.domain.model.DashboardSummary
+import com.example.my_car.domain.model.Vehicle
+import com.example.my_car.domain.repository.VehicleRepository
 import com.example.my_car.domain.usecase.GetDashboardSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    getDashboardSummaryUseCase: GetDashboardSummaryUseCase
+    private val getDashboardSummaryUseCase: GetDashboardSummaryUseCase,
+    private val vehicleRepository: VehicleRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<DashboardUiState> = getDashboardSummaryUseCase()
-        .map { summary ->
-            DashboardUiState(
-                isLoading = false,
-                mainVehicleName = summary.mainVehicle?.let { "${it.brand} ${it.line} (${it.plate})" },
-                upcomingMaintenances = summary.upcomingMaintenances,
-                recentExpensesTotal = summary.recentExpensesTotal,
-                activeAlerts = summary.activeAlertsCount
-            )
-        }
+    private val _selectedVehicleId = MutableStateFlow<String?>(null)
+    val selectedVehicleId: StateFlow<String?> = _selectedVehicleId.asStateFlow()
+
+    // El stream de datos del resumen responde reactivamente a cualquier cambio en _selectedVehicleId
+    val summaryState: StateFlow<DashboardSummary?> = getDashboardSummaryUseCase(_selectedVehicleId)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = DashboardUiState(isLoading = true)
+            initialValue = null
         )
+
+    fun onVehicleSelected(vehicleId: String) {
+        _selectedVehicleId.value = vehicleId
+    }
 }

@@ -1,5 +1,9 @@
 package com.example.my_car.feature.maintenance.presentation
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.my_car.domain.model.MaintenancePlan
@@ -8,10 +12,19 @@ import com.example.my_car.domain.model.Part
 import com.example.my_car.domain.model.Vehicle
 import com.example.my_car.domain.repository.MileageRepository
 import com.example.my_car.domain.repository.VehicleRepository
+import com.example.my_car.domain.usecase.ExportHistoryToCsvUseCase
 import com.example.my_car.feature.maintenance.domain.MaintenanceRules
 import com.example.my_car.feature.maintenance.domain.MaintenanceUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,14 +32,49 @@ import javax.inject.Inject
 class MaintenanceViewModel @Inject constructor(
     private val vehicleRepository: VehicleRepository,
     private val mileageRepository: MileageRepository,
-    private val maintenanceUseCases: MaintenanceUseCases
+    private val maintenanceUseCases: MaintenanceUseCases,
+    private val exportHistoryToCsvUseCase: ExportHistoryToCsvUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MaintenanceUiState())
     val uiState: StateFlow<MaintenanceUiState> = _uiState.asStateFlow()
 
+    private var plansJob: Job? = null
+
     init {
         loadVehicles()
+    }
+
+    fun exportHistory(context: Context, vehicleId: String) {
+        viewModelScope.launch {
+            val fileName = "historial_mantenimiento_${System.currentTimeMillis()}.csv"
+            val exportDir = java.io.File(context.cacheDir, "exports").apply { if (!exists()) mkdirs() }
+            val file = java.io.File(exportDir, fileName)
+            
+            runCatching {
+                java.io.FileOutputStream(file).use { outputStream ->
+                    exportHistoryToCsvUseCase(outputStream, vehicleId).getOrThrow()
+                }
+            }.onSuccess {
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file
+                )
+                shareFile(context, uri)
+            }.onFailure {
+                Toast.makeText(context, "Error al exportar: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun shareFile(context: Context, uri: Uri) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Compartir Historial CSV"))
     }
 
     private fun loadVehicles() {
@@ -42,22 +90,23 @@ class MaintenanceViewModel @Inject constructor(
 
     fun selectVehicle(vehicle: Vehicle) {
         _uiState.update { it.copy(selectedVehicle = vehicle) }
-        observePlans(vehicle.id)
+        observePlans(vehicle.plate)
     }
 
     private fun observePlans(vehicleId: String) {
-        combine(
+        plansJob?.cancel()
+        plansJob = combine(
             maintenanceUseCases.observePlans(vehicleId),
-            maintenanceUseCases.observeServices(vehicleId),
-            mileageRepository.observeMileage(vehicleId)
+            maintenanceUseCases.observeServices(vehicleId).onStart { emit(emptyList()) },
+            mileageRepository.observeMileage(vehicleId).onStart { emit(emptyList()) }
         ) { plans, services, mileageRecords ->
             val currentMileage = mileageRecords.firstOrNull()?.reading ?: _uiState.value.selectedVehicle?.currentMileage ?: 0
             val currentTime = System.currentTimeMillis()
-            
+
             plans.map { plan ->
                 val planServices = services.filter { it.planId == plan.id }.sortedByDescending { it.date }
                 val lastService = planServices.firstOrNull()
-                
+
                 val nextDeadlineDate = lastService?.let {
                     MaintenanceRules.calculateNextRecurrence(it.date, it.mileage, plan.intervalMonths, plan.intervalMileage).first
                 }
@@ -99,9 +148,8 @@ class MaintenanceViewModel @Inject constructor(
             maintenanceUseCases.registerService(service, parts)
         }
     }
-    
+
     fun updateAlertSettings(marginDays: Int, marginKm: Int) {
         _uiState.update { it.copy(alertMarginDays = marginDays, alertMarginKm = marginKm) }
-        // Re-trigger calculation if needed or wait for next emission
     }
 }

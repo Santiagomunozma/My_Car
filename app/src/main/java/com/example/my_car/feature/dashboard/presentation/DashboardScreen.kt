@@ -32,7 +32,6 @@ import com.example.my_car.ui.components.MiCarroCard
 import com.example.my_car.ui.components.PrimaryButton
 import com.example.my_car.ui.components.StatusChip
 import com.example.my_car.ui.theme.StatusWarning
-import com.example.my_car.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +40,9 @@ fun DashboardScreen(
     onOpenAlerts: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val summary by viewModel.summaryState.collectAsStateWithLifecycle()
+    val mainVehicleName = summary?.selectedVehicle?.let { "${it.brand} ${it.model} (${it.plate})" }
+    val activeAlerts = summary?.activeAlertsCount ?: 0
 
     Scaffold(
         topBar = {
@@ -72,18 +73,17 @@ fun DashboardScreen(
                         Text(
                             stringResource(R.string.dashboard_main_vehicle),
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            state.mainVehicleName
-                                ?: stringResource(R.string.dashboard_no_vehicle),
+                            mainVehicleName ?: stringResource(R.string.dashboard_no_vehicle),
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
             }
 
-            if (state.mainVehicleName == null) {
+            if (mainVehicleName == null) {
                 PrimaryButton(
                     text = stringResource(R.string.dashboard_add_first),
                     onClick = onAddVehicle
@@ -102,13 +102,13 @@ fun DashboardScreen(
                         tint = StatusWarning
                     )
                     Text(
-                        stringResource(R.string.dashboard_alerts_count, state.activeAlerts),
+                        stringResource(R.string.dashboard_alerts_count, activeAlerts),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    if (state.activeAlerts > 0) {
+                    if (activeAlerts > 0) {
                         StatusChip(
-                            text = state.activeAlerts.toString(),
+                            text = activeAlerts.toString(),
                             containerColor = StatusWarning,
                             icon = Icons.Filled.Warning
                         )

@@ -1,7 +1,9 @@
 package com.example.my_car.feature.maintenance.data
 
 import androidx.room.*
+import com.example.my_car.domain.model.CategoryExpenseDto
 import kotlinx.coroutines.flow.Flow
+
 
 @Dao
 interface MaintenanceServiceDao {
@@ -10,6 +12,20 @@ interface MaintenanceServiceDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(service: MaintenanceServiceEntity)
+
+    // Consulta agregada para el resumen de gastos por categoría (RF-36)
+    @Query("""
+        SELECT category, SUM(totalCost) AS totalAmount 
+        FROM maintenance_services 
+        WHERE vehicleId = :vehicleId 
+          AND date >= :startDateTimestamp 
+        GROUP BY category 
+        ORDER BY totalAmount DESC
+    """)
+    fun observeExpensesByCategory(
+        vehicleId: String,
+        startDateTimestamp: Long
+    ): Flow<List<CategoryExpenseDto>>
 
     @Query("""
         SELECT * FROM maintenance_services 

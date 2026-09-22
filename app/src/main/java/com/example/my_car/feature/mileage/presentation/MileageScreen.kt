@@ -38,7 +38,6 @@ import com.example.my_car.ui.components.MiCarroTextField
 import com.example.my_car.ui.components.PrimaryButton
 import com.example.my_car.ui.components.formatUtcMillis
 import com.example.my_car.ui.theme.StatusError
-import com.example.my_car.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,13 +155,13 @@ fun MileageScreen(
                             Text(
                                 formatUtcMillis(reading.date),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             reading.note?.let {
                                 Text(
                                     it,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
                             }

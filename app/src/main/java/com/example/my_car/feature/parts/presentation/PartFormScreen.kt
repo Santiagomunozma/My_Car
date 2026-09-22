@@ -1,20 +1,35 @@
 package com.example.my_car.feature.parts.presentation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.my_car.domain.model.Part
-import com.example.my_car.ui.theme.*
+import com.example.my_car.ui.components.MiCarroCard
+import com.example.my_car.ui.components.MiCarroTextField
+import com.example.my_car.ui.theme.StatusError
 
 @Composable
 fun PartFormScreen(
@@ -29,58 +44,56 @@ fun PartFormScreen(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = "Repuestos y Materiales",
-            style = MaterialTheme.typography.titleMedium,
-            color = TextPrimary
+            style = MaterialTheme.typography.titleMedium
         )
 
-        // Lista de repuestos agregados
         parts.forEach { part ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(BorderGray.copy(alpha = 0.3f))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(part.name, style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        "${part.quantity} x $${String.format("%.2f", part.cost)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
-                    )
-                }
-                IconButton(onClick = { onRemovePart(part) }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = StatusError)
+            MiCarroCard {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(part.name, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "${part.quantity} x $${String.format("%.2f", part.cost)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = { onRemovePart(part) }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = StatusError)
+                    }
                 }
             }
         }
 
-        // Formulario para agregar repuesto
-        Card(
-            colors = CardDefaults.cardColors(containerColor = BackgroundLight),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        MiCarroCard {
             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
+                MiCarroTextField(
                     value = partName,
                     onValueChange = { partName = it },
-                    label = { Text("Nombre del repuesto") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = "Nombre del repuesto",
+                    placeholder = "Filtro de aceite"
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
+                    MiCarroTextField(
                         value = quantity,
                         onValueChange = { quantity = it },
-                        label = { Text("Cant.") },
+                        label = "Cant.",
+                        placeholder = "1",
+                        keyboardType = KeyboardType.Number,
                         modifier = Modifier.weight(1f)
                     )
-                    OutlinedTextField(
+                    MiCarroTextField(
                         value = cost,
                         onValueChange = { cost = it },
-                        label = { Text("Precio Unit.") },
+                        label = "Precio Unit.",
+                        placeholder = "0.00",
+                        keyboardType = KeyboardType.Decimal,
                         modifier = Modifier.weight(2f)
                     )
                 }
@@ -89,7 +102,7 @@ fun PartFormScreen(
                         if (partName.isNotBlank() && quantity.toIntOrNull() != null && cost.toDoubleOrNull() != null) {
                             onAddPart(
                                 Part(
-                                    serviceId = "", // Se asignará al guardar el servicio
+                                    serviceId = "",
                                     name = partName,
                                     quantity = quantity.toInt(),
                                     cost = cost.toDouble()
@@ -101,7 +114,11 @@ fun PartFormScreen(
                         }
                     },
                     modifier = Modifier.align(Alignment.End),
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusInfo)
+                    shape = MaterialTheme.shapes.small,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    )
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))

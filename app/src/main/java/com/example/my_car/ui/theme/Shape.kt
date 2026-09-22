@@ -5,7 +5,9 @@ import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
 val AppShapes = Shapes(
-    small = RoundedCornerShape(12.dp),  // Campos de texto y botones[cite: 3]
-    medium = RoundedCornerShape(16.dp), // Cards de vehículos y servicios[cite: 3]
-    large = RoundedCornerShape(20.dp)   // Chips de estado y diálogos[cite: 3]
+    extraSmall = RoundedCornerShape(16.dp),
+    small = RoundedCornerShape(24.dp),
+    medium = RoundedCornerShape(28.dp),
+    large = RoundedCornerShape(32.dp),
+    extraLarge = RoundedCornerShape(36.dp)
 )
