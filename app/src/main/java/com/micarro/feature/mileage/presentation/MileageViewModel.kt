@@ -29,7 +29,7 @@ data class MileageUiState(
     val dateMillis: Long = MileageRules.dateToMillis(LocalDate.now()),
     val noteInput: String = "",
     val errors: Set<MileageError> = emptySet(),
-    val pendingConfirmation: Int? = null,
+    val pendingConfirmation: Long? = null,
     val isSaving: Boolean = false,
     val saveFailed: Boolean = false,
     val isLoading: Boolean = true
@@ -53,7 +53,7 @@ class MileageViewModel @Inject constructor(
         val dateMillis: Long = MileageRules.dateToMillis(LocalDate.now()),
         val noteInput: String = "",
         val errors: Set<MileageError> = emptySet(),
-        val pendingConfirmation: Int? = null,
+        val pendingConfirmation: Long? = null,
         val isSaving: Boolean = false,
         val saveFailed: Boolean = false
     )

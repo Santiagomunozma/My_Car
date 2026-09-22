@@ -15,7 +15,7 @@ data class MileageEntity(
     @PrimaryKey val id: Long,
     @ColumnInfo(name = "vehicle_id") val vehicleId: Long,
     val date: Long,
-    val reading: Int,
+    val reading: Long,
     val note: String?
 )
 

@@ -146,8 +146,8 @@ class FakeVehiclePhotoStore : VehiclePhotoStore {
 }
 
 class RecordingMileageAlertNotifier : MileageAlertNotifier {
-    val calls = mutableListOf<Pair<String, Int>>()
-    override suspend fun onMileageUpdated(vehicleId: String, odometer: Int) {
+    val calls = mutableListOf<Pair<String, Long>>()
+    override suspend fun onMileageUpdated(vehicleId: String, odometer: Long) {
         calls += vehicleId to odometer
     }
 }

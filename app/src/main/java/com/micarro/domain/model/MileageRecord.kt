@@ -6,6 +6,6 @@ data class MileageRecord(
     val id: Long = 0L,
     val vehicleId: Long,
     val date: LocalDate,
-    val reading: Int,
+    val reading: Long,
     val note: String? = null
 )

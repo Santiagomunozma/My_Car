@@ -181,7 +181,7 @@ fun MileageScreen(
                 Text(
                     stringResource(
                         R.string.mileage_lower_warning_message,
-                        state.odometerInput.toIntOrNull() ?: 0,
+                        state.odometerInput.toLongOrNull() ?: 0L,
                         previous
                     )
                 )

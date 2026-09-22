@@ -93,7 +93,7 @@ Revisión contra el archivo `# MiCarro — Sistema móvil para el control del ma
 - [x] Renombrar `Vehicle.isMainVehicle` a `Vehicle.isPrimary`.
 - [x] Cambiar `MileageRecord` (`id`, `vehicleId`) de `String` a `Long`.
 - [x] Cambiar `MileageRecord.date` de `Long` (epoch millis) a `LocalDate`.
-- [ ] Cambiar `MileageRecord.reading` de `Int` a `Long`.
+- [x] Cambiar `MileageRecord.reading` de `Int` a `Long`.
 - [ ] Renombrar `MileageRecord` a `MileageReading` (nombre de la guía).
 - [ ] Cambiar `VehicleDocument.id` y `vehicleId` de `String` a `Long`.
 - [ ] Cambiar `VehicleDocument.expirationDate` de `Long` a `LocalDate`.

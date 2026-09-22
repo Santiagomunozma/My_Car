@@ -9,9 +9,9 @@ import javax.inject.Inject
  * módulo de alertas; mientras tanto Hilt enlaza [NoOpMileageAlertNotifier].
  */
 interface MileageAlertNotifier {
-    suspend fun onMileageUpdated(vehicleId: String, odometer: Int)
+    suspend fun onMileageUpdated(vehicleId: String, odometer: Long)
 }
 
 class NoOpMileageAlertNotifier @Inject constructor() : MileageAlertNotifier {
-    override suspend fun onMileageUpdated(vehicleId: String, odometer: Int) = Unit
+    override suspend fun onMileageUpdated(vehicleId: String, odometer: Long) = Unit
 }
