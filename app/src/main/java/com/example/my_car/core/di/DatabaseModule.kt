@@ -55,4 +55,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun providePartDao(database: AppDatabase): PartDao = database.partDao()
+
+    @Provides
+    @Singleton
+    fun provideGson(): com.google.gson.Gson = com.google.gson.Gson()
 }

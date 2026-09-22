@@ -6,6 +6,7 @@ import com.example.my_car.feature.parts.data.PartDao
 import com.example.my_car.feature.parts.data.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.example.my_car.domain.model.CategoryExpenseDto
 import javax.inject.Inject
 
 class MaintenanceRepositoryImpl @Inject constructor(
@@ -73,4 +74,11 @@ class MaintenanceRepositoryImpl @Inject constructor(
             entities.map { it.toDomain() }
         }
     }
+    override fun observeExpensesByCategory(
+        vehicleId: String,
+        startDateTimestamp: Long
+    ): Flow<List<CategoryExpenseDto>> {
+        // Aquí llamamos al DAO inyectado de la instancia de la clase, no estáticamente
+        return serviceDao.observeExpensesByCategory(vehicleId, startDateTimestamp)
+}
 }

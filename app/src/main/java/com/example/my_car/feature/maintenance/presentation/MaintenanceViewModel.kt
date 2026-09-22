@@ -47,11 +47,23 @@ class MaintenanceViewModel @Inject constructor(
 
     fun exportHistory(context: Context, vehicleId: String) {
         viewModelScope.launch {
-            val uri = exportHistoryToCsvUseCase.execute(context, vehicleId)
-            if (uri != null) {
+            val fileName = "historial_mantenimiento_${System.currentTimeMillis()}.csv"
+            val exportDir = java.io.File(context.cacheDir, "exports").apply { if (!exists()) mkdirs() }
+            val file = java.io.File(exportDir, fileName)
+            
+            runCatching {
+                java.io.FileOutputStream(file).use { outputStream ->
+                    exportHistoryToCsvUseCase(outputStream, vehicleId).getOrThrow()
+                }
+            }.onSuccess {
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    file
+                )
                 shareFile(context, uri)
-            } else {
-                Toast.makeText(context, "No hay planes para exportar", Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(context, "Error al exportar: ${it.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }

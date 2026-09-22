@@ -60,4 +60,9 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindPartRepository(impl: PartRepositoryImpl): PartRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindBackupRepository(
+        impl: com.example.my_car.feature.backup.data.repository.BackupRepositoryImpl
+    ): com.example.my_car.feature.backup.domain.repository.BackupRepository
 }

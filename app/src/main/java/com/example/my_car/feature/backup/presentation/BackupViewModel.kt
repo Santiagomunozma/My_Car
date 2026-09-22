@@ -1,11 +1,12 @@
 package com.example.my_car.feature.backup.presentation
 
-import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.my_car.feature.backup.domain.usecase.BackupUseCase
+import com.example.my_car.domain.usecase.BackupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,7 @@ data class BackupUiState(
 @HiltViewModel
 class BackupViewModel @Inject constructor(
     private val backupUseCase: BackupUseCase,
-    private val contentResolver: ContentResolver
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BackupUiState())
@@ -32,7 +33,7 @@ class BackupViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
 
-            val outputStream = contentResolver.openOutputStream(uri)
+            val outputStream = context.contentResolver.openOutputStream(uri)
             if (outputStream == null) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = "No se pudo abrir el archivo de destino") }
                 return@launch
@@ -52,7 +53,7 @@ class BackupViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
 
-            val inputStream = contentResolver.openInputStream(uri)
+            val inputStream = context.contentResolver.openInputStream(uri)
             if (inputStream == null) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = "No se pudo abrir el archivo seleccionado") }
                 return@launch

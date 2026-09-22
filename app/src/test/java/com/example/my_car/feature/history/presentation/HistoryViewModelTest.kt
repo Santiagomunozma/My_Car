@@ -56,6 +56,11 @@ class FakeMaintenanceRepository : MaintenanceRepository {
     override fun observeServices(vehicleId: String): Flow<List<MaintenanceService>> {
         return flowOf(emptyList())
     }
+
+    override fun observeExpensesByCategory(
+        vehicleId: String,
+        startDateTimestamp: Long
+    ): Flow<List<com.example.my_car.domain.model.CategoryExpenseDto>> = flowOf(emptyList())
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -69,7 +74,7 @@ class HistoryViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakeMaintenanceRepository()
-        viewModel = HistoryViewModel(fakeRepository)
+        viewModel = HistoryViewModel(fakeRepository, com.example.my_car.domain.usecase.ExportHistoryToCsvUseCase(fakeRepository))
     }
 
     @After
@@ -104,7 +109,7 @@ class HistoryViewModelTest {
         viewModel.clearFilters()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertNull(viewModel.filterState.value.query)
+        assertEquals("", viewModel.filterState.value.query)
         assertNull(viewModel.filterState.value.category)
     }
 }
