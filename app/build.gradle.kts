@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.my_car"
+    namespace = "com.micarro"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.my_car"
+        applicationId = "com.micarro"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

@@ -150,7 +150,7 @@ Si la caché de Gradle en el perfil de usuario da problemas, usa un directorio d
 ./gradlew installDebug
 ```
 
-El `applicationId` es `com.example.my_car` y la versión actual es **1.0** (`versionCode` 1).
+El `applicationId` es `com.micarro` y la versión actual es **1.0** (`versionCode` 1).
 
 ---
 

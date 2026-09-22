@@ -78,3 +78,33 @@ Commit: `eaa88ea` en rama `Marin` (basada en `develop` @ `ff334f9`).
 - Notificaciones push del sistema para vencimientos documentales — módulo de alertas.
 - Pruebas de emulador/UI (`connectedAndroidTest`) y de release.
 - Warnings restantes (deprecaciones en código del equipo: `ArrowBack`, `Divider`, `ScrollableTabRow`).
+
+---
+
+## 2026-09-22 — Pendientes de integración vs guía Compañero 1c
+
+Revisión contra el archivo `# MiCarro — Sistema móvil para el control del mantenimiento vehicular`.
+
+### Diferencias pendientes (por integrar)
+
+- [x] Renombrar paquete `com.example.my_car` a `com.micarro` y `applicationId` a `com.micarro`.
+- [ ] Cambiar `Vehicle.id` de `String` a `Long` (guía: `Long`).
+- [ ] Cambiar `Vehicle.currentMileage` de `Int` a `Long`.
+- [ ] Renombrar `Vehicle.isMainVehicle` a `Vehicle.isPrimary`.
+- [ ] Cambiar `MileageRecord` (`id`, `vehicleId`) de `String` a `Long`.
+- [ ] Cambiar `MileageRecord.date` de `Long` (epoch millis) a `LocalDate`.
+- [ ] Cambiar `MileageRecord.reading` de `Int` a `Long`.
+- [ ] Renombrar `MileageRecord` a `MileageReading` (nombre de la guía).
+- [ ] Cambiar `VehicleDocument.id` y `vehicleId` de `String` a `Long`.
+- [ ] Cambiar `VehicleDocument.expirationDate` de `Long` a `LocalDate`.
+- [ ] Alinear versiones del stack: Kotlin 2.0.x, Room 2.6.1, KSP compatible (actualmente Kotlin 2.2.10, Room 2.7.2).
+- [ ] Borrar fakes muertos: `FakeVehicleRepositoryImpl`, `FakeMileageRepositoryImpl`, `FakeMaintenanceRepositoryImpl`, `FakePartRepositoryImpl` (eliminados del código base).
+- [ ] Verificar/conectar `MileageAlertNotifier` a la implementación real del módulo de alertas (actualmente `NoOp`).
+- [ ] Validar con el orquestador los cambios hechos en archivos centrales: `AppDatabase`, `MainActivity`, `NavGraph`, `RepositoryModule`, `DatabaseModule`.
+
+### Funcionalidad ya cubierta (sin pendientes)
+
+- RF-01 a RF-05 (vehículos) implementados.
+- RF-06 a RF-09 (kilometraje) implementados.
+- RF-32 a RF-33 (documentos y alertas documentales) implementados.
+- Tests mínimos de la guía cubiertos por `VehicleUseCasesTest`, `MileageUseCasesTest`, `DocumentUseCasesTest` y `VehicleFormViewModelTest`.
