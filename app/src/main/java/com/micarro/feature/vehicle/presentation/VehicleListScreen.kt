@@ -234,7 +234,7 @@ private fun VehicleCard(
             modifier = Modifier.padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (vehicle.isMainVehicle) {
+            if (vehicle.isPrimary) {
                 StatusChip(
                     text = stringResource(R.string.vehicle_main_badge),
                     containerColor = StatusSuccess,
@@ -263,7 +263,7 @@ private fun VehicleCard(
                 Text(stringResource(R.string.vehicle_documents_button))
             }
             if (!vehicle.isArchived) {
-                if (!vehicle.isMainVehicle) {
+                if (!vehicle.isPrimary) {
                     TextButton(onClick = onSetMain) {
                         Text(stringResource(R.string.vehicle_set_main))
                     }

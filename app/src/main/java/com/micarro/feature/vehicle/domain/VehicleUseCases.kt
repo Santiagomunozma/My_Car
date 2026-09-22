@@ -78,7 +78,7 @@ class SaveVehicleUseCase @Inject constructor(
                 )
             } else {
                 // Edición segura: se recarga el estado actual del repositorio y se
-                // conservan currentMileage, isArchived e isMainVehicle.
+                // conservan currentMileage, isArchived e isPrimary.
                 val current = repository.getVehicleById(draft.id)
                     ?: return SaveVehicleResult.Failure(IllegalStateException("vehicle_gone"))
                 if (current.photoUri != draft.photoUri && current.photoUri != null) {

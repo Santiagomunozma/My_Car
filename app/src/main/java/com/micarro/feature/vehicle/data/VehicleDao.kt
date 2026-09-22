@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VehicleDao {
-    @Query("SELECT * FROM vehicles WHERE is_archived = 0 ORDER BY is_main_vehicle DESC, brand ASC")
+    @Query("SELECT * FROM vehicles WHERE is_archived = 0 ORDER BY is_primary DESC, brand ASC")
     fun observeActive(): Flow<List<VehicleEntity>>
 
-    @Query("SELECT * FROM vehicles ORDER BY is_main_vehicle DESC, brand ASC")
+    @Query("SELECT * FROM vehicles ORDER BY is_primary DESC, brand ASC")
     fun observeAll(): Flow<List<VehicleEntity>>
 
     @Query("SELECT * FROM vehicles WHERE id = :id")
@@ -33,10 +33,10 @@ interface VehicleDao {
     @Query("SELECT COUNT(*) FROM vehicles WHERE plate = :plate AND id != :excludingId")
     suspend fun countPlate(plate: String, excludingId: Long): Int
 
-    @Query("UPDATE vehicles SET is_main_vehicle = 0 WHERE is_main_vehicle = 1")
+    @Query("UPDATE vehicles SET is_primary = 0 WHERE is_primary = 1")
     suspend fun clearMainVehicle()
 
-    @Query("UPDATE vehicles SET is_main_vehicle = 1 WHERE id = :id")
+    @Query("UPDATE vehicles SET is_primary = 1 WHERE id = :id")
     suspend fun setMain(id: Long)
 
     @Transaction

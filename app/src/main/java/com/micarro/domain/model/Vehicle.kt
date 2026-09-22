@@ -9,7 +9,7 @@ data class Vehicle(
     val year: Int,
     val currentMileage: Long,
     val isArchived: Boolean = false,
-    val isMainVehicle: Boolean = false,
+    val isPrimary: Boolean = false,
     val model: String = "",
     val color: String? = null,
     val vin: String? = null,

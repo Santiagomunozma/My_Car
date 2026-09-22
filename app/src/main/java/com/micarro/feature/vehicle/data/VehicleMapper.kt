@@ -19,7 +19,7 @@ fun VehicleEntity.toDomain() = Vehicle(
     engineCc = engineCc,
     photoUri = photoUri,
     isArchived = isArchived,
-    isMainVehicle = isMainVehicle
+    isPrimary = isPrimary
 )
 
 fun Vehicle.toEntity() = VehicleEntity(
@@ -37,5 +37,5 @@ fun Vehicle.toEntity() = VehicleEntity(
     engineCc = engineCc,
     photoUri = photoUri,
     isArchived = isArchived,
-    isMainVehicle = isMainVehicle
+    isPrimary = isPrimary
 )

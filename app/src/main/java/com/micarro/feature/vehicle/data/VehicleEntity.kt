@@ -24,5 +24,5 @@ data class VehicleEntity(
     @ColumnInfo(name = "engine_cc") val engineCc: Int?,
     @ColumnInfo(name = "photo_uri") val photoUri: String?,
     @ColumnInfo(name = "is_archived") val isArchived: Boolean,
-    @ColumnInfo(name = "is_main_vehicle") val isMainVehicle: Boolean
+    @ColumnInfo(name = "is_primary") val isPrimary: Boolean
 )

@@ -48,7 +48,7 @@ class InMemoryVehicleRepository : VehicleRepository {
 
     override suspend fun setMainVehicle(id: Long) {
         vehicles.update { list ->
-            list.map { it.copy(isMainVehicle = it.id == id) }
+            list.map { it.copy(isPrimary = it.id == id) }
         }
     }
 

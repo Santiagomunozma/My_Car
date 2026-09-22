@@ -125,7 +125,7 @@ class VehicleUseCasesTest {
         val vehicle = Vehicle(
             plate = "ABC123", type = VehicleType.CAR, brand = "Mazda", line = "3",
             model = "Touring", year = 2020, currentMileage = 80000L,
-            isArchived = true, isMainVehicle = true
+            isArchived = true, isPrimary = true
         )
         repository.seed(vehicle)
         val result = saveVehicle(
@@ -136,7 +136,7 @@ class VehicleUseCasesTest {
         assertEquals("Mazda Editada", updated.brand)
         assertEquals(80000L, updated.currentMileage)
         assertTrue(updated.isArchived)
-        assertTrue(updated.isMainVehicle)
+        assertTrue(updated.isPrimary)
     }
 
     @Test
@@ -172,12 +172,12 @@ class VehicleUseCasesTest {
         val setMain = SetMainVehicleUseCase(repository)
 
         setMain(a.id)
-        assertEquals(a.id, repository.observeAllVehicles().first().single { it.isMainVehicle }.id)
+        assertEquals(a.id, repository.observeAllVehicles().first().single { it.isPrimary }.id)
 
         setMain(b.id)
         val all = repository.observeAllVehicles().first()
-        assertEquals(b.id, all.single { it.isMainVehicle }.id)
-        assertEquals(1, all.count { it.isMainVehicle })
+        assertEquals(b.id, all.single { it.isPrimary }.id)
+        assertEquals(1, all.count { it.isPrimary })
     }
 
     @Test
