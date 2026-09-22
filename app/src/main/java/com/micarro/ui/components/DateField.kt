@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.micarro.R
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -34,6 +35,8 @@ private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/
 
 fun formatUtcMillis(millis: Long): String =
     Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().format(DATE_FORMATTER)
+
+fun formatDate(date: LocalDate): String = date.format(DATE_FORMATTER)
 
 /**
  * Campo de fecha accesible: botón real que abre el DatePickerDialog de

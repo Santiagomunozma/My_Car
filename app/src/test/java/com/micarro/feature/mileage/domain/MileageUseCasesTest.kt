@@ -91,7 +91,7 @@ class MileageUseCasesTest {
 
     @Test
     fun `lectura con fecha antigua no pisa el kilometraje actual`() = runTest {
-        mileageRepo.addMileage(MileageRecord(vehicleId = 1L, date = todayMillis, reading = 60000))
+        mileageRepo.addMileage(MileageRecord(vehicleId = 1L, date = LocalDate.now(), reading = 60000))
         vehicleRepo.updateCurrentMileage(1L, 60000L)
         val oldDate = MileageRules.dateToMillis(LocalDate.now().minusDays(10))
         val result = addReading(1L, "61000", oldDate, null, false)
@@ -102,7 +102,7 @@ class MileageUseCasesTest {
 
     @Test
     fun `notifier recibe la ultima lectura cronologica`() = runTest {
-        mileageRepo.addMileage(MileageRecord(vehicleId = 1L, date = todayMillis, reading = 60000))
+        mileageRepo.addMileage(MileageRecord(vehicleId = 1L, date = LocalDate.now(), reading = 60000))
         vehicleRepo.updateCurrentMileage(1L, 60000L)
         val oldDate = MileageRules.dateToMillis(LocalDate.now().minusDays(10))
         addReading(1L, "61000", oldDate, null, false)

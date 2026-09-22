@@ -36,7 +36,7 @@ import com.micarro.ui.components.EmptyState
 import com.micarro.ui.components.MiCarroCard
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.components.PrimaryButton
-import com.micarro.ui.components.formatUtcMillis
+import com.micarro.ui.components.formatDate
 import com.micarro.ui.theme.StatusError
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,7 +153,7 @@ fun MileageScreen(
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Text(
-                                formatUtcMillis(reading.date),
+                                formatDate(reading.date),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

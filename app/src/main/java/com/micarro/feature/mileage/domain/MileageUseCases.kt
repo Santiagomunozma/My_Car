@@ -80,7 +80,7 @@ class AddMileageReadingUseCase @Inject constructor(
                 MileageRecord(
                     id = System.currentTimeMillis(),
                     vehicleId = vehicleId,
-                    date = dateMillis,
+                    date = MileageRules.millisToDate(dateMillis),
                     reading = reading,
                     note = note?.trim()?.ifEmpty { null }
                 )
