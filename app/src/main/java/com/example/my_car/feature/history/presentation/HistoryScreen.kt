@@ -36,15 +36,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.my_car.domain.model.MaintenanceHistoryItem
+import com.example.my_car.feature.maintenance.presentation.ExpensesViewModel
+import com.example.my_car.feature.maintenance.presentation.components.ExpensesSummaryCard
 import com.example.my_car.ui.components.MiCarroCard
 import com.example.my_car.ui.components.MiCarroTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    viewModel: HistoryViewModel = hiltViewModel()
+    viewModel: HistoryViewModel = hiltViewModel(),
+    expensesViewModel: ExpensesViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val expensesState by expensesViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -90,56 +94,75 @@ fun HistoryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Buscador por texto
-            MiCarroTextField(
-                value = state.filter.query ?: "",
-                onValueChange = { viewModel.onQueryChanged(it) },
-                label = "Buscar",
-                placeholder = "Servicio o taller...",
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null
-                    )
-                }
-            )
+            // Sección superior: Resumen visual de gastos agregados (RF-36)
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                ExpensesSummaryCard(
+                    summary = expensesState.summary,
+                    selectedPeriod = expensesState.selectedPeriod,
+                    onPeriodSelected = { period ->
+                        expensesViewModel.setPeriod(period)
+                    }
+                )
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Buscador por texto
+            item {
+                MiCarroTextField(
+                    value = state.filter.query ?: "",
+                    onValueChange = { viewModel.onQueryChanged(it) },
+                    label = "Buscar",
+                    placeholder = "Servicio o taller...",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
 
             // Chips interactivos de categoría
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(categories) { category ->
-                    val isSelected = state.filter.category == category
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { viewModel.onCategorySelected(category) },
-                        label = { Text(category) }
-                    )
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(categories) { category ->
+                        val isSelected = state.filter.category == category
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { viewModel.onCategorySelected(category) },
+                            label = { Text(category) }
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Lista detallada de mantenimientos o estado vacío
             if (state.items.isEmpty()) {
-                Text(
-                    text = "No hay registros en el historial.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(state.items, key = { it.id }) { item ->
-                        HistoryCard(item)
-                    }
+                item {
+                    Text(
+                        text = "No hay registros en el historial.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
                 }
+            } else {
+                items(state.items, key = { it.id }) { item ->
+                    HistoryCard(item)
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
