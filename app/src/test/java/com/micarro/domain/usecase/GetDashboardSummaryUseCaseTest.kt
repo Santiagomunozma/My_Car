@@ -1,6 +1,6 @@
 package com.micarro.domain.usecase
 
-import com.micarro.data.repository.FakeVehicleRepositoryImpl
+import com.micarro.fakes.InMemoryVehicleRepository
 import com.micarro.domain.model.HistoryFilter
 import com.micarro.domain.model.MaintenanceHistoryItem
 import com.micarro.domain.model.MaintenancePlan
@@ -30,7 +30,7 @@ class GetDashboardSummaryUseCaseTest {
 
     @Test
     fun `when no vehicles exist summary returns null main vehicle`() = runTest {
-        val fakeRepo = FakeVehicleRepositoryImpl()
+        val fakeRepo = InMemoryVehicleRepository()
         val fakeMaintenanceRepo = FakeMaintenanceRepository()
         val useCase = GetDashboardSummaryUseCase(fakeRepo, fakeMaintenanceRepo)
 
