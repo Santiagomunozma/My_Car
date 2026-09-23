@@ -100,7 +100,7 @@ Revisión contra el archivo `# MiCarro — Sistema móvil para el control del ma
 - [ ] Alinear versiones del stack: Kotlin 2.0.x, Room 2.6.1, KSP compatible (actualmente Kotlin 2.2.10, Room 2.7.2).
 - [x] Borrar fakes muertos: `FakeVehicleRepositoryImpl`, `FakeMileageRepositoryImpl`, `FakeMaintenanceRepositoryImpl`, `FakePartRepositoryImpl` (eliminados del código base).
 - [x] Verificar/conectar `MileageAlertNotifier` a la implementación real del módulo de alertas (actualmente `NoOp`).
-- [ ] Validar con el orquestador los cambios hechos en archivos centrales: `AppDatabase`, `MainActivity`, `NavGraph`, `RepositoryModule`, `DatabaseModule`.
+- [x] Validar con el orquestador los cambios hechos en archivos centrales: `AppDatabase`, `MainActivity`, `NavGraph`, `RepositoryModule`, `DatabaseModule`.
 
 ### Funcionalidad ya cubierta (sin pendientes)
 
