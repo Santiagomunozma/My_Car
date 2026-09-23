@@ -44,6 +44,7 @@ import androidx.work.WorkManager
 import com.micarro.core.navigation.MiCarroNavGraph
 import com.micarro.core.navigation.Screen
 import com.micarro.core.notification.NotificationHelper
+import com.micarro.core.worker.DocumentWorker
 import com.micarro.core.worker.MaintenanceWorker
 import com.micarro.ui.theme.MyCarTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -100,14 +101,24 @@ class MainActivity : ComponentActivity() {
             .setRequiresBatteryNotLow(true) // Cuida el consumo del dispositivo
             .build()
 
-        val periodicWorkRequest = PeriodicWorkRequestBuilder<MaintenanceWorker>(24, TimeUnit.HOURS)
+        val maintenanceWorkRequest = PeriodicWorkRequestBuilder<MaintenanceWorker>(24, TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .build()
+            
+        val documentWorkRequest = PeriodicWorkRequestBuilder<DocumentWorker>(24, TimeUnit.HOURS)
             .setConstraints(constraints)
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "MaintenanceWorkerTask",
             ExistingPeriodicWorkPolicy.KEEP, // Mantiene la tarea si ya estaba agendada
-            periodicWorkRequest
+            maintenanceWorkRequest
+        )
+        
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "DocumentWorkerTask",
+            ExistingPeriodicWorkPolicy.KEEP, // Mantiene la tarea si ya estaba agendada
+            documentWorkRequest
         )
     }
 }
