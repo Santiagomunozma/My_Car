@@ -2,7 +2,6 @@ package com.micarro.core.di
 
 import com.micarro.core.settings.SharedPreferencesAlertSettingsRepository
 import com.micarro.domain.alerts.MileageAlertNotifier
-import com.micarro.domain.alerts.NoOpMileageAlertNotifier
 import com.micarro.domain.repository.AlertSettingsRepository
 import com.micarro.domain.repository.DocumentRepository
 import com.micarro.domain.repository.MaintenanceRepository
@@ -50,7 +49,9 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindMileageAlertNotifier(impl: NoOpMileageAlertNotifier): MileageAlertNotifier
+    abstract fun bindMileageAlertNotifier(
+        impl: com.micarro.feature.alerts.domain.MileageAlertScheduler
+    ): MileageAlertNotifier
 
     @Binds
     @Singleton
