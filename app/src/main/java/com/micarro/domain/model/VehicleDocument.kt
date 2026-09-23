@@ -1,5 +1,7 @@
 package com.micarro.domain.model
 
+import java.time.LocalDate
+
 enum class DocumentType {
     SOAT,
     TECHNICAL_INSPECTION,
@@ -18,7 +20,7 @@ data class VehicleDocument(
     val vehicleId: Long,
     val type: DocumentType,
     val name: String,
-    val expirationDate: Long, // Medianoche UTC en EpochMillis (se migrará a LocalDate en ítem 10)
+    val expirationDate: LocalDate,
     val issuer: String? = null,
     val alertsEnabled: Boolean = true,
     val notes: String? = null

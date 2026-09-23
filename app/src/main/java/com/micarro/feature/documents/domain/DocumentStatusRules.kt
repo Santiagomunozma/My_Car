@@ -15,18 +15,15 @@ object DocumentStatusRules {
         date.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
 
     fun statusFor(
-        expirationDate: Long,
+        expirationDate: LocalDate,
         anticipationDays: Int,
         today: LocalDate = LocalDate.now()
-    ): DocumentStatus {
-        val expiry = millisToDate(expirationDate)
-        return when {
-            expiry.isBefore(today) -> DocumentStatus.EXPIRED
-            !expiry.isAfter(today.plusDays(anticipationDays.toLong())) -> DocumentStatus.UPCOMING
-            else -> DocumentStatus.UP_TO_DATE
-        }
+    ): DocumentStatus = when {
+        expirationDate.isBefore(today) -> DocumentStatus.EXPIRED
+        !expirationDate.isAfter(today.plusDays(anticipationDays.toLong())) -> DocumentStatus.UPCOMING
+        else -> DocumentStatus.UP_TO_DATE
     }
 
-    fun daysUntil(expirationDate: Long, today: LocalDate = LocalDate.now()): Long =
-        ChronoUnit.DAYS.between(today, millisToDate(expirationDate))
+    fun daysUntil(expirationDate: LocalDate, today: LocalDate = LocalDate.now()): Long =
+        ChronoUnit.DAYS.between(today, expirationDate)
 }

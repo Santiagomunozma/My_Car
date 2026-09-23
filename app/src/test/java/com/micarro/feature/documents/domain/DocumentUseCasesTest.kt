@@ -19,41 +19,46 @@ class DocumentStatusRulesTest {
 
     private val today = LocalDate.of(2025, 6, 15)
 
-    private fun millisOf(date: LocalDate) = DocumentStatusRules.dateToMillis(date)
-
     @Test
     fun `vencido si la fecha ya paso`() {
-        val status = DocumentStatusRules.statusFor(millisOf(today.minusDays(1)), 30, today)
+        val status = DocumentStatusRules.statusFor(today.minusDays(1), 30, today)
         assertEquals(DocumentStatus.EXPIRED, status)
     }
 
     @Test
     fun `vence hoy cuenta como proximo`() {
-        val status = DocumentStatusRules.statusFor(millisOf(today), 30, today)
+        val status = DocumentStatusRules.statusFor(today, 30, today)
         assertEquals(DocumentStatus.UPCOMING, status)
-        assertEquals(0, DocumentStatusRules.daysUntil(millisOf(today), today))
+        assertEquals(0, DocumentStatusRules.daysUntil(today, today))
     }
 
     @Test
     fun `limite exacto de anticipacion es proximo`() {
-        val status = DocumentStatusRules.statusFor(millisOf(today.plusDays(30)), 30, today)
+        val status = DocumentStatusRules.statusFor(today.plusDays(30), 30, today)
         assertEquals(DocumentStatus.UPCOMING, status)
     }
 
     @Test
     fun `un dia despues del limite es vigente`() {
-        val status = DocumentStatusRules.statusFor(millisOf(today.plusDays(31)), 30, today)
+        val status = DocumentStatusRules.statusFor(today.plusDays(31), 30, today)
         assertEquals(DocumentStatus.UP_TO_DATE, status)
     }
 
     @Test
     fun `el estado cambia al avanzar el dia sin editar datos`() {
-        val expiry = millisOf(today.plusDays(31))
+        val expiry = today.plusDays(31)
         assertEquals(DocumentStatus.UP_TO_DATE, DocumentStatusRules.statusFor(expiry, 30, today))
         assertEquals(
             DocumentStatus.UPCOMING,
             DocumentStatusRules.statusFor(expiry, 30, today.plusDays(1))
         )
+    }
+
+    @Test
+    fun `conversion de fecha a millis y viceversa es estable`() {
+        val date = LocalDate.of(2025, 6, 15)
+        val millis = DocumentStatusRules.dateToMillis(date)
+        assertEquals(date, DocumentStatusRules.millisToDate(millis))
     }
 }
 
@@ -72,7 +77,7 @@ class DocumentUseCasesTest {
             vehicleId = vehicleId,
             type = DocumentType.SOAT,
             name = "SOAT $vehicleId",
-            expirationDate = DocumentStatusRules.dateToMillis(today.plusDays(daysFromToday)),
+            expirationDate = today.plusDays(daysFromToday),
             alertsEnabled = alertsEnabled
         )
 
@@ -156,15 +161,25 @@ class DocumentUseCasesTest {
     fun `guardar documento valida nombre para tipo OTRO y fecha`() = runTest {
         val repo = InMemoryDocumentRepository()
         val save = SaveDocumentUseCase(repo)
+        val aDate = LocalDate.of(2025, 6, 15)
 
-        val noName = save(DocumentDraft(vehicleId = 1L, type = DocumentType.OTHER, name = "", expirationDate = 1L))
+        val noName = save(
+            DocumentDraft(
+                vehicleId = 1L,
+                type = DocumentType.OTHER,
+                name = "",
+                expirationDate = aDate
+            )
+        )
         assertTrue((noName as SaveDocumentResult.Invalid).errors.containsKey(DocumentField.NAME))
 
-        val noDate = save(DocumentDraft(vehicleId = 1L, type = DocumentType.SOAT, expirationDate = null))
+        val noDate = save(
+            DocumentDraft(vehicleId = 1L, type = DocumentType.SOAT, expirationDate = null)
+        )
         assertTrue((noDate as SaveDocumentResult.Invalid).errors.containsKey(DocumentField.EXPIRATION_DATE))
 
         val ok = save(
-            DocumentDraft(vehicleId = 1L, type = DocumentType.SOAT, expirationDate = 1L)
+            DocumentDraft(vehicleId = 1L, type = DocumentType.SOAT, expirationDate = aDate)
         )
         assertTrue(ok is SaveDocumentResult.Success)
         assertEquals(1, repo.observeAllDocuments().first().size)

@@ -29,7 +29,7 @@ data class DocumentDraft(
     val vehicleId: Long,
     val type: DocumentType = DocumentType.SOAT,
     val name: String = "",
-    val expirationDate: Long? = null,
+    val expirationDate: LocalDate? = null,
     val issuer: String = "",
     val alertsEnabled: Boolean = true,
     val notes: String = ""

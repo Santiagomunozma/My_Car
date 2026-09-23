@@ -49,7 +49,9 @@ import com.micarro.domain.model.DocumentStatus
 import com.micarro.domain.model.DocumentType
 import com.micarro.domain.model.VehicleDocument
 import com.micarro.feature.documents.domain.DocumentDraft
+import com.micarro.feature.documents.domain.DocumentError
 import com.micarro.feature.documents.domain.DocumentField
+import com.micarro.feature.documents.domain.DocumentStatusRules
 import com.micarro.feature.documents.domain.DocumentWithStatus
 import com.micarro.ui.components.DateField
 import com.micarro.ui.components.EmptyState
@@ -58,7 +60,7 @@ import com.micarro.ui.components.MiCarroDropdownField
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.StatusChip
-import com.micarro.ui.components.formatUtcMillis
+import com.micarro.ui.components.formatDate
 import com.micarro.ui.theme.StatusError
 import com.micarro.ui.theme.StatusSuccess
 import com.micarro.ui.theme.StatusWarning
@@ -212,7 +214,7 @@ private fun DocumentCard(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        formatUtcMillis(item.document.expirationDate),
+                        formatDate(item.document.expirationDate),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -279,7 +281,9 @@ private fun DocumentFormDialog(
 ) {
     var type by remember { mutableStateOf(editing?.type ?: DocumentType.SOAT) }
     var name by remember { mutableStateOf(editing?.name.orEmpty()) }
-    var expiration by remember { mutableStateOf(editing?.expirationDate) }
+    var expiration by remember {
+        mutableStateOf(editing?.expirationDate?.let { DocumentStatusRules.dateToMillis(it) })
+    }
     var issuer by remember { mutableStateOf(editing?.issuer.orEmpty()) }
     var notes by remember { mutableStateOf(editing?.notes.orEmpty()) }
     var alertsEnabled by remember { mutableStateOf(editing?.alertsEnabled ?: true) }
@@ -360,7 +364,7 @@ private fun DocumentFormDialog(
                             vehicleId = vehicleId,
                             type = type,
                             name = name,
-                            expirationDate = expiration,
+                            expirationDate = expiration?.let { DocumentStatusRules.millisToDate(it) },
                             issuer = issuer,
                             alertsEnabled = alertsEnabled,
                             notes = notes

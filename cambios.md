@@ -96,7 +96,7 @@ Revisión contra el archivo `# MiCarro — Sistema móvil para el control del ma
 - [x] Cambiar `MileageRecord.reading` de `Int` a `Long`.
 - [x] Renombrar `MileageRecord` a `MileageReading` (nombre de la guía).
 - [x] Cambiar `VehicleDocument.id` y `vehicleId` de `String` a `Long`.
-- [ ] Cambiar `VehicleDocument.expirationDate` de `Long` a `LocalDate`.
+- [x] Cambiar `VehicleDocument.expirationDate` de `Long` a `LocalDate`.
 - [ ] Alinear versiones del stack: Kotlin 2.0.x, Room 2.6.1, KSP compatible (actualmente Kotlin 2.2.10, Room 2.7.2).
 - [ ] Borrar fakes muertos: `FakeVehicleRepositoryImpl`, `FakeMileageRepositoryImpl`, `FakeMaintenanceRepositoryImpl`, `FakePartRepositoryImpl` (eliminados del código base).
 - [ ] Verificar/conectar `MileageAlertNotifier` a la implementación real del módulo de alertas (actualmente `NoOp`).

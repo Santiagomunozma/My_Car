@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.micarro.domain.model.DocumentType
 import com.micarro.domain.model.VehicleDocument
+import com.micarro.feature.documents.domain.DocumentStatusRules
 
 @Entity(
     tableName = "vehicle_documents",
@@ -27,7 +28,7 @@ fun DocumentEntity.toDomain() = VehicleDocument(
     vehicleId = vehicleId,
     type = runCatching { DocumentType.valueOf(type) }.getOrDefault(DocumentType.OTHER),
     name = name,
-    expirationDate = expirationDate,
+    expirationDate = DocumentStatusRules.millisToDate(expirationDate),
     issuer = issuer,
     alertsEnabled = alertsEnabled,
     notes = notes
@@ -38,7 +39,7 @@ fun VehicleDocument.toEntity() = DocumentEntity(
     vehicleId = vehicleId,
     type = type.name,
     name = name,
-    expirationDate = expirationDate,
+    expirationDate = DocumentStatusRules.dateToMillis(expirationDate),
     issuer = issuer,
     alertsEnabled = alertsEnabled,
     notes = notes
