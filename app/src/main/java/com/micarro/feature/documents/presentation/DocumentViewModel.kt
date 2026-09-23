@@ -47,7 +47,8 @@ class DocumentViewModel @Inject constructor(
     private val toggleAlerts: ToggleDocumentAlertsUseCase
 ) : ViewModel() {
 
-    private val vehicleId: String = checkNotNull(savedStateHandle["vehicleId"])
+    private val routeVehicleId: String = checkNotNull(savedStateHandle["vehicleId"])
+    private val vehicleId: Long = routeVehicleId.toLongOrNull() ?: -1L
 
     private val vehicle = MutableStateFlow<Vehicle?>(null)
     private val formState = MutableStateFlow(FormState())
@@ -80,7 +81,7 @@ class DocumentViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DocumentUiState())
 
     init {
-        viewModelScope.launch { vehicle.value = getVehicle(vehicleId.toLongOrNull() ?: -1L) }
+        viewModelScope.launch { vehicle.value = getVehicle(vehicleId) }
     }
 
     fun openAddForm() {

@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import java.time.LocalDate
-import java.util.UUID
 import javax.inject.Inject
 
 enum class DocumentField {
@@ -26,8 +25,8 @@ enum class DocumentError {
 }
 
 data class DocumentDraft(
-    val id: String? = null,
-    val vehicleId: String,
+    val id: Long? = null,
+    val vehicleId: Long,
     val type: DocumentType = DocumentType.SOAT,
     val name: String = "",
     val expirationDate: Long? = null,
@@ -49,9 +48,9 @@ data class DocumentWithStatus(
 )
 
 data class DocumentAlert(
-    val vehicleId: String,
+    val vehicleId: Long,
     val vehiclePlate: String,
-    val documentId: String,
+    val documentId: Long,
     val documentType: DocumentType,
     val documentName: String,
     val status: DocumentStatus,
@@ -69,7 +68,7 @@ class ObserveVehicleDocumentsUseCase @Inject constructor(
     private val documentRepository: DocumentRepository,
     private val settingsRepository: AlertSettingsRepository
 ) {
-    operator fun invoke(vehicleId: String): Flow<List<DocumentWithStatus>> =
+    operator fun invoke(vehicleId: Long): Flow<List<DocumentWithStatus>> =
         combine(
             documentRepository.observeDocuments(vehicleId),
             settingsRepository.observeSettings(),
@@ -107,7 +106,7 @@ class SaveDocumentUseCase @Inject constructor(
         return try {
             repository.saveDocument(
                 VehicleDocument(
-                    id = draft.id ?: UUID.randomUUID().toString(),
+                    id = draft.id ?: 0L,
                     vehicleId = draft.vehicleId,
                     type = draft.type,
                     name = draft.name.trim(),
@@ -127,13 +126,13 @@ class SaveDocumentUseCase @Inject constructor(
 class DeleteDocumentUseCase @Inject constructor(
     private val repository: DocumentRepository
 ) {
-    suspend operator fun invoke(id: String) = repository.deleteDocument(id)
+    suspend operator fun invoke(id: Long) = repository.deleteDocument(id)
 }
 
 class ToggleDocumentAlertsUseCase @Inject constructor(
     private val repository: DocumentRepository
 ) {
-    suspend operator fun invoke(id: String, enabled: Boolean) =
+    suspend operator fun invoke(id: Long, enabled: Boolean) =
         repository.setAlertsEnabled(id, enabled)
 }
 
@@ -161,7 +160,7 @@ class ObserveDocumentAlertsUseCase @Inject constructor(
             today: LocalDate
         ): List<DocumentAlert> {
             if (!settings.globalAlertsEnabled) return emptyList()
-            val vehiclesById = vehicles.associateBy { it.id.toString() }
+            val vehiclesById = vehicles.associateBy { it.id }
             return documents
                 .filter { it.alertsEnabled }
                 .mapNotNull { document ->
@@ -171,7 +170,7 @@ class ObserveDocumentAlertsUseCase @Inject constructor(
                     )
                     if (status == DocumentStatus.UP_TO_DATE) return@mapNotNull null
                     DocumentAlert(
-                        vehicleId = vehicle.id.toString(),
+                        vehicleId = vehicle.id,
                         vehiclePlate = vehicle.plate,
                         documentId = document.id,
                         documentType = document.type,

@@ -122,7 +122,7 @@ fun DocumentsAlertsScreen(
             } else {
                 items(state.alerts, key = { it.documentId }) { alert ->
                     AlertCard(alert = alert, onClick = {
-                        onOpenVehicleDocuments(alert.vehicleId)
+                        onOpenVehicleDocuments(alert.vehicleId.toString())
                     })
                 }
             }

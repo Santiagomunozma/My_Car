@@ -1,7 +1,5 @@
 package com.micarro.domain.model
 
-import java.util.UUID
-
 enum class DocumentType {
     SOAT,
     TECHNICAL_INSPECTION,
@@ -16,11 +14,11 @@ enum class DocumentStatus {
 }
 
 data class VehicleDocument(
-    val id: String = UUID.randomUUID().toString(),
-    val vehicleId: String,
+    val id: Long = 0L,
+    val vehicleId: Long,
     val type: DocumentType,
     val name: String,
-    val expirationDate: Long, // Medianoche UTC en EpochMillis
+    val expirationDate: Long, // Medianoche UTC en EpochMillis (se migrará a LocalDate en ítem 10)
     val issuer: String? = null,
     val alertsEnabled: Boolean = true,
     val notes: String? = null

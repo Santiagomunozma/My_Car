@@ -152,7 +152,7 @@ fun DocumentScreen(
     if (state.showForm) {
         DocumentFormDialog(
             editing = state.editingDocument,
-            vehicleId = state.vehicle?.id?.toString().orEmpty(),
+            vehicleId = state.vehicle?.id ?: 0L,
             isSaving = state.isSaving,
             saveFailed = state.saveFailed,
             errors = state.formErrors,
@@ -270,7 +270,7 @@ private fun DocumentCard(
 @Composable
 private fun DocumentFormDialog(
     editing: VehicleDocument?,
-    vehicleId: String,
+    vehicleId: Long,
     isSaving: Boolean,
     saveFailed: Boolean,
     errors: Map<DocumentField, com.micarro.feature.documents.domain.DocumentError>,

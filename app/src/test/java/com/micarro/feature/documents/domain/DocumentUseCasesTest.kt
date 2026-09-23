@@ -62,12 +62,12 @@ class DocumentUseCasesTest {
     private val today = LocalDate.of(2025, 6, 15)
     private val settings = AlertSettings(globalAlertsEnabled = true, anticipationDays = 30)
 
-    private fun vehicle(id: String, archived: Boolean = false) = Vehicle(
-        id = id.toLongOrNull() ?: 0L, plate = "PLATE-$id", type = VehicleType.CAR, brand = "M",
+    private fun vehicle(id: Long, archived: Boolean = false) = Vehicle(
+        id = id, plate = "PLATE-$id", type = VehicleType.CAR, brand = "M",
         line = "L", model = "M", year = 2020, currentMileage = 0L, isArchived = archived
     )
 
-    private fun doc(vehicleId: String, daysFromToday: Long, alertsEnabled: Boolean = true) =
+    private fun doc(vehicleId: Long, daysFromToday: Long, alertsEnabled: Boolean = true) =
         VehicleDocument(
             vehicleId = vehicleId,
             type = DocumentType.SOAT,
@@ -79,14 +79,14 @@ class DocumentUseCasesTest {
     @Test
     fun `bandeja identifica vehiculo documento y causa`() {
         val alerts = computeAlerts(
-            documents = listOf(doc("1", -5), doc("1", 10)),
-            vehicles = listOf(vehicle("1")),
+            documents = listOf(doc(1L, -5), doc(1L, 10)),
+            vehicles = listOf(vehicle(1L)),
             settings = settings,
             today = today
         )
         assertEquals(2, alerts.size)
         val expired = alerts.first()
-        assertEquals("1", expired.vehicleId)
+        assertEquals(1L, expired.vehicleId)
         assertEquals("PLATE-1", expired.vehiclePlate)
         assertEquals(DocumentStatus.EXPIRED, expired.status)
         assertEquals(-5, expired.daysUntilExpiration)
@@ -97,8 +97,8 @@ class DocumentUseCasesTest {
     @Test
     fun `vencidos van primero en la bandeja`() {
         val alerts = computeAlerts(
-            documents = listOf(doc("1", 3), doc("1", -2), doc("1", 0)),
-            vehicles = listOf(vehicle("1")),
+            documents = listOf(doc(1L, 3), doc(1L, -2), doc(1L, 0)),
+            vehicles = listOf(vehicle(1L)),
             settings = settings,
             today = today
         )
@@ -110,8 +110,8 @@ class DocumentUseCasesTest {
     @Test
     fun `incluye documentos de vehiculos archivados`() {
         val alerts = computeAlerts(
-            documents = listOf(doc("1", 5)),
-            vehicles = listOf(vehicle("1", archived = true)),
+            documents = listOf(doc(1L, 5)),
+            vehicles = listOf(vehicle(1L, archived = true)),
             settings = settings,
             today = today
         )
@@ -121,8 +121,8 @@ class DocumentUseCasesTest {
     @Test
     fun `switch global apagado vacia la bandeja`() {
         val alerts = computeAlerts(
-            documents = listOf(doc("1", 5)),
-            vehicles = listOf(vehicle("1")),
+            documents = listOf(doc(1L, 5)),
+            vehicles = listOf(vehicle(1L)),
             settings = settings.copy(globalAlertsEnabled = false),
             today = today
         )
@@ -132,8 +132,8 @@ class DocumentUseCasesTest {
     @Test
     fun `switch por documento apagado lo excluye`() {
         val alerts = computeAlerts(
-            documents = listOf(doc("1", 5, alertsEnabled = false), doc("1", 10)),
-            vehicles = listOf(vehicle("1")),
+            documents = listOf(doc(1L, 5, alertsEnabled = false), doc(1L, 10)),
+            vehicles = listOf(vehicle(1L)),
             settings = settings,
             today = today
         )
@@ -144,8 +144,8 @@ class DocumentUseCasesTest {
     @Test
     fun `documentos vigentes no generan alerta`() {
         val alerts = computeAlerts(
-            documents = listOf(doc("1", 60)),
-            vehicles = listOf(vehicle("1")),
+            documents = listOf(doc(1L, 60)),
+            vehicles = listOf(vehicle(1L)),
             settings = settings,
             today = today
         )
@@ -157,14 +157,14 @@ class DocumentUseCasesTest {
         val repo = InMemoryDocumentRepository()
         val save = SaveDocumentUseCase(repo)
 
-        val noName = save(DocumentDraft(vehicleId = "1", type = DocumentType.OTHER, name = "", expirationDate = 1L))
+        val noName = save(DocumentDraft(vehicleId = 1L, type = DocumentType.OTHER, name = "", expirationDate = 1L))
         assertTrue((noName as SaveDocumentResult.Invalid).errors.containsKey(DocumentField.NAME))
 
-        val noDate = save(DocumentDraft(vehicleId = "1", type = DocumentType.SOAT, expirationDate = null))
+        val noDate = save(DocumentDraft(vehicleId = 1L, type = DocumentType.SOAT, expirationDate = null))
         assertTrue((noDate as SaveDocumentResult.Invalid).errors.containsKey(DocumentField.EXPIRATION_DATE))
 
         val ok = save(
-            DocumentDraft(vehicleId = "1", type = DocumentType.SOAT, expirationDate = 1L)
+            DocumentDraft(vehicleId = 1L, type = DocumentType.SOAT, expirationDate = 1L)
         )
         assertTrue(ok is SaveDocumentResult.Success)
         assertEquals(1, repo.observeAllDocuments().first().size)
@@ -173,7 +173,7 @@ class DocumentUseCasesTest {
     @Test
     fun `eliminar y alternar alertas por documento`() = runTest {
         val repo = InMemoryDocumentRepository()
-        val document = doc("1", 10)
+        val document = doc(1L, 10)
         repo.seed(document)
 
         ToggleDocumentAlertsUseCase(repo)(document.id, false)

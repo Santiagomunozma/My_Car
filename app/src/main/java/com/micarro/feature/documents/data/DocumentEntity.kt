@@ -12,8 +12,8 @@ import com.micarro.domain.model.VehicleDocument
     indices = [Index(value = ["vehicle_id"])]
 )
 data class DocumentEntity(
-    @PrimaryKey val id: String,
-    @ColumnInfo(name = "vehicle_id") val vehicleId: String,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    @ColumnInfo(name = "vehicle_id") val vehicleId: Long,
     val type: String,
     val name: String,
     @ColumnInfo(name = "expiration_date") val expirationDate: Long,

@@ -84,7 +84,7 @@ class InMemoryMileageRepository : MileageRepository {
 class InMemoryDocumentRepository : DocumentRepository {
     private val documents = MutableStateFlow<List<VehicleDocument>>(emptyList())
 
-    override fun observeDocuments(vehicleId: String): Flow<List<VehicleDocument>> =
+    override fun observeDocuments(vehicleId: Long): Flow<List<VehicleDocument>> =
         documents.map { list ->
             list.filter { it.vehicleId == vehicleId }.sortedBy { it.expirationDate }
         }
@@ -92,18 +92,18 @@ class InMemoryDocumentRepository : DocumentRepository {
     override fun observeAllDocuments(): Flow<List<VehicleDocument>> =
         documents.map { list -> list.sortedBy { it.expirationDate } }
 
-    override suspend fun getDocumentById(id: String): VehicleDocument? =
+    override suspend fun getDocumentById(id: Long): VehicleDocument? =
         documents.value.firstOrNull { it.id == id }
 
     override suspend fun saveDocument(document: VehicleDocument) {
         documents.update { list -> list.filter { it.id != document.id } + document }
     }
 
-    override suspend fun deleteDocument(id: String) {
+    override suspend fun deleteDocument(id: Long) {
         documents.update { list -> list.filter { it.id != id } }
     }
 
-    override suspend fun setAlertsEnabled(id: String, enabled: Boolean) {
+    override suspend fun setAlertsEnabled(id: Long, enabled: Boolean) {
         documents.update { list ->
             list.map { if (it.id == id) it.copy(alertsEnabled = enabled) else it }
         }
