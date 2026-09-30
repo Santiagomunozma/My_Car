@@ -10,7 +10,13 @@ data class PartEntity(
     val serviceId: String,
     val name: String,
     val quantity: Int,
-    val cost: Double
+    val cost: Double,
+    val brand: String? = null,
+    val reference: String? = null,
+    val provider: String? = null,
+    val installationDate: Long? = null,
+    val warranty: String? = null,
+    val notes: String? = null
 )
 
 fun PartEntity.toDomain() = Part(
@@ -18,7 +24,13 @@ fun PartEntity.toDomain() = Part(
     serviceId = serviceId,
     name = name,
     quantity = quantity,
-    cost = cost
+    cost = cost,
+    brand = brand,
+    reference = reference,
+    provider = provider,
+    installationDate = installationDate,
+    warranty = warranty,
+    notes = notes
 )
 
 fun Part.toEntity() = PartEntity(
@@ -26,5 +38,11 @@ fun Part.toEntity() = PartEntity(
     serviceId = serviceId,
     name = name,
     quantity = quantity,
-    cost = cost
+    cost = cost,
+    brand = brand,
+    reference = reference,
+    provider = provider,
+    installationDate = installationDate,
+    warranty = warranty,
+    notes = notes
 )

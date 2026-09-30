@@ -54,6 +54,10 @@ class MaintenanceRepositoryImpl @Inject constructor(
         planDao.update(plan.toEntity())
     }
 
+    override suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean) {
+        planDao.updateActiveStatus(planId, isActive)
+    }
+
     override suspend fun deletePlanIfWithoutHistory(planId: String): Boolean {
         val count = planDao.getServiceCountForPlan(planId)
         return if (count == 0) {
@@ -80,5 +84,5 @@ class MaintenanceRepositoryImpl @Inject constructor(
     ): Flow<List<CategoryExpenseDto>> {
         // Aquí llamamos al DAO inyectado de la instancia de la clase, no estáticamente
         return serviceDao.observeExpensesByCategory(vehicleId, startDateTimestamp)
-}
+    }
 }

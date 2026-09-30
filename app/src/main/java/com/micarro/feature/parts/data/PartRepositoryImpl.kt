@@ -4,7 +4,9 @@ import com.micarro.domain.model.Part
 import com.micarro.domain.repository.PartRepository
 import kotlinx.coroutines.flow.map
 
-class PartRepositoryImpl(
+import javax.inject.Inject
+
+class PartRepositoryImpl @Inject constructor(
     private val partDao: PartDao
 ) : PartRepository {
     override suspend fun getPartsForService(serviceId: String): List<Part> {

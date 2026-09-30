@@ -151,3 +151,84 @@ class RecordingMileageAlertNotifier : MileageAlertNotifier {
         calls += vehicleId to odometer
     }
 }
+
+class InMemoryMaintenanceRepository : com.micarro.domain.repository.MaintenanceRepository {
+    val plans = MutableStateFlow<List<com.micarro.domain.model.MaintenancePlan>>(emptyList())
+    val services = MutableStateFlow<List<com.micarro.domain.model.MaintenanceService>>(emptyList())
+    val registeredParts = mutableListOf<com.micarro.domain.model.Part>()
+
+    override fun observeHistory(
+        vehicleId: String?,
+        filter: com.micarro.domain.model.HistoryFilter
+    ): Flow<List<com.micarro.domain.model.MaintenanceHistoryItem>> =
+        services.map { list ->
+            list.filter { vehicleId == null || it.vehicleId == vehicleId }
+                .map { s ->
+                    com.micarro.domain.model.MaintenanceHistoryItem(
+                        id = s.id,
+                        vehiclePlate = s.vehicleId,
+                        title = s.title,
+                        category = s.category,
+                        date = s.date,
+                        mileage = s.mileage,
+                        totalCost = s.totalCost,
+                        workshopName = s.workshopName
+                    )
+                }
+        }
+
+    override fun observePlans(vehicleId: String): Flow<List<com.micarro.domain.model.MaintenancePlan>> =
+        plans.map { it.filter { p -> p.vehicleId == vehicleId } }
+
+    override suspend fun savePlan(plan: com.micarro.domain.model.MaintenancePlan) {
+        plans.update { it + plan }
+    }
+
+    override suspend fun updatePlan(plan: com.micarro.domain.model.MaintenancePlan) {
+        plans.update { list -> list.map { if (it.id == plan.id) plan else it } }
+    }
+
+    override suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean) {
+        plans.update { list -> list.map { if (it.id == planId) it.copy(isActive = isActive) else it } }
+    }
+
+    override suspend fun deletePlanIfWithoutHistory(planId: String): Boolean {
+        val hasHistory = services.value.any { it.planId == planId }
+        return if (!hasHistory) {
+            plans.update { list -> list.filter { it.id != planId } }
+            true
+        } else {
+            false
+        }
+    }
+
+    override suspend fun registerService(
+        service: com.micarro.domain.model.MaintenanceService,
+        parts: List<com.micarro.domain.model.Part>
+    ) {
+        services.update { it + service }
+        registeredParts.addAll(parts)
+    }
+
+    override fun observeServices(vehicleId: String): Flow<List<com.micarro.domain.model.MaintenanceService>> =
+        services.map { it.filter { s -> s.vehicleId == vehicleId } }
+
+    override fun observeExpensesByCategory(
+        vehicleId: String,
+        startDateTimestamp: Long
+    ): Flow<List<com.micarro.domain.model.CategoryExpenseDto>> =
+        kotlinx.coroutines.flow.flowOf(emptyList())
+}
+
+class InMemoryPartRepository : com.micarro.domain.repository.PartRepository {
+    private val parts = MutableStateFlow<List<com.micarro.domain.model.Part>>(emptyList())
+
+    override suspend fun getPartsForService(serviceId: String): List<com.micarro.domain.model.Part> =
+        parts.value.filter { it.serviceId == serviceId }
+
+    override suspend fun saveParts(partsList: List<com.micarro.domain.model.Part>) {
+        parts.update { it + partsList }
+    }
+
+    override fun observeInstalledParts(vehicleId: String): Flow<List<com.micarro.domain.model.Part>> = parts
+}

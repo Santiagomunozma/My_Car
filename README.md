@@ -21,7 +21,7 @@ Aplicación nativa de Android para el seguimiento de vehículos: kilometraje, hi
 | Exportación CSV | Disponible | Comparte el historial con `FileProvider` |
 | Configuración | Disponible | Borrado irreversible de todos los datos locales |
 | Alertas (notificaciones) | Infraestructura lista | Notificaciones programadas con WorkManager |
-| Plan de mantenimiento | Disponible | Planificación y registro de servicios (Compañero 2) |
+| Plan de mantenimiento | Disponible | Planificación, registro de servicios, repuestos y alertas (Compañero 2) |
 
 Tipos de vehículo soportados en el modelo de dominio: **automóvil**, **camión** y **motocicleta**.
 
@@ -222,7 +222,6 @@ Guía completa para el equipo: [`app/src/main/java/com/example/my_car/GUIA_DISEN
 
 **Pendiente de integración**
 
-- Registrar las entidades de mantenimiento/repuestos en `AppDatabase` y enlazar sus repositorios Room (Compañero 2)
 - Implementar `MileageAlertNotifier` real (hoy `NoOpMileageAlertNotifier`) para recalcular alertas por km tras cada lectura (RF-09)
 - Notificaciones push del sistema para vencimientos documentales (módulo de alertas)
 - Pruebas de emulador/UI (`connectedAndroidTest`) y de release

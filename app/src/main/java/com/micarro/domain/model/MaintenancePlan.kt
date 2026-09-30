@@ -8,5 +8,6 @@ data class MaintenancePlan(
     val title: String,
     val category: String,
     val intervalMileage: Int,
-    val intervalMonths: Int
+    val intervalMonths: Int,
+    val isActive: Boolean = true
 )

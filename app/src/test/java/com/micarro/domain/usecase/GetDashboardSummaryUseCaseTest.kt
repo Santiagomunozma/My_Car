@@ -20,6 +20,7 @@ class FakeMaintenanceRepository : MaintenanceRepository {
     override fun observePlans(vehicleId: String): Flow<List<MaintenancePlan>> = flowOf(emptyList())
     override suspend fun savePlan(plan: MaintenancePlan) {}
     override suspend fun updatePlan(plan: MaintenancePlan) {}
+    override suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean) {}
     override suspend fun deletePlanIfWithoutHistory(planId: String): Boolean = true
     override suspend fun registerService(service: MaintenanceService, parts: List<Part>) {}
     override fun observeServices(vehicleId: String): Flow<List<MaintenanceService>> = flowOf(emptyList())

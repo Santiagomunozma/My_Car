@@ -15,6 +15,7 @@ import com.micarro.domain.repository.VehicleRepository
 import com.micarro.domain.usecase.ExportHistoryToCsvUseCase
 import com.micarro.feature.maintenance.domain.MaintenanceRules
 import com.micarro.feature.maintenance.domain.MaintenanceUseCases
+import com.micarro.feature.parts.domain.PartUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +34,8 @@ class MaintenanceViewModel @Inject constructor(
     private val vehicleRepository: VehicleRepository,
     private val mileageRepository: MileageRepository,
     private val maintenanceUseCases: MaintenanceUseCases,
+    private val partUseCases: PartUseCases,
+    private val alertScheduler: com.micarro.feature.alerts.domain.AlertScheduler,
     private val exportHistoryToCsvUseCase: ExportHistoryToCsvUseCase
 ) : ViewModel() {
 
@@ -40,6 +43,7 @@ class MaintenanceViewModel @Inject constructor(
     val uiState: StateFlow<MaintenanceUiState> = _uiState.asStateFlow()
 
     private var plansJob: Job? = null
+    private var partsJob: Job? = null
 
     init {
         loadVehicles()
@@ -95,9 +99,17 @@ class MaintenanceViewModel @Inject constructor(
 
     private fun observePlans(vehicle: Vehicle) {
         plansJob?.cancel()
+        partsJob?.cancel()
+
+        partsJob = partUseCases.observeInstalledParts(vehicle.id.toString())
+            .onEach { installedParts ->
+                _uiState.update { it.copy(installedParts = installedParts) }
+            }
+            .launchIn(viewModelScope)
+
         plansJob = combine(
-            maintenanceUseCases.observePlans(vehicle.plate),
-            maintenanceUseCases.observeServices(vehicle.plate).onStart { emit(emptyList()) },
+            maintenanceUseCases.observePlans(vehicle.id.toString()),
+            maintenanceUseCases.observeServices(vehicle.id.toString()).onStart { emit(emptyList()) },
             mileageRepository.observeMileage(vehicle.id).onStart { emit(emptyList()) }
         ) { plans, services, mileageRecords ->
             val currentMileage = mileageRecords.firstOrNull()?.reading?.toInt()
@@ -141,6 +153,30 @@ class MaintenanceViewModel @Inject constructor(
     fun savePlan(plan: MaintenancePlan) {
         viewModelScope.launch {
             maintenanceUseCases.savePlan(plan)
+            alertScheduler.scheduleForActivity(plan)
+        }
+    }
+
+    fun updatePlan(plan: MaintenancePlan) {
+        viewModelScope.launch {
+            maintenanceUseCases.updatePlan(plan)
+            alertScheduler.scheduleForActivity(plan)
+        }
+    }
+
+    fun deletePlan(planId: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = maintenanceUseCases.deletePlan(planId)
+            if (success) {
+                alertScheduler.cancelForActivity(planId)
+            }
+            onResult(success)
+        }
+    }
+
+    fun togglePlanActiveStatus(planId: String, currentStatus: Boolean) {
+        viewModelScope.launch {
+            maintenanceUseCases.updatePlanActiveStatus(planId, !currentStatus)
         }
     }
 

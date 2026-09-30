@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,9 +40,11 @@ import com.micarro.domain.model.MaintenanceService
 import com.micarro.domain.model.Part
 import com.micarro.feature.maintenance.domain.MaintenanceRules
 import com.micarro.feature.parts.presentation.PartFormScreen
+import com.micarro.ui.components.DateField
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.theme.StatusError
+import com.micarro.ui.theme.StatusWarning
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,15 +56,73 @@ fun ServiceFormScreen(
     onBack: () -> Unit
 ) {
     var title by remember { mutableStateOf("") }
+    var serviceType by remember { mutableStateOf(if (planId != null) "Preventivo" else "Correctivo") }
     var workshop by remember { mutableStateOf("") }
     var mileage by remember { mutableStateOf(lastMileage.toString()) }
     var laborCost by remember { mutableStateOf("") }
-    var parts = remember { mutableStateListOf<Part>() }
+    var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    val parts = remember { mutableStateListOf<Part>() }
+
+    var showMileageConfirmDialog by remember { mutableStateOf(false) }
 
     val currentMileage = mileage.toIntOrNull() ?: 0
     val currentTime = System.currentTimeMillis()
 
-    val isMileageValid = MaintenanceRules.isMileageValid(currentMileage, lastMileage)
+    // Regla RN-05: No permitir fecha futura
+    val isDateValid = MaintenanceRules.isDateValid(selectedDateMillis, currentTime)
+    // Regla RN-06: Kilometraje menor al último exige advertencia y confirmación
+    val isMileageLower = !MaintenanceRules.isMileageValid(currentMileage, lastMileage)
+
+    fun doSave() {
+        val totalPartsCost = parts.sumOf { it.cost * it.quantity }
+        val totalCost = MaintenanceRules.calculateTotalCost(
+            laborCost.toDoubleOrNull() ?: 0.0,
+            totalPartsCost,
+            0.0
+        )
+        onSave(
+            MaintenanceService(
+                vehicleId = vehicleId,
+                planId = planId,
+                title = title.trim(),
+                category = serviceType,
+                date = selectedDateMillis,
+                mileage = currentMileage,
+                totalCost = totalCost,
+                workshopName = workshop.trim()
+            ),
+            parts.toList()
+        )
+    }
+
+    if (showMileageConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showMileageConfirmDialog = false },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = StatusWarning) },
+            title = { Text("Advertencia de Kilometraje (RN-06)") },
+            text = {
+                Text(
+                    "El kilometraje ingresado ($currentMileage km) es menor al último registrado del vehículo ($lastMileage km).\n\n" +
+                            "¿Confirmas que este valor es correcto y deseas registrar el servicio?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showMileageConfirmDialog = false
+                        doSave()
+                    }
+                ) {
+                    Text("Confirmar de todos modos")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showMileageConfirmDialog = false }) {
+                    Text("Corregir")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -66,7 +130,7 @@ fun ServiceFormScreen(
                 title = { Text("Registrar Servicio") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 }
             )
@@ -81,23 +145,53 @@ fun ServiceFormScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (!isMileageValid) {
+            // Alerta visual de kilometraje menor (RN-06)
+            if (isMileageLower && currentMileage > 0) {
                 Surface(
-                    color = StatusError.copy(alpha = 0.1f),
+                    color = StatusWarning.copy(alpha = 0.12f),
                     shape = MaterialTheme.shapes.small,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(modifier = Modifier.padding(8.dp)) {
-                        Icon(Icons.Default.Info, contentDescription = null, tint = StatusError)
+                    Row(modifier = Modifier.padding(12.dp)) {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = StatusWarning)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Alerta RN-06: El kilometraje no puede ser menor al último registrado ($lastMileage km).",
-                            color = StatusError,
+                            "Aviso RN-06: El kilometraje ingresado ($currentMileage km) es menor al último registrado ($lastMileage km). Se solicitará confirmación al guardar.",
+                            color = StatusWarning,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
             }
+
+            // Selector Tipo de Servicio: Preventivo / Correctivo (RF-17)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Tipo de servicio",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = serviceType == "Preventivo",
+                        onClick = { serviceType = "Preventivo" },
+                        label = { Text("Preventivo") }
+                    )
+                    FilterChip(
+                        selected = serviceType == "Correctivo",
+                        onClick = { serviceType = "Correctivo" },
+                        label = { Text("Correctivo") }
+                    )
+                }
+            }
+
+            // Fecha de Realización (RN-05)
+            DateField(
+                label = "Fecha de realización",
+                selectedDateMillis = selectedDateMillis,
+                onDateSelected = { selectedDateMillis = it },
+                errorMessage = if (!isDateValid) "La fecha de realización no puede ser futura (RN-05)" else null
+            )
 
             MiCarroTextField(
                 value = title,
@@ -109,18 +203,18 @@ fun ServiceFormScreen(
             MiCarroTextField(
                 value = workshop,
                 onValueChange = { workshop = it },
-                label = "Taller / Establecimiento",
-                placeholder = "Nombre del taller"
+                label = "Taller / Responsable",
+                placeholder = "Nombre del taller o mecánico"
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 MiCarroTextField(
                     value = mileage,
-                    onValueChange = { mileage = it },
+                    onValueChange = { mileage = it.filter { ch -> ch.isDigit() } },
                     label = "Kilometraje",
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.weight(1f),
-                    isError = !isMileageValid
+                    isError = isMileageLower
                 )
                 MiCarroTextField(
                     value = laborCost,
@@ -140,7 +234,7 @@ fun ServiceFormScreen(
                 onRemovePart = { parts.remove(it) }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             val totalPartsCost = parts.sumOf { it.cost * it.quantity }
             val totalCost = MaintenanceRules.calculateTotalCost(
@@ -158,22 +252,14 @@ fun ServiceFormScreen(
 
             PrimaryButton(
                 text = "Confirmar Registro",
-                enabled = isMileageValid && title.isNotBlank(),
+                enabled = title.isNotBlank() && isDateValid,
                 onClick = {
-                    if (title.isNotBlank() && isMileageValid) {
-                        onSave(
-                            MaintenanceService(
-                                vehicleId = vehicleId,
-                                planId = planId,
-                                title = title,
-                                category = "General",
-                                date = currentTime,
-                                mileage = currentMileage,
-                                totalCost = totalCost,
-                                workshopName = workshop
-                            ),
-                            parts.toList()
-                        )
+                    if (title.isNotBlank() && isDateValid) {
+                        if (isMileageLower) {
+                            showMileageConfirmDialog = true
+                        } else {
+                            doSave()
+                        }
                     }
                 }
             )

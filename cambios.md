@@ -108,3 +108,102 @@ Revisión contra el archivo `# MiCarro — Sistema móvil para el control del ma
 - RF-06 a RF-09 (kilometraje) implementados.
 - RF-32 a RF-33 (documentos y alertas documentales) implementados.
 - Tests mínimos de la guía cubiertos por `VehicleUseCasesTest`, `MileageUseCasesTest`, `DocumentUseCasesTest` y `VehicleFormViewModelTest`.
+
+---
+
+## 2026-09-29 — Avance Compañero 2: Plan de mantenimiento, Servicios, Repuestos y Alertas
+
+Rama: `Herrera` (basada en `develop`).
+
+### Verificación
+
+| Comando | Resultado |
+| --- | --- |
+| `./gradlew assembleDebug` | OK |
+| `./gradlew testDebugUnitTest` | 66/66 tests |
+| `./gradlew lintDebug` | 0 errores |
+
+### Hecho
+
+**Plan de mantenimiento (RF-10…RF-16)**
+- Modelo `MaintenancePlan` extendido con `isActive` para pausar/reactivar actividades.
+- `MaintenanceRules`: implementación completa de RN-01 a RN-08 (estados vencida/próxima/al día/sin programación, cálculo de recurrencia, validación de fechas/kilometraje).
+- Alta/edición de planes con plantillas rápidas (RF-16): Cambio de Aceite, Filtros, Frenos, Batería.
+- Programación por fecha (meses) y/o kilometraje con anticipación configurable.
+- Estados visuales con `StatusChip`: Vencida (rojo), Próxima (amarillo), Al día (verde), Pausado.
+- Eliminar solo si no tiene historial asociado (RF-15) con diálogo de confirmación y rechazo informativo.
+- Pausar/reactivar actividades sin afectar historial.
+
+**Servicios realizados (RF-17…RF-23)**
+- Registro de servicios preventivos/correctivos con selector de tipo (RF-17).
+- Campos: vehículo, fecha de realización, kilometraje, tipo, título, taller/responsable, mano de obra, repuestos.
+- RN-05: Validación de fecha futura rechazada con error visual.
+- RN-06: Kilometraje menor al último con advertencia visual y diálogo de confirmación obligatorio.
+- Cálculo automático de costo total (RN-04): mano de obra + repuestos.
+- Al completar servicio periódico, cálculo automático de siguiente recurrencia (RN-03).
+- Integración con `DateField` para selección de fecha.
+
+**Repuestos (RF-24…RF-27)**
+- Modelo `Part` extendido con campos opcionales: `brand`, `reference`, `provider`, `installationDate`, `warranty`, `notes`.
+- Formulario de repuestos con campos de marca y referencia (RF-24).
+- Asociar múltiples repuestos a un servicio de mantenimiento.
+- Visualización de repuestos actualmente instalados por vehículo (RF-27) con pestaña dedicada.
+- Cálculo de costo total por repuesto (cantidad × valor unitario).
+
+**Alertas locales (RF-28…RF-31)**
+- `AlertScheduler` con contratos del equipo: `scheduleForActivity`, `cancelForActivity`, `postpone`.
+- RN-08: Posponer mueve el aviso, no el vencimiento (implementado en `snoozeAlert`).
+- `AlertCalculator`: lógica pura para evaluar si debe lanzar alerta inmediata.
+- Configuración de anticipación (días y kilómetros) en `AlertSettingsScreen`.
+- Programación de alertas al crear/actualizar planes en `MaintenanceViewModel`.
+- Cancelación de alertas al eliminar planes.
+
+**Infraestructura / integración**
+- `AppDatabase` v2: registro de `MaintenancePlanEntity`, `MaintenanceServiceEntity`, `PartEntity` con sus DAOs.
+- `DatabaseModule`: provisión de `MaintenancePlanDao`, `MaintenanceServiceDao`, `PartDao`.
+- `RepositoryModule`: binding de `MaintenanceRepositoryImpl` y `PartRepositoryImpl`.
+- `MaintenanceRepository`: contrato extendido con `updatePlanActiveStatus`.
+- `MaintenancePlanDao`: query `updateActiveStatus` para pausar/reactivar sin afectar historial.
+- `MaintenanceServiceDao`: queries agregadas para historial con filtros y gastos por categoría.
+- `PartDao`: query `observeInstalledParts` con JOIN a servicios para filtrar por vehículo.
+- Navegación: rutas `maintenance_plan_screen`, `alert_settings_screen`, `maintenance_form_screen/{vehicleId}`, `service_form_screen/{vehicleId}?planId=&lastMileage=`.
+- `AlertScheduler` (core): refactorizado para soportar inyección en tests (constructor secundario sin contexto).
+- `MaintenancePlanScreen`: pestañas Planes/Repuestos instalados, selector de vehículos, FAB condicional.
+- `MaintenanceFormScreen`: plantillas rápidas, corrección de `vehicleId` (usar ID en lugar de placa).
+- `ServiceFormScreen`: validaciones RN-05/RN-06, selector tipo preventivo/correctivo, diálogo de confirmación.
+
+**Modelos de dominio actualizados**
+- `MaintenancePlan`: agregado `isActive: Boolean = true`.
+- `Part`: agregados campos opcionales `brand`, `reference`, `provider`, `installationDate`, `warranty`, `notes`.
+- `MaintenanceService`: mantiene estructura existente con `planId` nullable para servicios correctivos.
+
+**Tests nuevos**
+- `MaintenanceUseCasesTest` (4): eliminar sin/con historial, múltiples repuestos, pausar/reactivar.
+- `AlertSchedulerTest` (4): programar alerta, cancelar, posponer (RN-08), snooze.
+- `MaintenanceRulesTest` (9): estados vencida/próxima/al día, recurrencia, costo total, validaciones RN-05/RN-06, RN-08.
+- `InMemoryMaintenanceRepository` y `InMemoryPartRepository` en `fakes/InMemoryFakes.kt` para testing.
+
+### Reglas de negocio implementadas (RN-01 a RN-08)
+
+| Regla | Descripción | Implementación |
+| --- | --- | --- |
+| **RN-01** | Vencida si supera fecha o kilometraje límite | `MaintenanceRules.calculateStatus` |
+| **RN-02** | Próxima si entra en margen de anticipación | `MaintenanceRules.calculateStatus` |
+| **RN-03** | Siguiente recurrencia nace del servicio real | `MaintenanceRules.calculateNextRecurrence` |
+| **RN-04** | Total = mano de obra + repuestos + otros | `MaintenanceRules.calculateTotalCost` |
+| **RN-05** | No permitir fecha futura como realización | `MaintenanceRules.isDateValid` + validación UI |
+| **RN-06** | Kilometraje menor exige advertencia/confirmación | `MaintenanceRules.isMileageValid` + diálogo UI |
+| **RN-08** | Posponer mueve aviso, no vencimiento | `AlertScheduler.postpone` + `snoozeAlert` |
+
+### RFs cubiertos (RF-10 a RF-31)
+
+- **RF-10…RF-16**: Plan de mantenimiento completo ✓
+- **RF-17…RF-23**: Registro de servicios con validaciones ✓
+- **RF-24…RF-27**: Repuestos con campos extendidos y trazabilidad ✓
+- **RF-28…RF-31**: Alertas locales con configuración y programación ✓
+
+### Pendiente
+
+- Integración con notificaciones push del sistema (módulo de alertas avanzado).
+- Pruebas de emulador/UI (`connectedAndroidTest`) y de release.
+- Corrección de warnings de deprecación (`menuAnchor`, `fallbackToDestructiveMigration`).

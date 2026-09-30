@@ -26,6 +26,7 @@ sealed class Screen(val route: String) {
 
     // Rutas del Compañero 2 (Mantenimiento)
     object MaintenancePlan : Screen("maintenance_plan_screen")
+    object AlertSettings : Screen("alert_settings_screen")
     object MaintenanceForm : Screen("maintenance_form_screen/{vehicleId}") {
         fun createRoute(vehicleId: String) = "maintenance_form_screen/$vehicleId"
     }

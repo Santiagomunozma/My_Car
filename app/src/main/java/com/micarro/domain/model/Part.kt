@@ -7,5 +7,11 @@ data class Part(
     val serviceId: String,
     val name: String,
     val quantity: Int,
-    val cost: Double
+    val cost: Double,
+    val brand: String? = null,
+    val reference: String? = null,
+    val provider: String? = null,
+    val installationDate: Long? = null,
+    val warranty: String? = null,
+    val notes: String? = null
 )

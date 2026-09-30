@@ -14,6 +14,7 @@ interface MaintenanceRepository {
     fun observePlans(vehicleId: String): Flow<List<MaintenancePlan>>
     suspend fun savePlan(plan: MaintenancePlan)
     suspend fun updatePlan(plan: MaintenancePlan)
+    suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean)
     suspend fun deletePlanIfWithoutHistory(planId: String): Boolean
     suspend fun registerService(service: MaintenanceService, parts: List<Part>)
     fun observeServices(vehicleId: String): Flow<List<MaintenanceService>>

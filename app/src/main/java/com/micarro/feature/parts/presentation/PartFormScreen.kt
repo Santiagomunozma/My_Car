@@ -38,6 +38,8 @@ fun PartFormScreen(
     onRemovePart: (Part) -> Unit
 ) {
     var partName by remember { mutableStateOf("") }
+    var brand by remember { mutableStateOf("") }
+    var reference by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
     var cost by remember { mutableStateOf("") }
 
@@ -57,9 +59,11 @@ fun PartFormScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(part.name, style = MaterialTheme.typography.bodyMedium)
+                        val displayName = if (!part.brand.isNullOrBlank()) "${part.name} (${part.brand})" else part.name
+                        Text(displayName, style = MaterialTheme.typography.bodyMedium)
+                        val refText = if (!part.reference.isNullOrBlank()) "Ref: ${part.reference} • " else ""
                         Text(
-                            "${part.quantity} x $${String.format("%.2f", part.cost)}",
+                            "$refText${part.quantity} x $${String.format("%.2f", part.cost)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -79,6 +83,22 @@ fun PartFormScreen(
                     label = "Nombre del repuesto",
                     placeholder = "Filtro de aceite"
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MiCarroTextField(
+                        value = brand,
+                        onValueChange = { brand = it },
+                        label = "Marca (Opcional)",
+                        placeholder = "Bosch, Mobil...",
+                        modifier = Modifier.weight(1f)
+                    )
+                    MiCarroTextField(
+                        value = reference,
+                        onValueChange = { reference = it },
+                        label = "Ref / Código (Opcional)",
+                        placeholder = "OEM-12345",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     MiCarroTextField(
                         value = quantity,
@@ -103,12 +123,16 @@ fun PartFormScreen(
                             onAddPart(
                                 Part(
                                     serviceId = "",
-                                    name = partName,
+                                    name = partName.trim(),
                                     quantity = quantity.toInt(),
-                                    cost = cost.toDouble()
+                                    cost = cost.toDouble(),
+                                    brand = brand.trim().ifEmpty { null },
+                                    reference = reference.trim().ifEmpty { null }
                                 )
                             )
                             partName = ""
+                            brand = ""
+                            reference = ""
                             quantity = ""
                             cost = ""
                         }

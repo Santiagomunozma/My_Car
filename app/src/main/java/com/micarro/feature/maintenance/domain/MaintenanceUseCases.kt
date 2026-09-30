@@ -28,6 +28,13 @@ class UpdateMaintenancePlanUseCase @Inject constructor(
         repository.updatePlan(plan)
 }
 
+class UpdateMaintenancePlanActiveStatusUseCase @Inject constructor(
+    private val repository: MaintenanceRepository
+) {
+    suspend operator fun invoke(planId: String, isActive: Boolean) =
+        repository.updatePlanActiveStatus(planId, isActive)
+}
+
 class DeleteMaintenancePlanUseCase @Inject constructor(
     private val repository: MaintenanceRepository
 ) {
@@ -53,6 +60,7 @@ class MaintenanceUseCases @Inject constructor(
     val observePlans: ObserveMaintenancePlansUseCase,
     val savePlan: SaveMaintenancePlanUseCase,
     val updatePlan: UpdateMaintenancePlanUseCase,
+    val updatePlanActiveStatus: UpdateMaintenancePlanActiveStatusUseCase,
     val deletePlan: DeleteMaintenancePlanUseCase,
     val registerService: RegisterMaintenanceServiceUseCase,
     val observeServices: ObserveMaintenanceServicesUseCase

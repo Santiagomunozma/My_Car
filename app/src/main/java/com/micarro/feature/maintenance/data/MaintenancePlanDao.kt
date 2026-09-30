@@ -17,6 +17,9 @@ interface MaintenancePlanDao {
     @Query("DELETE FROM maintenance_plans WHERE id = :planId")
     suspend fun delete(planId: String)
 
+    @Query("UPDATE maintenance_plans SET isActive = :isActive WHERE id = :planId")
+    suspend fun updateActiveStatus(planId: String, isActive: Boolean)
+
     @Query("SELECT COUNT(*) FROM maintenance_services WHERE planId = :planId")
     suspend fun getServiceCountForPlan(planId: String): Int
 }

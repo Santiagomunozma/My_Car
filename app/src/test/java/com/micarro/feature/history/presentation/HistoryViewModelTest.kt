@@ -46,6 +46,7 @@ class FakeMaintenanceRepository : MaintenanceRepository {
 
     override suspend fun savePlan(plan: MaintenancePlan) {}
     override suspend fun updatePlan(plan: MaintenancePlan) {}
+    override suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean) {}
     override suspend fun deletePlanIfWithoutHistory(planId: String): Boolean = true
 
     override suspend fun registerService(
