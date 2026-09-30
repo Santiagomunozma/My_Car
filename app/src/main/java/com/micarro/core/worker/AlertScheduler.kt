@@ -12,10 +12,17 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AlertScheduler @Inject constructor(
-    @ApplicationContext private val context: Context
+open class AlertScheduler(
+    private val context: Context?,
+    @Suppress("UNUSED_PARAMETER") isReal: Boolean
 ) {
-    fun scheduleAlert(delayInMinutes: Long, title: String, message: String) {
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(context, true)
+
+    constructor() : this(null, false)
+
+    open fun scheduleAlert(delayInMinutes: Long, title: String, message: String) {
+        val ctx = context ?: return
         val inputData = workDataOf(
             MaintenanceAlertWorker.KEY_TITLE to title,
             MaintenanceAlertWorker.KEY_MESSAGE to message
@@ -31,10 +38,15 @@ class AlertScheduler @Inject constructor(
             .setConstraints(constraints)
             .build()
 
-        WorkManager.getInstance(context).enqueueUniqueWork(
+        WorkManager.getInstance(ctx).enqueueUniqueWork(
             "alert_${title.hashCode()}",
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
+    }
+
+    open fun cancelAlert(uniqueWorkName: String) {
+        val ctx = context ?: return
+        WorkManager.getInstance(ctx).cancelUniqueWork(uniqueWorkName)
     }
 }

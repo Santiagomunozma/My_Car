@@ -23,7 +23,7 @@ class MaintenanceWorker @AssistedInject constructor(
         val vehicles = vehicleRepository.observeVehicles().firstOrNull() ?: return Result.success()
 
         for (vehicle in vehicles) {
-            val plans = maintenanceRepository.observePlans(vehicle.plate).firstOrNull() ?: continue
+            val plans = maintenanceRepository.observePlans(vehicle.id.toString()).firstOrNull() ?: continue
 
             for (plan in plans) {
                 if (plan.intervalMileage <= 0) continue

@@ -114,7 +114,18 @@ fun MiCarroNavGraph(
                             )
                         )
                     }
+                },
+                onOpenAlertSettings = {
+                    navController.navigate(Screen.AlertSettings.route)
                 }
+            )
+        }
+
+        composable(route = Screen.AlertSettings.route) {
+            val viewModel: MaintenanceViewModel = hiltViewModel()
+            com.micarro.feature.alerts.presentation.AlertSettingsScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -127,11 +138,13 @@ fun MiCarroNavGraph(
                     defaultValue = null
                 }
             )
-        ) {
+        ) { backStackEntry ->
             val viewModel: MaintenanceViewModel = hiltViewModel()
+            val vehicleId = backStackEntry.arguments?.getString("vehicleId")
 
             MaintenanceFormScreen(
                 viewModel = viewModel,
+                initialVehicleId = vehicleId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

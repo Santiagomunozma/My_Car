@@ -48,18 +48,37 @@ val DEFAULT_CATEGORIES = listOf(
     "Otros"
 )
 
+data class MaintenanceTemplate(
+    val name: String,
+    val category: String,
+    val km: Int,
+    val months: Int
+)
+
+val COMMON_TEMPLATES = listOf(
+    MaintenanceTemplate("Cambio de Aceite", "Aceite", 5000, 6),
+    MaintenanceTemplate("Filtros (Aire/Combustible)", "Filtros", 10000, 12),
+    MaintenanceTemplate("Revisión de Frenos", "Frenos", 15000, 12),
+    MaintenanceTemplate("Batería y Eléctrico", "Batería", 0, 24)
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaintenanceFormScreen(
     viewModel: MaintenanceViewModel,
+    initialVehicleId: String? = null,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Estado del vehículo seleccionado (toma por defecto el activo o el primero de la lista)
-    var selectedVehicle by remember(uiState.vehicles, uiState.selectedVehicle) {
-        mutableStateOf<Vehicle?>(uiState.selectedVehicle ?: uiState.vehicles.firstOrNull())
+    // Estado del vehículo seleccionado (toma por defecto el que coincida con initialVehicleId o activo)
+    var selectedVehicle by remember(uiState.vehicles, uiState.selectedVehicle, initialVehicleId) {
+        mutableStateOf<Vehicle?>(
+            uiState.vehicles.find { it.id.toString() == initialVehicleId }
+                ?: uiState.selectedVehicle
+                ?: uiState.vehicles.firstOrNull()
+        )
     }
     var expandedVehicleDropdown by remember { mutableStateOf(false) }
 
@@ -134,6 +153,32 @@ fun MaintenanceFormScreen(
                     label = { Text("Vehículo asignado") },
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            // Sugerencias / Plantillas rápidas (RF-16)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Plantillas rápidas:",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    COMMON_TEMPLATES.forEach { template ->
+                        androidx.compose.material3.FilterChip(
+                            selected = title == template.name,
+                            onClick = {
+                                title = template.name
+                                category = template.category
+                                intervalKmText = if (template.km > 0) template.km.toString() else ""
+                                intervalMonthsText = if (template.months > 0) template.months.toString() else ""
+                            },
+                            label = { Text(template.name) }
+                        )
+                    }
+                }
             }
 
             // 2. Título de la actividad
@@ -215,7 +260,7 @@ fun MaintenanceFormScreen(
                     }
 
                     val newPlan = MaintenancePlan(
-                        vehicleId = targetVehicle.plate,
+                        vehicleId = targetVehicle.id.toString(),
                         title = title.trim(),
                         category = category,
                         intervalMileage = kmInt,

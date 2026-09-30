@@ -12,7 +12,8 @@ data class MaintenancePlanEntity(
     val title: String,
     val category: String,
     val intervalMileage: Int,
-    val intervalMonths: Int
+    val intervalMonths: Int,
+    val isActive: Boolean = true
 )
 
 @Entity(tableName = "maintenance_services")
@@ -34,7 +35,8 @@ fun MaintenancePlanEntity.toDomain() = MaintenancePlan(
     title = title,
     category = category,
     intervalMileage = intervalMileage,
-    intervalMonths = intervalMonths
+    intervalMonths = intervalMonths,
+    isActive = isActive
 )
 
 fun MaintenancePlan.toEntity() = MaintenancePlanEntity(
@@ -43,7 +45,8 @@ fun MaintenancePlan.toEntity() = MaintenancePlanEntity(
     title = title,
     category = category,
     intervalMileage = intervalMileage,
-    intervalMonths = intervalMonths
+    intervalMonths = intervalMonths,
+    isActive = isActive
 )
 
 fun MaintenanceServiceEntity.toDomain() = MaintenanceService(
