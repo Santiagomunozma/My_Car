@@ -26,7 +26,8 @@ data class MaintenanceServiceEntity(
     val date: Long,
     val mileage: Int,
     val totalCost: Double,
-    val workshopName: String
+    val workshopName: String,
+    val evidenceUri: String? = null
 )
 
 fun MaintenancePlanEntity.toDomain() = MaintenancePlan(
@@ -58,7 +59,8 @@ fun MaintenanceServiceEntity.toDomain() = MaintenanceService(
     date = date,
     mileage = mileage,
     totalCost = totalCost,
-    workshopName = workshopName
+    workshopName = workshopName,
+    evidenceUri = evidenceUri
 )
 
 fun MaintenanceService.toEntity() = MaintenanceServiceEntity(
@@ -70,5 +72,6 @@ fun MaintenanceService.toEntity() = MaintenanceServiceEntity(
     date = date,
     mileage = mileage,
     totalCost = totalCost,
-    workshopName = workshopName
+    workshopName = workshopName,
+    evidenceUri = evidenceUri
 )
