@@ -47,6 +47,7 @@ import com.micarro.core.notification.NotificationHelper
 import com.micarro.core.worker.DocumentWorker
 import com.micarro.core.worker.MaintenanceWorker
 import com.micarro.ui.theme.MyCarTheme
+import com.micarro.core.worker.WarrantyWorker
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
 
@@ -108,6 +109,10 @@ class MainActivity : ComponentActivity() {
         val documentWorkRequest = PeriodicWorkRequestBuilder<DocumentWorker>(24, TimeUnit.HOURS)
             .setConstraints(constraints)
             .build()
+            
+        val warrantyWorkRequest = PeriodicWorkRequestBuilder<WarrantyWorker>(24, TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "MaintenanceWorkerTask",
@@ -119,6 +124,12 @@ class MainActivity : ComponentActivity() {
             "DocumentWorkerTask",
             ExistingPeriodicWorkPolicy.KEEP, // Mantiene la tarea si ya estaba agendada
             documentWorkRequest
+        )
+        
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "WarrantyWorkerTask",
+            ExistingPeriodicWorkPolicy.KEEP, // Mantiene la tarea si ya estaba agendada
+            warrantyWorkRequest
         )
     }
 }
