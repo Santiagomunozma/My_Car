@@ -11,5 +11,6 @@ data class MaintenanceService(
     val date: Long,
     val mileage: Int,
     val totalCost: Double,
-    val workshopName: String
+    val workshopName: String,
+    val evidenceUri: String? = null
 )

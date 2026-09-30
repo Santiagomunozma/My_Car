@@ -1,5 +1,7 @@
 package com.micarro.feature.maintenance.presentation
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -61,7 +65,13 @@ fun ServiceFormScreen(
     var mileage by remember { mutableStateOf(lastMileage.toString()) }
     var laborCost by remember { mutableStateOf("") }
     var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    var evidenceUri by remember { mutableStateOf<String?>(null) }
     val parts = remember { mutableStateListOf<Part>() }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> evidenceUri = uri?.toString() }
+    )
 
     var showMileageConfirmDialog by remember { mutableStateOf(false) }
 
@@ -89,7 +99,8 @@ fun ServiceFormScreen(
                 date = selectedDateMillis,
                 mileage = currentMileage,
                 totalCost = totalCost,
-                workshopName = workshop.trim()
+                workshopName = workshop.trim(),
+                evidenceUri = evidenceUri
             ),
             parts.toList()
         )
@@ -224,6 +235,34 @@ fun ServiceFormScreen(
                     keyboardType = KeyboardType.Decimal,
                     modifier = Modifier.weight(1f)
                 )
+            }
+            
+            // Adjuntar Evidencia (RF-20)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Evidencia (opcional)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (evidenceUri != null) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = com.micarro.ui.theme.StatusSuccess)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        TextButton(onClick = { evidenceUri = null }) {
+                            Text("Quitar", color = StatusError)
+                        }
+                    }
+                } else {
+                    TextButton(onClick = { photoPickerLauncher.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
+                        Icon(Icons.Default.Image, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Adjuntar foto")
+                    }
+                }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)

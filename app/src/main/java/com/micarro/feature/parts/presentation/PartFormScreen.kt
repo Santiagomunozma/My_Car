@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.micarro.domain.model.Part
+import com.micarro.ui.components.DateField
 import com.micarro.ui.components.MiCarroCard
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.theme.StatusError
@@ -42,6 +43,8 @@ fun PartFormScreen(
     var reference by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
     var cost by remember { mutableStateOf("") }
+    var installationDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var warranty by remember { mutableStateOf("") }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -117,6 +120,22 @@ fun PartFormScreen(
                         modifier = Modifier.weight(2f)
                     )
                 }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DateField(
+                        label = "Fecha instalación",
+                        selectedDateMillis = installationDate,
+                        onDateSelected = { installationDate = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    MiCarroTextField(
+                        value = warranty,
+                        onValueChange = { warranty = it.filter { ch -> ch.isDigit() } },
+                        label = "Garantía (meses)",
+                        placeholder = "Ej: 6",
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 Button(
                     onClick = {
                         if (partName.isNotBlank() && quantity.toIntOrNull() != null && cost.toDoubleOrNull() != null) {
@@ -127,7 +146,9 @@ fun PartFormScreen(
                                     quantity = quantity.toInt(),
                                     cost = cost.toDouble(),
                                     brand = brand.trim().ifEmpty { null },
-                                    reference = reference.trim().ifEmpty { null }
+                                    reference = reference.trim().ifEmpty { null },
+                                    installationDate = installationDate,
+                                    warranty = warranty.trim().ifEmpty { null }
                                 )
                             )
                             partName = ""
@@ -135,6 +156,8 @@ fun PartFormScreen(
                             reference = ""
                             quantity = ""
                             cost = ""
+                            warranty = ""
+                            installationDate = System.currentTimeMillis()
                         }
                     },
                     modifier = Modifier.align(Alignment.End),
