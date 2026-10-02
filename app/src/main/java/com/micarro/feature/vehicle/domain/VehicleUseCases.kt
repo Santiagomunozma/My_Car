@@ -65,8 +65,8 @@ class SaveVehicleUseCase @Inject constructor(
                         plate = normalizedPlate,
                         type = draft.type,
                         brand = draft.brand.trim(),
-                        line = draft.line.trim(),
-                        model = draft.model.trim(),
+                        line = draft.line.trim().ifEmpty { draft.model.trim() },
+                        model = draft.model.trim().ifEmpty { draft.line.trim() },
                         year = draft.year.trim().toInt(),
                         currentMileage = draft.mileage.trim().toLong(),
                         color = draft.color.trim().ifEmpty { null },
@@ -89,8 +89,8 @@ class SaveVehicleUseCase @Inject constructor(
                         plate = normalizedPlate,
                         type = draft.type,
                         brand = draft.brand.trim(),
-                        line = draft.line.trim(),
-                        model = draft.model.trim(),
+                        line = draft.line.trim().ifEmpty { draft.model.trim() },
+                        model = draft.model.trim().ifEmpty { draft.line.trim() },
                         year = draft.year.trim().toInt(),
                         color = draft.color.trim().ifEmpty { null },
                         vin = draft.vin.trim().uppercase().ifEmpty { null },
@@ -109,14 +109,15 @@ class SaveVehicleUseCase @Inject constructor(
     private fun validate(draft: VehicleDraft): Map<VehicleField, VehicleError> {
         val errors = mutableMapOf<VehicleField, VehicleError>()
         val normalizedPlate = VehicleRules.normalizePlate(draft.plate)
+        val typeKey = if (draft.type == VehicleType.MOTORCYCLE) "MOTO" else "CARRO"
         when {
             normalizedPlate.isEmpty() -> errors[VehicleField.PLATE] = VehicleError.REQUIRED
-            !VehicleRules.isPlateFormatValid(normalizedPlate) ->
+            !VehicleRules.isPlateValid(normalizedPlate, typeKey) && !VehicleRules.isPlateFormatValid(normalizedPlate) ->
                 errors[VehicleField.PLATE] = VehicleError.INVALID_FORMAT
         }
         if (draft.brand.isBlank()) errors[VehicleField.BRAND] = VehicleError.REQUIRED
-        if (draft.line.isBlank()) errors[VehicleField.LINE] = VehicleError.REQUIRED
-        if (draft.model.isBlank()) errors[VehicleField.MODEL] = VehicleError.REQUIRED
+        val effectiveLine = draft.line.ifBlank { draft.model }
+        if (effectiveLine.isBlank()) errors[VehicleField.LINE] = VehicleError.REQUIRED
 
         val year = draft.year.trim().toIntOrNull()
         when {

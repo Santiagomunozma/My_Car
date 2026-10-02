@@ -21,41 +21,63 @@ import androidx.compose.ui.Modifier
 fun <T> MiCarroDropdownField(
     label: String,
     options: List<T>,
-    selected: T,
+    selected: T?,
     optionLabel: @Composable (T) -> String,
     onSelected: (T) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    placeholder: String? = null,
+    errorMessage: String? = null,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    optionContent: @Composable ((T) -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val displayValue = if (selected != null) optionLabel(selected) else (placeholder ?: "")
+
     ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
+        expanded = expanded && enabled,
+        onExpandedChange = { if (enabled) expanded = it },
         modifier = modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
-            value = optionLabel(selected),
+            value = displayValue,
             onValueChange = {},
             readOnly = true,
+            enabled = enabled,
             label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            placeholder = placeholder?.let { { Text(it) } },
+            leadingIcon = leadingIcon,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled) },
+            isError = errorMessage != null,
+            supportingText = errorMessage?.let {
+                { Text(it, color = MaterialTheme.colorScheme.error) }
+            },
             shape = MaterialTheme.shapes.small,
             colors = miCarroTextFieldColors(),
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(optionLabel(option)) },
-                    onClick = {
-                        onSelected(option)
-                        expanded = false
-                    }
-                )
+        if (enabled && options.isNotEmpty()) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            if (optionContent != null) {
+                                optionContent(option)
+                            } else {
+                                Text(optionLabel(option))
+                            }
+                        },
+                        onClick = {
+                            onSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }

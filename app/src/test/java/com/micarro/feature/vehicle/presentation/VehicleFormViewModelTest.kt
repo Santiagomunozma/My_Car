@@ -1,12 +1,14 @@
 package com.micarro.feature.vehicle.presentation
 
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.lifecycle.SavedStateHandle
 import com.micarro.MainDispatcherRule
 import com.micarro.fakes.FakeVehiclePhotoStore
 import com.micarro.fakes.InMemoryVehicleRepository
+import com.micarro.feature.vehicle.data.VehicleCatalogHelper
 import com.micarro.feature.vehicle.domain.GetVehicleUseCase
 import com.micarro.feature.vehicle.domain.SaveVehicleUseCase
-import com.micarro.domain.model.VehicleType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -16,6 +18,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+private object DummyContext : ContextWrapper(null)
+
+class FakeVehicleCatalogHelper : VehicleCatalogHelper(DummyContext) {
+    override suspend fun getBrands(typeKey: String): List<String> = listOf("BYD", "Chevrolet", "Renault")
+    override suspend fun getLines(typeKey: String, brand: String): List<String> = listOf("Onix", "Tracker")
+}
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class VehicleFormViewModelTest {
 
@@ -24,12 +33,14 @@ class VehicleFormViewModelTest {
 
     private val repository = InMemoryVehicleRepository()
     private val photoStore = FakeVehiclePhotoStore()
+    private val catalogHelper = FakeVehicleCatalogHelper()
 
     private fun viewModel() = VehicleFormViewModel(
         savedStateHandle = SavedStateHandle(),
         saveVehicle = SaveVehicleUseCase(repository, photoStore),
         getVehicle = GetVehicleUseCase(repository),
-        photoStore = photoStore
+        photoStore = photoStore,
+        catalogHelper = catalogHelper
     )
 
     @Test
@@ -37,12 +48,11 @@ class VehicleFormViewModelTest {
         val vm = viewModel()
         advanceUntilIdle()
 
-        vm.updateDraft {
-            it.copy(
-                plate = "abc123", brand = "M", line = "L", model = "M",
-                year = "2020", mileage = "100", type = VehicleType.CAR
-            )
-        }
+        vm.onPlateChanged("AAA123")
+        vm.onBrandSelected("Chevrolet")
+        vm.onLineSelected("Onix")
+        vm.onYearSelected("2020")
+        vm.onMileageChanged("100")
         vm.onSave()
         vm.onSave() // segundo tap inmediato debe ser ignorado por isSaving
         advanceUntilIdle()
@@ -82,7 +92,8 @@ class VehicleFormViewModelTest {
         val vm = viewModel()
         advanceUntilIdle()
 
-        vm.updateDraft { it.copy(plate = "", year = "abc") }
+        vm.onPlateChanged("")
+        vm.onYearSelected("abc")
         vm.onSave()
         advanceUntilIdle()
 

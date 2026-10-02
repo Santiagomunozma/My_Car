@@ -11,7 +11,9 @@ enum class VehicleError {
 }
 
 object VehicleRules {
-    private val PLATE_PATTERN = Regex("^[A-Z0-9-]{3,10}$")
+    private val GENERIC_PLATE_PATTERN = Regex("^[A-Z0-9-]{3,10}$")
+    val CAR_PLATE_REGEX = Regex("^[A-Z]{3}[0-9]{3}$")
+    val MOTO_PLATE_REGEX = Regex("^[A-Z]{3}[0-9]{2}[A-Z]$")
     private val VIN_PATTERN = Regex("^[A-Z0-9]{17}$")
     const val MIN_YEAR = 1900
 
@@ -19,7 +21,18 @@ object VehicleRules {
         raw.trim().uppercase().replace(Regex("\\s+"), "")
 
     fun isPlateFormatValid(normalizedPlate: String): Boolean =
-        PLATE_PATTERN.matches(normalizedPlate)
+        GENERIC_PLATE_PATTERN.matches(normalizedPlate) ||
+                CAR_PLATE_REGEX.matches(normalizedPlate) ||
+                MOTO_PLATE_REGEX.matches(normalizedPlate)
+
+    fun isPlateValid(normalizedPlate: String, typeKey: String): Boolean {
+        val uppercasePlate = normalizedPlate.trim().uppercase()
+        return if (typeKey == "MOTO") {
+            MOTO_PLATE_REGEX.matches(uppercasePlate)
+        } else {
+            CAR_PLATE_REGEX.matches(uppercasePlate)
+        }
+    }
 
     fun isYearValid(year: Int, currentYear: Int = Year.now().value): Boolean =
         year in MIN_YEAR..(currentYear + 1)

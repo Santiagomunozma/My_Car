@@ -3,6 +3,8 @@ package com.micarro.feature.vehicle.presentation
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,6 +26,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -30,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,9 +47,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.micarro.R
 import com.micarro.domain.model.FuelType
-import com.micarro.domain.model.VehicleType
 import com.micarro.feature.vehicle.domain.VehicleError
 import com.micarro.feature.vehicle.domain.VehicleField
+import com.micarro.feature.vehicle.domain.VehicleRules
 import com.micarro.ui.components.MiCarroDropdownField
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.components.PrimaryButton
@@ -55,6 +63,24 @@ fun fuelTypeLabel(type: FuelType): Int = when (type) {
     FuelType.GAS -> R.string.fuel_type_gas
     FuelType.ELECTRIC -> R.string.fuel_type_electric
     FuelType.HYBRID -> R.string.fuel_type_hybrid
+}
+
+@Composable
+fun ColorDot(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(18.dp)
+            .clip(CircleShape)
+            .background(color)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                shape = CircleShape
+            )
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,9 +135,9 @@ fun VehicleFormScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Fotografía (RF-02)
+                // 1. Fotografía del Vehículo
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -164,68 +190,132 @@ fun VehicleFormScreen(
                     )
                 }
 
-                MiCarroDropdownField(
-                    label = stringResource(R.string.field_type),
-                    options = VehicleType.entries,
-                    selected = state.draft.type,
-                    optionLabel = { stringResource(vehicleTypeLabel(it)) },
-                    onSelected = { type ->
-                        viewModel.updateDraft { it.copy(type = type) }
-                    }
+                // 2. Selector de Tipo de Vehículo (CARRO / MOTO)
+                Text(
+                    text = "Tipo de Vehículo",
+                    style = MaterialTheme.typography.titleMedium
                 )
+                val typeOptions = listOf(
+                    "CARRO" to "Automóvil / Camioneta",
+                    "MOTO" to "Motocicleta"
+                )
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    typeOptions.forEachIndexed { index, (key, label) ->
+                        SegmentedButton(
+                            selected = state.typeKey == key,
+                            onClick = { viewModel.onTypeSelected(key) },
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = typeOptions.size
+                            )
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+
+                // 3. Campo de Placa
+                val plateErrorText = when {
+                    state.errors.containsKey(VehicleField.PLATE) -> {
+                        when (state.errors[VehicleField.PLATE]) {
+                            VehicleError.REQUIRED -> stringResource(R.string.error_required)
+                            VehicleError.DUPLICATE_PLATE -> stringResource(R.string.error_plate_duplicate)
+                            else -> if (state.typeKey == "MOTO") {
+                                "Formato inválido. Ejemplo: AAA12A (3 letras, 2 números y 1 letra)"
+                            } else {
+                                "Formato inválido. Ejemplo: AAA123 (3 letras y 3 números)"
+                            }
+                        }
+                    }
+                    state.draft.plate.isNotBlank() && !VehicleRules.isPlateValid(state.draft.plate, state.typeKey) -> {
+                        if (state.typeKey == "MOTO") {
+                            "Formato inválido. Ejemplo: AAA12A (3 letras, 2 números y 1 letra)"
+                        } else {
+                            "Formato inválido. Ejemplo: AAA123 (3 letras y 3 números)"
+                        }
+                    }
+                    else -> null
+                }
 
                 MiCarroTextField(
                     value = state.draft.plate,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(plate = it) }
-                        viewModel.clearFieldError(VehicleField.PLATE)
-                    },
+                    onValueChange = viewModel::onPlateChanged,
                     label = stringResource(R.string.field_plate),
-                    errorMessage = state.errors[VehicleField.PLATE]?.let { errorText(it) }
+                    errorMessage = plateErrorText,
+                    supportingText = if (plateErrorText == null) {
+                        if (state.typeKey == "MOTO") "Ejemplo: AAA12A (máximo 6 caracteres)"
+                        else "Ejemplo: AAA123 (máximo 6 caracteres)"
+                    } else null,
+                    singleLine = true
                 )
-                MiCarroTextField(
-                    value = state.draft.brand,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(brand = it) }
-                        viewModel.clearFieldError(VehicleField.BRAND)
-                    },
+
+                // 4. Desplegables en Cascada: Marca, Línea, Año del Modelo
+                MiCarroDropdownField(
                     label = stringResource(R.string.field_brand),
+                    options = state.availableBrands,
+                    selected = state.draft.brand.ifEmpty { null },
+                    placeholder = "Selecciona una marca",
+                    optionLabel = { it },
+                    onSelected = viewModel::onBrandSelected,
                     errorMessage = state.errors[VehicleField.BRAND]?.let { errorText(it) }
                 )
-                MiCarroTextField(
-                    value = state.draft.line,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(line = it) }
-                        viewModel.clearFieldError(VehicleField.LINE)
-                    },
+
+                MiCarroDropdownField(
                     label = stringResource(R.string.field_line),
+                    options = state.availableLines,
+                    selected = state.draft.line.ifEmpty { null },
+                    enabled = state.draft.brand.isNotBlank(),
+                    placeholder = if (state.draft.brand.isBlank()) "Selecciona una marca primero" else "Selecciona una línea",
+                    optionLabel = { it },
+                    onSelected = viewModel::onLineSelected,
                     errorMessage = state.errors[VehicleField.LINE]?.let { errorText(it) }
                 )
-                MiCarroTextField(
-                    value = state.draft.model,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(model = it) }
-                        viewModel.clearFieldError(VehicleField.MODEL)
-                    },
-                    label = stringResource(R.string.field_model),
-                    errorMessage = state.errors[VehicleField.MODEL]?.let { errorText(it) }
-                )
-                MiCarroTextField(
-                    value = state.draft.year,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(year = it) }
-                        viewModel.clearFieldError(VehicleField.YEAR)
-                    },
+
+                MiCarroDropdownField(
                     label = stringResource(R.string.field_year),
-                    keyboardType = KeyboardType.Number,
+                    options = state.availableYears,
+                    selected = state.draft.year.ifEmpty { null },
+                    placeholder = "Selecciona el año",
+                    optionLabel = { it },
+                    onSelected = viewModel::onYearSelected,
                     errorMessage = state.errors[VehicleField.YEAR]?.let { errorText(it) }
                 )
+
+                // 5. Desplegable de Color Visual
+                val selectedColorOption = VehicleColors.findByName(state.draft.color)
+                MiCarroDropdownField(
+                    label = stringResource(R.string.field_color),
+                    options = VehicleColors.options,
+                    selected = selectedColorOption,
+                    placeholder = "Selecciona un color",
+                    optionLabel = { it.name },
+                    onSelected = { viewModel.onColorSelected(it.name) },
+                    leadingIcon = selectedColorOption?.let { colorOpt ->
+                        { ColorDot(color = colorOpt.color) }
+                    },
+                    optionContent = { colorOpt ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            ColorDot(color = colorOpt.color)
+                            Text(
+                                text = colorOpt.name,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                )
+
+                // 6. Kilometraje actual (sólo editable en alta)
                 MiCarroTextField(
                     value = state.draft.mileage,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(mileage = it) }
-                        viewModel.clearFieldError(VehicleField.MILEAGE)
-                    },
+                    onValueChange = viewModel::onMileageChanged,
                     label = stringResource(R.string.field_mileage),
                     keyboardType = KeyboardType.Number,
                     readOnly = state.isEditing,
@@ -234,6 +324,7 @@ fun VehicleFormScreen(
                     errorMessage = state.errors[VehicleField.MILEAGE]?.let { errorText(it) }
                 )
 
+                // 7. Tipo de Combustible
                 MiCarroDropdownField(
                     label = stringResource(R.string.field_fuel_type),
                     options = listOf<FuelType?>(null) + FuelType.entries,
@@ -242,31 +333,22 @@ fun VehicleFormScreen(
                         it?.let { t -> stringResource(fuelTypeLabel(t)) }
                             ?: stringResource(R.string.field_none)
                     },
-                    onSelected = { fuel ->
-                        viewModel.updateDraft { it.copy(fuelType = fuel) }
-                    }
+                    onSelected = viewModel::onFuelTypeSelected
                 )
 
-                MiCarroTextField(
-                    value = state.draft.color,
-                    onValueChange = { viewModel.updateDraft { d -> d.copy(color = it) } },
-                    label = stringResource(R.string.field_color)
-                )
+                // 8. VIN / Número de Chasis
                 MiCarroTextField(
                     value = state.draft.vin,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(vin = it) }
-                        viewModel.clearFieldError(VehicleField.VIN)
-                    },
+                    onValueChange = viewModel::onVinChanged,
                     label = stringResource(R.string.field_vin),
+                    supportingText = "17 caracteres alfanuméricos (opcional)",
                     errorMessage = state.errors[VehicleField.VIN]?.let { errorText(it) }
                 )
+
+                // 9. Cilindraje (cc)
                 MiCarroTextField(
                     value = state.draft.engineCc,
-                    onValueChange = {
-                        viewModel.updateDraft { d -> d.copy(engineCc = it) }
-                        viewModel.clearFieldError(VehicleField.ENGINE_CC)
-                    },
+                    onValueChange = viewModel::onEngineCcChanged,
                     label = stringResource(R.string.field_engine_cc),
                     keyboardType = KeyboardType.Number,
                     errorMessage = state.errors[VehicleField.ENGINE_CC]?.let { errorText(it) }
@@ -283,10 +365,11 @@ fun VehicleFormScreen(
                     )
                 }
 
+                // 10. Botón Guardar (habilitado únicamente si el formulario es válido)
                 PrimaryButton(
                     text = stringResource(R.string.action_save),
                     onClick = viewModel::onSave,
-                    enabled = !state.isSaving && !state.isImportingPhoto
+                    enabled = state.isFormValid && !state.isSaving && !state.isImportingPhoto
                 )
             }
         }
