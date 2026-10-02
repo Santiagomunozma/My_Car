@@ -17,7 +17,7 @@ import com.micarro.feature.history.presentation.HistoryScreen
 import com.micarro.feature.maintenance.presentation.MaintenanceFormScreen
 import com.micarro.feature.maintenance.presentation.MaintenancePlanScreen
 import com.micarro.feature.maintenance.presentation.MaintenanceViewModel
-import com.micarro.feature.maintenance.presentation.ServiceFormScreen
+import com.micarro.feature.maintenance.presentation.ServiceFormRoute
 import com.micarro.feature.mileage.presentation.MileageScreen
 import com.micarro.feature.settings.presentation.SettingsScreen
 import com.micarro.feature.vehicle.presentation.VehicleFormScreen
@@ -115,6 +115,13 @@ fun MiCarroNavGraph(
                         )
                     }
                 },
+                onEditPlan = { planId ->
+                    state.selectedVehicle?.let { vehicle ->
+                        navController.navigate(
+                            Screen.MaintenanceForm.createRoute(vehicle.id.toString(), planId)
+                        )
+                    }
+                },
                 onOpenAlertSettings = {
                     navController.navigate(Screen.AlertSettings.route)
                 }
@@ -136,15 +143,22 @@ fun MiCarroNavGraph(
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
+                },
+                navArgument("planId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
             val viewModel: MaintenanceViewModel = hiltViewModel()
             val vehicleId = backStackEntry.arguments?.getString("vehicleId")
+            val planId = backStackEntry.arguments?.getString("planId")?.ifBlank { null }
 
             MaintenanceFormScreen(
                 viewModel = viewModel,
                 initialVehicleId = vehicleId,
+                planId = planId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -161,25 +175,40 @@ fun MiCarroNavGraph(
                 navArgument("lastMileage") {
                     type = NavType.StringType
                     defaultValue = "0"
+                },
+                navArgument("serviceId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
             val viewModel: MaintenanceViewModel = hiltViewModel()
-            ServiceFormScreen(
+            ServiceFormRoute(
                 vehicleId = checkNotNull(backStackEntry.arguments?.getString("vehicleId")),
-                planId = backStackEntry.arguments?.getString("planId")?.ifEmpty { null },
-                lastMileage = backStackEntry.arguments?.getString("lastMileage")
-                    ?.toIntOrNull() ?: 0,
-                onSave = { service, parts ->
-                    viewModel.registerService(service, parts)
-                    navController.popBackStack()
-                },
+                planId = backStackEntry.arguments?.getString("planId")?.ifBlank { null },
+                serviceId = backStackEntry.arguments?.getString("serviceId")?.ifBlank { null },
+                lastMileage = backStackEntry.arguments?.getString("lastMileage")?.toIntOrNull() ?: 0,
+                viewModel = viewModel,
                 onBack = { navController.popBackStack() }
             )
         }
 
         // Orquestador
-        composable(route = Screen.History.route) { HistoryScreen() }
+        composable(route = Screen.History.route) {
+            HistoryScreen(
+                onEditService = { item ->
+                    navController.navigate(
+                        Screen.ServiceForm.createRoute(
+                            vehicleId = item.vehicleId.ifBlank { "0" },
+                            planId = null,
+                            lastMileage = item.mileage,
+                            serviceId = item.id
+                        )
+                    )
+                }
+            )
+        }
 
         // RF-40: SettingsScreen con reinicio de backstack tras borrado total de datos
         composable(route = Screen.Settings.route) {
@@ -189,7 +218,14 @@ fun MiCarroNavGraph(
                         popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
-                }
+                },
+                onOpenBackup = { navController.navigate(Screen.Backup.route) }
+            )
+        }
+
+        composable(route = Screen.Backup.route) {
+            com.micarro.feature.backup.presentation.BackupScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

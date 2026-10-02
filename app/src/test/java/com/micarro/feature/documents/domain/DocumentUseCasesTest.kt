@@ -113,14 +113,14 @@ class DocumentUseCasesTest {
     }
 
     @Test
-    fun `incluye documentos de vehiculos archivados`() {
+    fun `no alerta documentos de vehiculos archivados`() {
         val alerts = computeAlerts(
             documents = listOf(doc(1L, 5)),
             vehicles = listOf(vehicle(1L, archived = true)),
             settings = settings,
             today = today
         )
-        assertEquals(1, alerts.size)
+        assertEquals(0, alerts.size)
     }
 
     @Test

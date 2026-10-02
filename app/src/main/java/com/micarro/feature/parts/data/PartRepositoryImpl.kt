@@ -18,8 +18,8 @@ class PartRepositoryImpl @Inject constructor(
     }
 
     override fun observeInstalledParts(vehicleId: String): kotlinx.coroutines.flow.Flow<List<Part>> {
-        return partDao.observeInstalledParts(vehicleId).map { entities ->
-            entities.map { it.toDomain() }
+        return partDao.observeInstalledParts(vehicleId).map { rows ->
+            rows.map { row -> row.part.toDomain().copy(originTitle = row.originTitle) }
         }
     }
 }

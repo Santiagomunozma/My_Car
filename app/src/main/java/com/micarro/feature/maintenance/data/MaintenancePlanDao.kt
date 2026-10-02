@@ -22,4 +22,10 @@ interface MaintenancePlanDao {
 
     @Query("SELECT COUNT(*) FROM maintenance_services WHERE planId = :planId")
     suspend fun getServiceCountForPlan(planId: String): Int
+
+    @Query("SELECT * FROM maintenance_plans WHERE id = :planId LIMIT 1")
+    suspend fun getById(planId: String): MaintenancePlanEntity?
+
+    @Query("SELECT * FROM maintenance_plans")
+    suspend fun getAll(): List<MaintenancePlanEntity>
 }

@@ -19,12 +19,21 @@ class MaintenanceAlertWorker(
     override suspend fun doWork(): Result {
         val title = inputData.getString(KEY_TITLE) ?: "Alerta de Mantenimiento"
         val message = inputData.getString(KEY_MESSAGE) ?: "Tienes una revisión pendiente para tu vehículo."
+        val vehicle = inputData.getString(KEY_VEHICLE).orEmpty()
+        val activity = inputData.getString(KEY_ACTIVITY).orEmpty()
+        val cause = inputData.getString(KEY_CAUSE).orEmpty()
 
-        showNotification(title, message)
+        showNotification(title, message, vehicle, activity, cause)
         return Result.success()
     }
 
-    private fun showNotification(title: String, message: String) {
+    private fun showNotification(
+        title: String,
+        message: String,
+        vehicle: String,
+        activity: String,
+        cause: String
+    ) {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "maintenance_alerts_channel"
@@ -40,8 +49,10 @@ class MaintenanceAlertWorker(
 
         // 1. Creamos el Intent para abrir el MainActivity
         val intent = Intent(context, MainActivity::class.java).apply {
-            // Estas flags aseguran que si la app ya está abierta, no cree una pantalla duplicada
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(KEY_VEHICLE, vehicle)
+            putExtra(KEY_ACTIVITY, activity)
+            putExtra(KEY_CAUSE, cause)
         }
 
         // 2. Envolvemos el Intent en un PendingIntent inmutable (por seguridad y compatibilidad)
@@ -57,9 +68,10 @@ class MaintenanceAlertWorker(
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent) // <--- ¡Esta es la magia!
-            .setAutoCancel(true) // Hace que la notificación desaparezca al tocarla
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
             .build()
 
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
@@ -68,5 +80,8 @@ class MaintenanceAlertWorker(
     companion object {
         const val KEY_TITLE = "key_title"
         const val KEY_MESSAGE = "key_message"
+        const val KEY_VEHICLE = "alert_vehicle"
+        const val KEY_ACTIVITY = "alert_activity"
+        const val KEY_CAUSE = "alert_cause"
     }
 }

@@ -2,6 +2,11 @@ package com.micarro.domain.model
 
 import java.util.UUID
 
+enum class ServiceType {
+    PREVENTIVE,
+    CORRECTIVE
+}
+
 data class MaintenanceService(
     val id: String = UUID.randomUUID().toString(),
     val vehicleId: String,
@@ -12,5 +17,9 @@ data class MaintenanceService(
     val mileage: Int,
     val totalCost: Double,
     val workshopName: String,
-    val evidenceUri: String? = null
+    val serviceType: ServiceType = ServiceType.CORRECTIVE,
+    val laborCost: Double = 0.0,
+    val otherCosts: Double = 0.0,
+    val evidenceUri: String? = null,
+    val description: String = ""
 )

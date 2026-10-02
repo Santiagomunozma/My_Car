@@ -13,6 +13,12 @@ interface MileageDao {
     @Insert
     suspend fun insert(reading: MileageEntity)
 
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun upsert(reading: MileageEntity)
+
+    @Query("SELECT * FROM mileage_readings")
+    suspend fun getAll(): List<MileageEntity>
+
     @Query("SELECT * FROM mileage_readings WHERE vehicle_id = :vehicleId ORDER BY date DESC, id DESC LIMIT 1")
     suspend fun getLatest(vehicleId: Long): MileageEntity?
 }

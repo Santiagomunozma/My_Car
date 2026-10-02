@@ -13,5 +13,6 @@ data class Part(
     val provider: String? = null,
     val installationDate: Long? = null,
     val warranty: String? = null,
-    val notes: String? = null
+    val notes: String? = null,
+    val originTitle: String? = null
 )

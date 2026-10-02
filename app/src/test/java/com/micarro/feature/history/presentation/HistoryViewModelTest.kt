@@ -48,11 +48,11 @@ class FakeMaintenanceRepository : MaintenanceRepository {
     override suspend fun updatePlan(plan: MaintenancePlan) {}
     override suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean) {}
     override suspend fun deletePlanIfWithoutHistory(planId: String): Boolean = true
-
-    override suspend fun registerService(
-        service: MaintenanceService,
-        parts: List<Part>
-    ) {}
+    override suspend fun getPlanById(planId: String): MaintenancePlan? = null
+    override suspend fun registerService(service: MaintenanceService, parts: List<Part>) {}
+    override suspend fun updateService(service: MaintenanceService, parts: List<Part>) {}
+    override suspend fun deleteService(serviceId: String) {}
+    override suspend fun getServiceById(serviceId: String): MaintenanceService? = null
 
     override fun observeServices(vehicleId: String): Flow<List<MaintenanceService>> {
         return flowOf(emptyList())
@@ -75,7 +75,17 @@ class HistoryViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakeMaintenanceRepository()
-        viewModel = HistoryViewModel(fakeRepository, com.micarro.domain.usecase.ExportHistoryToCsvUseCase(fakeRepository))
+        viewModel = HistoryViewModel(
+            fakeRepository,
+            com.micarro.domain.usecase.ExportHistoryToCsvUseCase(fakeRepository),
+            com.micarro.domain.usecase.ExportHistoryToPdfUseCase(fakeRepository),
+            com.micarro.feature.maintenance.domain.DeleteMaintenanceServiceUseCase(fakeRepository),
+            com.micarro.feature.alerts.domain.AlertScheduler(
+                com.micarro.core.worker.AlertScheduler(),
+                com.micarro.fakes.InMemoryAlertSettingsRepository()
+            ),
+            com.micarro.fakes.InMemoryVehicleRepository()
+        )
     }
 
     @After

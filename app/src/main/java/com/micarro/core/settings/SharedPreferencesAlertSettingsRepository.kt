@@ -41,15 +41,34 @@ class SharedPreferencesAlertSettingsRepository @Inject constructor(
         prefs.edit { putInt(KEY_ANTICIPATION_DAYS, coerced) }
     }
 
+    override fun current(): AlertSettings = read()
+
+    override suspend fun setMaintenanceAlertsEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_MAINTENANCE_ENABLED, enabled) }
+    }
+
+    override suspend fun setMaintenanceMargins(days: Int, km: Int) {
+        prefs.edit {
+            putInt(KEY_MAINTENANCE_DAYS, days.coerceIn(0, 365))
+            putInt(KEY_MAINTENANCE_KM, km.coerceIn(0, 1_000_000))
+        }
+    }
+
     private fun read() = AlertSettings(
         globalAlertsEnabled = prefs.getBoolean(KEY_GLOBAL_ENABLED, true),
         anticipationDays = prefs.getInt(KEY_ANTICIPATION_DAYS, AlertSettings.DEFAULT_ANTICIPATION_DAYS)
-            .coerceIn(AlertSettings.MIN_ANTICIPATION_DAYS, AlertSettings.MAX_ANTICIPATION_DAYS)
+            .coerceIn(AlertSettings.MIN_ANTICIPATION_DAYS, AlertSettings.MAX_ANTICIPATION_DAYS),
+        maintenanceAlertsEnabled = prefs.getBoolean(KEY_MAINTENANCE_ENABLED, true),
+        maintenanceMarginDays = prefs.getInt(KEY_MAINTENANCE_DAYS, 15).coerceIn(0, 365),
+        maintenanceMarginKm = prefs.getInt(KEY_MAINTENANCE_KM, 500).coerceIn(0, 1_000_000)
     )
 
     companion object {
         private const val PREFS_NAME = "alert_settings"
         private const val KEY_GLOBAL_ENABLED = "global_alerts_enabled"
         private const val KEY_ANTICIPATION_DAYS = "anticipation_days"
+        private const val KEY_MAINTENANCE_ENABLED = "maintenance_alerts_enabled"
+        private const val KEY_MAINTENANCE_DAYS = "maintenance_margin_days"
+        private const val KEY_MAINTENANCE_KM = "maintenance_margin_km"
     }
 }

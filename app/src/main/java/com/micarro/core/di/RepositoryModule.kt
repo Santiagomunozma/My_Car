@@ -9,7 +9,9 @@ import com.micarro.domain.repository.MileageRepository
 import com.micarro.domain.repository.PartRepository
 import com.micarro.domain.repository.VehicleRepository
 import com.micarro.feature.documents.data.DocumentRepositoryImpl
+import com.micarro.feature.maintenance.data.LocalServiceEvidenceStore
 import com.micarro.feature.maintenance.data.MaintenanceRepositoryImpl
+import com.micarro.feature.maintenance.domain.ServiceEvidenceStore
 import com.micarro.feature.mileage.data.MileageRepositoryImpl
 import com.micarro.feature.parts.data.PartRepositoryImpl
 import com.micarro.feature.vehicle.data.LocalVehiclePhotoStore
@@ -56,6 +58,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMaintenanceRepository(impl: MaintenanceRepositoryImpl): MaintenanceRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindServiceEvidenceStore(impl: LocalServiceEvidenceStore): ServiceEvidenceStore
 
     @Binds
     @Singleton

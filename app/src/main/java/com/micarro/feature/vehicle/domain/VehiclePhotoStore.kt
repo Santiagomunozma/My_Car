@@ -11,4 +11,7 @@ interface VehiclePhotoStore {
 
     /** Borra el archivo gestionado si pertenece al almacén. */
     suspend fun deletePhoto(path: String)
+
+    /** Borra todas las fotos gestionadas por la app. */
+    suspend fun deleteAll()
 }

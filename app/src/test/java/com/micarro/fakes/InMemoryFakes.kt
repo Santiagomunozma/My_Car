@@ -126,6 +126,21 @@ class InMemoryAlertSettingsRepository : AlertSettingsRepository {
     override suspend fun setAnticipationDays(days: Int) {
         settings.update { it.copy(anticipationDays = days) }
     }
+
+    override fun current(): AlertSettings = settings.value
+
+    override suspend fun setMaintenanceAlertsEnabled(enabled: Boolean) {
+        settings.update { it.copy(maintenanceAlertsEnabled = enabled) }
+    }
+
+    override suspend fun setMaintenanceMargins(days: Int, km: Int) {
+        settings.update {
+            it.copy(
+                maintenanceMarginDays = days.coerceIn(0, 365),
+                maintenanceMarginKm = km.coerceIn(0, 1_000_000)
+            )
+        }
+    }
 }
 
 class FakeVehiclePhotoStore : VehiclePhotoStore {
@@ -142,6 +157,14 @@ class FakeVehiclePhotoStore : VehiclePhotoStore {
 
     override suspend fun deletePhoto(path: String) {
         deleted += path
+    }
+
+    override suspend fun deleteAll() {
+        deleted += ALL
+    }
+
+    companion object {
+        const val ALL = "*"
     }
 }
 
@@ -172,7 +195,9 @@ class InMemoryMaintenanceRepository : com.micarro.domain.repository.MaintenanceR
                         date = s.date,
                         mileage = s.mileage,
                         totalCost = s.totalCost,
-                        workshopName = s.workshopName
+                        workshopName = s.workshopName,
+                        serviceType = s.serviceType.name,
+                        vehicleId = s.vehicleId
                     )
                 }
         }
@@ -202,13 +227,38 @@ class InMemoryMaintenanceRepository : com.micarro.domain.repository.MaintenanceR
         }
     }
 
+    override suspend fun getPlanById(planId: String): com.micarro.domain.model.MaintenancePlan? =
+        plans.value.find { it.id == planId }
+
     override suspend fun registerService(
         service: com.micarro.domain.model.MaintenanceService,
         parts: List<com.micarro.domain.model.Part>
     ) {
-        services.update { it + service }
+        services.update { current ->
+            if (current.any { it.id == service.id }) {
+                current.map { if (it.id == service.id) service else it }
+            } else {
+                current + service
+            }
+        }
+        registeredParts.removeAll { it.serviceId == service.id }
         registeredParts.addAll(parts)
     }
+
+    override suspend fun updateService(
+        service: com.micarro.domain.model.MaintenanceService,
+        parts: List<com.micarro.domain.model.Part>
+    ) {
+        registerService(service, parts)
+    }
+
+    override suspend fun deleteService(serviceId: String) {
+        services.update { list -> list.filter { it.id != serviceId } }
+        registeredParts.removeAll { it.serviceId == serviceId }
+    }
+
+    override suspend fun getServiceById(serviceId: String): com.micarro.domain.model.MaintenanceService? =
+        services.value.find { it.id == serviceId }
 
     override fun observeServices(vehicleId: String): Flow<List<com.micarro.domain.model.MaintenanceService>> =
         services.map { it.filter { s -> s.vehicleId == vehicleId } }

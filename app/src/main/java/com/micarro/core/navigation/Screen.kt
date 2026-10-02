@@ -27,14 +27,21 @@ sealed class Screen(val route: String) {
     // Rutas del Compañero 2 (Mantenimiento)
     object MaintenancePlan : Screen("maintenance_plan_screen")
     object AlertSettings : Screen("alert_settings_screen")
-    object MaintenanceForm : Screen("maintenance_form_screen/{vehicleId}") {
-        fun createRoute(vehicleId: String) = "maintenance_form_screen/$vehicleId"
+    object MaintenanceForm : Screen("maintenance_form_screen/{vehicleId}?planId={planId}") {
+        fun createRoute(vehicleId: String, planId: String? = null) =
+            "maintenance_form_screen/$vehicleId?planId=${planId ?: ""}"
     }
 
     object ServiceForm : Screen(
-        "service_form_screen/{vehicleId}?planId={planId}&lastMileage={lastMileage}"
+        "service_form_screen/{vehicleId}?planId={planId}&lastMileage={lastMileage}&serviceId={serviceId}"
     ) {
-        fun createRoute(vehicleId: String, planId: String?, lastMileage: Int) =
-            "service_form_screen/$vehicleId?planId=${planId ?: ""}&lastMileage=$lastMileage"
+        fun createRoute(
+            vehicleId: String,
+            planId: String?,
+            lastMileage: Int,
+            serviceId: String? = null
+        ) = "service_form_screen/$vehicleId?planId=${planId ?: ""}&lastMileage=$lastMileage&serviceId=${serviceId ?: ""}"
     }
+
+    object Backup : Screen("backup_screen")
 }

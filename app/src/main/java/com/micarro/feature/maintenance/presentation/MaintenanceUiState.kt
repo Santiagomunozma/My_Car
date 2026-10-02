@@ -12,6 +12,7 @@ data class MaintenanceUiState(
     val error: String? = null,
     val alertMarginDays: Int = 15,
     val alertMarginKm: Int = 500,
+    val maintenanceAlertsEnabled: Boolean = true,
     val installedParts: List<com.micarro.domain.model.Part> = emptyList()
 )
 

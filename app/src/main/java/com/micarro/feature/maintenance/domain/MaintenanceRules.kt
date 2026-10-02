@@ -62,16 +62,20 @@ object MaintenanceRules {
         actualMileage: Int,
         intervalMonths: Int,
         intervalMileage: Int
-    ): Pair<Long, Int> {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = actualDate
-        calendar.add(Calendar.MONTH, intervalMonths)
-        
-        val nextDate = calendar.timeInMillis
-        val nextMileage = actualMileage + intervalMileage
-        
-        return Pair(nextDate, nextMileage)
+    ): Pair<Long?, Int?> {
+        val nextDate = if (intervalMonths > 0) {
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = actualDate
+            calendar.add(Calendar.MONTH, intervalMonths)
+            calendar.timeInMillis
+        } else {
+            null
+        }
+        val nextMileage = if (intervalMileage > 0) actualMileage + intervalMileage else null
+        return nextDate to nextMileage
     }
+
+    fun isAmountValid(amount: Double): Boolean = !amount.isNaN() && amount >= 0.0
 
     /**
      * RN-04: Calcula el costo total sumando mano de obra, repuestos y otros costos.

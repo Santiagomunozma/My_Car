@@ -9,5 +9,11 @@ data class MaintenancePlan(
     val category: String,
     val intervalMileage: Int,
     val intervalMonths: Int,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val description: String = "",
+    val nextDeadlineDate: Long? = null,
+    val nextLimitMileage: Int? = null,
+    val marginDays: Int = 15,
+    val marginKm: Int = 500,
+    val alertsEnabled: Boolean = true
 )

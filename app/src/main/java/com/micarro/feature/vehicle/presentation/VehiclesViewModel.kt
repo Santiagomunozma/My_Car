@@ -3,8 +3,10 @@ package com.micarro.feature.vehicle.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.micarro.domain.model.Vehicle
+import com.micarro.feature.alerts.domain.AlertScheduler
 import com.micarro.feature.documents.domain.ObserveDocumentAlertsUseCase
 import com.micarro.feature.vehicle.domain.ArchiveVehicleUseCase
+import com.micarro.domain.repository.MaintenanceRepository
 import com.micarro.feature.vehicle.domain.ObserveVehiclesUseCase
 import com.micarro.feature.vehicle.domain.ReactivateVehicleUseCase
 import com.micarro.feature.vehicle.domain.SetMainVehicleUseCase
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,7 +37,9 @@ class VehiclesViewModel @Inject constructor(
     observeDocumentAlerts: ObserveDocumentAlertsUseCase,
     private val archiveVehicle: ArchiveVehicleUseCase,
     private val reactivateVehicle: ReactivateVehicleUseCase,
-    private val setMainVehicle: SetMainVehicleUseCase
+    private val setMainVehicle: SetMainVehicleUseCase,
+    private val maintenanceRepository: MaintenanceRepository,
+    private val alertScheduler: AlertScheduler
 ) : ViewModel() {
 
     private val showArchived = MutableStateFlow(false)
@@ -76,7 +81,11 @@ class VehiclesViewModel @Inject constructor(
     fun confirmArchive() {
         val vehicle = vehicleToArchive.value ?: return
         vehicleToArchive.value = null
-        viewModelScope.launch { archiveVehicle(vehicle.id) }
+        viewModelScope.launch {
+            archiveVehicle(vehicle.id)
+            val plans = maintenanceRepository.observePlans(vehicle.id.toString()).first()
+            plans.forEach { alertScheduler.cancelForActivity(it.id) }
+        }
     }
 
     fun reactivate(vehicleId: Long) {

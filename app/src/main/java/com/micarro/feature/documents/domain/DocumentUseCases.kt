@@ -152,7 +152,7 @@ class ObserveDocumentAlertsUseCase @Inject constructor(
         }.distinctUntilChanged()
 
     companion object {
-        /** Puro y testeable: la bandeja incluye vehículos archivados. */
+        /** Puro y testeable. Los vehículos archivados conservan documentos, pero no alertan (RN-07). */
         fun computeAlerts(
             documents: List<VehicleDocument>,
             vehicles: List<Vehicle>,
@@ -165,6 +165,7 @@ class ObserveDocumentAlertsUseCase @Inject constructor(
                 .filter { it.alertsEnabled }
                 .mapNotNull { document ->
                     val vehicle = vehiclesById[document.vehicleId] ?: return@mapNotNull null
+                    if (vehicle.isArchived) return@mapNotNull null
                     val status = DocumentStatusRules.statusFor(
                         document.expirationDate, settings.anticipationDays, today
                     )

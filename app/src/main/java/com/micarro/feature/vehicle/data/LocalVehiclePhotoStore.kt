@@ -35,6 +35,12 @@ class LocalVehiclePhotoStore @Inject constructor(
         }
     }
 
+    override suspend fun deleteAll() {
+        withContext(Dispatchers.IO) {
+            photosDir.listFiles()?.forEach { it.delete() }
+        }
+    }
+
     companion object {
         const val PHOTOS_DIR = "vehicle_photos"
     }

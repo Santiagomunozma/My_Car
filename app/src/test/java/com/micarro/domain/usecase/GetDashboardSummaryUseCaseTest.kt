@@ -1,5 +1,6 @@
 package com.micarro.domain.usecase
 
+import com.micarro.fakes.InMemoryAlertSettingsRepository
 import com.micarro.fakes.InMemoryVehicleRepository
 import com.micarro.domain.model.HistoryFilter
 import com.micarro.domain.model.MaintenanceHistoryItem
@@ -22,7 +23,11 @@ class FakeMaintenanceRepository : MaintenanceRepository {
     override suspend fun updatePlan(plan: MaintenancePlan) {}
     override suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean) {}
     override suspend fun deletePlanIfWithoutHistory(planId: String): Boolean = true
+    override suspend fun getPlanById(planId: String): MaintenancePlan? = null
     override suspend fun registerService(service: MaintenanceService, parts: List<Part>) {}
+    override suspend fun updateService(service: MaintenanceService, parts: List<Part>) {}
+    override suspend fun deleteService(serviceId: String) {}
+    override suspend fun getServiceById(serviceId: String): MaintenanceService? = null
     override fun observeServices(vehicleId: String): Flow<List<MaintenanceService>> = flowOf(emptyList())
     override fun observeExpensesByCategory(vehicleId: String, startDateTimestamp: Long) = flowOf(emptyList<com.micarro.domain.model.CategoryExpenseDto>())
 }
@@ -33,7 +38,11 @@ class GetDashboardSummaryUseCaseTest {
     fun `when no vehicles exist summary returns null main vehicle`() = runTest {
         val fakeRepo = InMemoryVehicleRepository()
         val fakeMaintenanceRepo = FakeMaintenanceRepository()
-        val useCase = GetDashboardSummaryUseCase(fakeRepo, fakeMaintenanceRepo)
+        val useCase = GetDashboardSummaryUseCase(
+            fakeRepo,
+            fakeMaintenanceRepo,
+            InMemoryAlertSettingsRepository()
+        )
 
         val result = useCase(flowOf(null)).first()
 

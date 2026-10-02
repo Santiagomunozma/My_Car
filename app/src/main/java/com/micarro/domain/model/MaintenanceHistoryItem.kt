@@ -8,5 +8,7 @@ data class MaintenanceHistoryItem(
     val date: Long,
     val mileage: Int,
     val totalCost: Double,
-    val workshopName: String
+    val workshopName: String,
+    val serviceType: String = "",
+    val vehicleId: String = ""
 )

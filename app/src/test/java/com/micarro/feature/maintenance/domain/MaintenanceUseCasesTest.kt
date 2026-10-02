@@ -27,6 +27,8 @@ class MaintenanceUseCasesTest {
             updatePlanActiveStatus = UpdateMaintenancePlanActiveStatusUseCase(repository),
             deletePlan = DeleteMaintenancePlanUseCase(repository),
             registerService = RegisterMaintenanceServiceUseCase(repository),
+            updateService = UpdateMaintenanceServiceUseCase(repository),
+            deleteService = DeleteMaintenanceServiceUseCase(repository),
             observeServices = ObserveMaintenanceServicesUseCase(repository)
         )
     }
@@ -75,6 +77,7 @@ class MaintenanceUseCasesTest {
             category = "Aceite",
             date = System.currentTimeMillis(),
             mileage = 5000,
+            laborCost = 120000.0,
             totalCost = 120000.0,
             workshopName = "Taller Central"
         )
@@ -99,7 +102,8 @@ class MaintenanceUseCasesTest {
             category = "Frenos",
             date = System.currentTimeMillis(),
             mileage = 20000,
-            totalCost = 350000.0,
+            laborCost = 0.0,
+            totalCost = 425000.0,
             workshopName = "Frenos del Norte"
         )
 
@@ -159,5 +163,154 @@ class MaintenanceUseCasesTest {
         useCases.updatePlanActiveStatus("plan-activo", true)
         val reactivatedPlan = useCases.observePlans("1").first().first()
         assertTrue(reactivatedPlan.isActive)
+    }
+
+    @Test
+    fun `fecha futura y monto negativo se rechazan antes de persistir`() = runTest {
+        val future = MaintenanceService(
+            id = "srv-futuro",
+            vehicleId = "1",
+            title = "Servicio",
+            category = "Aceite",
+            date = System.currentTimeMillis() + 86_400_000L,
+            mileage = 1000,
+            laborCost = 10.0,
+            totalCost = 10.0,
+            workshopName = "Taller"
+        )
+        val futureResult = useCases.registerService(future, emptyList(), lastKnownMileage = 1000)
+        assertTrue(futureResult is RegisterServiceResult.Invalid)
+
+        val negative = future.copy(
+            id = "srv-neg",
+            date = System.currentTimeMillis(),
+            laborCost = -1.0,
+            totalCost = -1.0
+        )
+        val negativeResult = useCases.registerService(negative, emptyList(), lastKnownMileage = 1000)
+        assertTrue(negativeResult is RegisterServiceResult.Invalid)
+        assertEquals(0, repository.services.value.size)
+    }
+
+    @Test
+    fun `kilometraje menor y total ajustado exigen confirmacion y RN-03 persiste el proximo`() = runTest {
+        val plan = MaintenancePlan(
+            id = "plan-rn",
+            vehicleId = "1",
+            title = "Aceite",
+            category = "Aceite",
+            intervalMileage = 5000,
+            intervalMonths = 6
+        )
+        useCases.savePlan(plan)
+        val service = MaintenanceService(
+            id = "srv-rn",
+            vehicleId = "1",
+            planId = plan.id,
+            title = "Cambio",
+            category = "Aceite",
+            date = System.currentTimeMillis(),
+            mileage = 1000,
+            laborCost = 50.0,
+            totalCost = 80.0,
+            workshopName = "Taller"
+        )
+        val mileageResult = useCases.registerService(service, emptyList(), lastKnownMileage = 4000)
+        assertTrue(mileageResult is RegisterServiceResult.RequiresMileageConfirmation)
+
+        val totalResult = useCases.registerService(
+            service,
+            emptyList(),
+            lastKnownMileage = 1000,
+            confirmedLowerMileage = true
+        )
+        assertTrue(totalResult is RegisterServiceResult.RequiresTotalConfirmation)
+
+        val saved = useCases.registerService(
+            service,
+            emptyList(),
+            lastKnownMileage = 1000,
+            confirmedLowerMileage = true,
+            confirmedAdjustedTotal = true
+        )
+        assertTrue(saved is RegisterServiceResult.Success)
+        val updated = useCases.observePlans("1").first().first()
+        assertEquals(6000, updated.nextLimitMileage)
+        assertTrue(updated.nextDeadlineDate != null)
+    }
+
+    @Test
+    fun `borrar un servicio recalcula el proximo vencimiento con el historial que queda`() = runTest {
+        val plan = MaintenancePlan(
+            id = "plan-del",
+            vehicleId = "1",
+            title = "Aceite",
+            category = "Aceite",
+            intervalMileage = 1000,
+            intervalMonths = 0
+        )
+        useCases.savePlan(plan)
+        val older = MaintenanceService(
+            id = "srv-old",
+            vehicleId = "1",
+            planId = plan.id,
+            title = "Primero",
+            category = "Aceite",
+            date = 1_000L,
+            mileage = 1000,
+            laborCost = 10.0,
+            totalCost = 10.0,
+            workshopName = "Taller"
+        )
+        val newer = older.copy(id = "srv-new", date = 2_000L, mileage = 2500, title = "Segundo")
+        useCases.registerService(older, emptyList(), lastKnownMileage = 0, confirmedLowerMileage = true, confirmedAdjustedTotal = true)
+        useCases.registerService(newer, emptyList(), lastKnownMileage = 0, confirmedLowerMileage = true, confirmedAdjustedTotal = true)
+        useCases.deleteService(newer.id)
+        val updated = useCases.observePlans("1").first().first()
+        assertEquals(2000, updated.nextLimitMileage)
+    }
+
+    @Test
+    fun `fecha anterior al ultimo servicio de la actividad exige confirmacion`() = runTest {
+        val plan = MaintenancePlan(
+            id = "plan-fecha",
+            vehicleId = "1",
+            title = "Aceite",
+            category = "Aceite",
+            intervalMileage = 1000,
+            intervalMonths = 0
+        )
+        useCases.savePlan(plan)
+        val first = MaintenanceService(
+            id = "srv-a",
+            vehicleId = "1",
+            planId = plan.id,
+            title = "Primero",
+            category = "Aceite",
+            date = 5_000L,
+            mileage = 1000,
+            laborCost = 10.0,
+            totalCost = 10.0,
+            workshopName = "Taller"
+        )
+        useCases.registerService(first, emptyList(), lastKnownMileage = 0, confirmedLowerMileage = true, confirmedAdjustedTotal = true)
+        val earlier = first.copy(id = "srv-b", date = 1_000L, title = "Antes")
+        val blocked = useCases.registerService(
+            earlier,
+            emptyList(),
+            lastKnownMileage = 0,
+            confirmedLowerMileage = true,
+            confirmedAdjustedTotal = true
+        )
+        assertTrue(blocked is RegisterServiceResult.RequiresEarlierDate)
+        val saved = useCases.registerService(
+            earlier,
+            emptyList(),
+            lastKnownMileage = 0,
+            confirmedLowerMileage = true,
+            confirmedAdjustedTotal = true,
+            confirmedEarlierDate = true
+        )
+        assertTrue(saved is RegisterServiceResult.Success)
     }
 }

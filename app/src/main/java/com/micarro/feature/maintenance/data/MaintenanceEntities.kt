@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.micarro.domain.model.MaintenancePlan
 import com.micarro.domain.model.MaintenanceService
+import com.micarro.domain.model.ServiceType
 
 @Entity(tableName = "maintenance_plans")
 data class MaintenancePlanEntity(
@@ -13,7 +14,13 @@ data class MaintenancePlanEntity(
     val category: String,
     val intervalMileage: Int,
     val intervalMonths: Int,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val description: String = "",
+    val nextDeadlineDate: Long? = null,
+    val nextLimitMileage: Int? = null,
+    val marginDays: Int = 15,
+    val marginKm: Int = 500,
+    val alertsEnabled: Boolean = true
 )
 
 @Entity(tableName = "maintenance_services")
@@ -27,7 +34,11 @@ data class MaintenanceServiceEntity(
     val mileage: Int,
     val totalCost: Double,
     val workshopName: String,
-    val evidenceUri: String? = null
+    val serviceType: String = ServiceType.CORRECTIVE.name,
+    val laborCost: Double = 0.0,
+    val otherCosts: Double = 0.0,
+    val evidenceUri: String? = null,
+    val description: String = ""
 )
 
 fun MaintenancePlanEntity.toDomain() = MaintenancePlan(
@@ -37,7 +48,13 @@ fun MaintenancePlanEntity.toDomain() = MaintenancePlan(
     category = category,
     intervalMileage = intervalMileage,
     intervalMonths = intervalMonths,
-    isActive = isActive
+    isActive = isActive,
+    description = description,
+    nextDeadlineDate = nextDeadlineDate,
+    nextLimitMileage = nextLimitMileage,
+    marginDays = marginDays,
+    marginKm = marginKm,
+    alertsEnabled = alertsEnabled
 )
 
 fun MaintenancePlan.toEntity() = MaintenancePlanEntity(
@@ -47,7 +64,13 @@ fun MaintenancePlan.toEntity() = MaintenancePlanEntity(
     category = category,
     intervalMileage = intervalMileage,
     intervalMonths = intervalMonths,
-    isActive = isActive
+    isActive = isActive,
+    description = description,
+    nextDeadlineDate = nextDeadlineDate,
+    nextLimitMileage = nextLimitMileage,
+    marginDays = marginDays,
+    marginKm = marginKm,
+    alertsEnabled = alertsEnabled
 )
 
 fun MaintenanceServiceEntity.toDomain() = MaintenanceService(
@@ -60,7 +83,11 @@ fun MaintenanceServiceEntity.toDomain() = MaintenanceService(
     mileage = mileage,
     totalCost = totalCost,
     workshopName = workshopName,
-    evidenceUri = evidenceUri
+    serviceType = runCatching { ServiceType.valueOf(serviceType) }.getOrDefault(ServiceType.CORRECTIVE),
+    laborCost = laborCost,
+    otherCosts = otherCosts,
+    evidenceUri = evidenceUri,
+    description = description
 )
 
 fun MaintenanceService.toEntity() = MaintenanceServiceEntity(
@@ -73,5 +100,9 @@ fun MaintenanceService.toEntity() = MaintenanceServiceEntity(
     mileage = mileage,
     totalCost = totalCost,
     workshopName = workshopName,
-    evidenceUri = evidenceUri
+    serviceType = serviceType.name,
+    laborCost = laborCost,
+    otherCosts = otherCosts,
+    evidenceUri = evidenceUri,
+    description = description
 )

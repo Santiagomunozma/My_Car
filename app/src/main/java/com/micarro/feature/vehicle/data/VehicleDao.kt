@@ -18,8 +18,17 @@ interface VehicleDao {
     @Query("SELECT * FROM vehicles WHERE id = :id")
     suspend fun getById(id: Long): VehicleEntity?
 
+    @Query("SELECT * FROM vehicles WHERE plate = :plate LIMIT 1")
+    suspend fun getByPlate(plate: String): VehicleEntity?
+
+    @Query("SELECT * FROM vehicles")
+    suspend fun getAll(): List<VehicleEntity>
+
     @Insert
     suspend fun insert(vehicle: VehicleEntity)
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun upsert(vehicle: VehicleEntity)
 
     @Update
     suspend fun update(vehicle: VehicleEntity)

@@ -14,6 +14,9 @@ interface DocumentDao {
     @Query("SELECT * FROM vehicle_documents ORDER BY expiration_date ASC")
     fun observeAll(): Flow<List<DocumentEntity>>
 
+    @Query("SELECT * FROM vehicle_documents")
+    suspend fun getAll(): List<DocumentEntity>
+
     @Query("SELECT * FROM vehicle_documents WHERE id = :id")
     suspend fun getById(id: Long): DocumentEntity?
 

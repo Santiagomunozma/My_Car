@@ -21,11 +21,22 @@ open class AlertScheduler(
 
     constructor() : this(null, false)
 
-    open fun scheduleAlert(delayInMinutes: Long, title: String, message: String) {
+    open fun scheduleAlert(
+        uniqueWorkName: String,
+        delayInMinutes: Long,
+        title: String,
+        message: String,
+        vehicleLabel: String = "",
+        activityTitle: String = "",
+        cause: String = ""
+    ) {
         val ctx = context ?: return
         val inputData = workDataOf(
             MaintenanceAlertWorker.KEY_TITLE to title,
-            MaintenanceAlertWorker.KEY_MESSAGE to message
+            MaintenanceAlertWorker.KEY_MESSAGE to message,
+            MaintenanceAlertWorker.KEY_VEHICLE to vehicleLabel,
+            MaintenanceAlertWorker.KEY_ACTIVITY to activityTitle,
+            MaintenanceAlertWorker.KEY_CAUSE to cause
         )
 
         val constraints = Constraints.Builder()
@@ -39,7 +50,7 @@ open class AlertScheduler(
             .build()
 
         WorkManager.getInstance(ctx).enqueueUniqueWork(
-            "alert_${title.hashCode()}",
+            uniqueWorkName,
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
@@ -48,5 +59,9 @@ open class AlertScheduler(
     open fun cancelAlert(uniqueWorkName: String) {
         val ctx = context ?: return
         WorkManager.getInstance(ctx).cancelUniqueWork(uniqueWorkName)
+    }
+
+    companion object {
+        fun workName(activityId: String) = "activity_$activityId"
     }
 }

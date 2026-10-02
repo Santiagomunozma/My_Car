@@ -29,9 +29,15 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -92,7 +98,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MiCarroAppShell()
+                    MiCarroAppShell(
+                        alertVehicle = intent?.getStringExtra(com.micarro.core.worker.MaintenanceAlertWorker.KEY_VEHICLE),
+                        alertActivity = intent?.getStringExtra(com.micarro.core.worker.MaintenanceAlertWorker.KEY_ACTIVITY),
+                        alertCause = intent?.getStringExtra(com.micarro.core.worker.MaintenanceAlertWorker.KEY_CAUSE)
+                    )
                 }
             }
         }
@@ -150,10 +160,38 @@ private val bottomNavItems = listOf(
 )
 
 @Composable
-fun MiCarroAppShell() {
+fun MiCarroAppShell(
+    alertVehicle: String? = null,
+    alertActivity: String? = null,
+    alertCause: String? = null
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    var showAlert by remember {
+        mutableStateOf(!alertVehicle.isNullOrBlank() || !alertActivity.isNullOrBlank())
+    }
+    if (showAlert) {
+        AlertDialog(
+            onDismissRequest = { showAlert = false },
+            title = { Text(stringResource(R.string.alert_opened_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.alert_opened_body,
+                        alertVehicle.orEmpty(),
+                        alertActivity.orEmpty(),
+                        alertCause.orEmpty()
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showAlert = false }) {
+                    Text(stringResource(R.string.action_accept))
+                }
+            }
+        )
+    }
 
     // Muestra la BottomBar solo si la ruta actual coincide con una de las pestañas principales
     val shouldShowBottomBar = bottomNavItems.any { it.screen.route == currentRoute }

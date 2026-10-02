@@ -22,6 +22,8 @@ object UseCaseModule {
         updatePlanActiveStatus: com.micarro.feature.maintenance.domain.UpdateMaintenancePlanActiveStatusUseCase,
         deletePlan: com.micarro.feature.maintenance.domain.DeleteMaintenancePlanUseCase,
         registerService: com.micarro.feature.maintenance.domain.RegisterMaintenanceServiceUseCase,
+        updateService: com.micarro.feature.maintenance.domain.UpdateMaintenanceServiceUseCase,
+        deleteService: com.micarro.feature.maintenance.domain.DeleteMaintenanceServiceUseCase,
         observeServices: com.micarro.feature.maintenance.domain.ObserveMaintenanceServicesUseCase
     ): MaintenanceUseCases {
         return MaintenanceUseCases(
@@ -31,6 +33,8 @@ object UseCaseModule {
             updatePlanActiveStatus = updatePlanActiveStatus,
             deletePlan = deletePlan,
             registerService = registerService,
+            updateService = updateService,
+            deleteService = deleteService,
             observeServices = observeServices
         )
     }
@@ -48,8 +52,9 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideAlertScheduler(
-        coreAlertScheduler: com.micarro.core.worker.AlertScheduler
+        coreAlertScheduler: com.micarro.core.worker.AlertScheduler,
+        settingsRepository: com.micarro.domain.repository.AlertSettingsRepository
     ): AlertScheduler {
-        return AlertScheduler(coreAlertScheduler)
+        return AlertScheduler(coreAlertScheduler, settingsRepository)
     }
 }

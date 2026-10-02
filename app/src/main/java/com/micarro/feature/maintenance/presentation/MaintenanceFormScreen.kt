@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,10 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.micarro.R
 import com.micarro.domain.model.MaintenancePlan
 import com.micarro.domain.model.Vehicle
+import com.micarro.ui.components.DateField
 
 val DEFAULT_CATEGORIES = listOf(
     "Aceite",
@@ -68,6 +72,7 @@ val COMMON_TEMPLATES = listOf(
 fun MaintenanceFormScreen(
     viewModel: MaintenanceViewModel,
     initialVehicleId: String? = null,
+    planId: String? = null,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -84,19 +89,49 @@ fun MaintenanceFormScreen(
     var expandedVehicleDropdown by remember { mutableStateOf(false) }
 
     var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(DEFAULT_CATEGORIES.first()) }
+    var customCategory by remember { mutableStateOf("") }
     var expandedCategoryDropdown by remember { mutableStateOf(false) }
     var intervalKmText by remember { mutableStateOf("") }
     var intervalMonthsText by remember { mutableStateOf("") }
+    var deadlineMillis by remember { mutableStateOf<Long?>(null) }
+    var loadedPlan by remember { mutableStateOf<MaintenancePlan?>(null) }
+    var categories by remember { mutableStateOf(DEFAULT_CATEGORIES) }
+
+    LaunchedEffect(Unit) {
+        categories = viewModel.categoryOptions()
+    }
+
+    LaunchedEffect(planId) {
+        if (!planId.isNullOrBlank()) {
+            viewModel.loadPlan(planId)?.let { plan ->
+                loadedPlan = plan
+                title = plan.title
+                description = plan.description
+                if (plan.category in categories) {
+                    category = plan.category
+                    customCategory = ""
+                } else {
+                    category = categories.last()
+                    customCategory = plan.category
+                }
+                intervalKmText = plan.intervalMileage.takeIf { it > 0 }?.toString().orEmpty()
+                intervalMonthsText = plan.intervalMonths.takeIf { it > 0 }?.toString().orEmpty()
+                deadlineMillis = plan.nextDeadlineDate
+            }
+        }
+    }
 
     val kmInt = intervalKmText.toIntOrNull() ?: 0
     val monthsInt = intervalMonthsText.toIntOrNull() ?: 0
-    val isFormValid = title.isNotBlank() && (kmInt > 0 || monthsInt > 0) && selectedVehicle != null
+    val resolvedCategory = customCategory.trim().ifBlank { category }
+    val isFormValid = title.isNotBlank() && selectedVehicle != null
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nueva Actividad") },
+                title = { Text(stringResource(if (loadedPlan == null) R.string.plan_new else R.string.plan_edit)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -124,7 +159,7 @@ fun MaintenanceFormScreen(
                         value = selectedVehicle?.let { "${it.plate} - ${it.brand} ${it.model}" } ?: "Seleccionar vehículo",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Vehículo") },
+                        label = { Text(stringResource(R.string.plan_vehicle)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedVehicleDropdown) },
                         modifier = Modifier
                             .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
@@ -151,7 +186,7 @@ fun MaintenanceFormScreen(
                     onValueChange = {},
                     readOnly = true,
                     enabled = false,
-                    label = { Text("Vehículo asignado") },
+                    label = { Text(stringResource(R.string.plan_vehicle_assigned)) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -186,7 +221,23 @@ fun MaintenanceFormScreen(
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Título de la actividad") },
+                label = { Text(stringResource(R.string.plan_title_field)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text(stringResource(R.string.plan_description)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = customCategory,
+                onValueChange = { customCategory = it },
+                label = { Text(stringResource(R.string.plan_other_category)) },
+                placeholder = { Text(stringResource(R.string.plan_other_category_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -201,7 +252,7 @@ fun MaintenanceFormScreen(
                     value = category,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Categoría") },
+                    label = { Text(stringResource(R.string.plan_category_field)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategoryDropdown) },
                     modifier = Modifier
                         .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
@@ -211,7 +262,7 @@ fun MaintenanceFormScreen(
                     expanded = expandedCategoryDropdown,
                     onDismissRequest = { expandedCategoryDropdown = false }
                 ) {
-                    DEFAULT_CATEGORIES.forEach { option ->
+                    categories.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option) },
                             onClick = {
@@ -223,6 +274,17 @@ fun MaintenanceFormScreen(
                 }
             }
 
+            DateField(
+                label = stringResource(R.string.plan_deadline),
+                selectedDateMillis = deadlineMillis,
+                onDateSelected = { deadlineMillis = it }
+            )
+            if (deadlineMillis != null) {
+                androidx.compose.material3.TextButton(onClick = { deadlineMillis = null }) {
+                    Text(stringResource(R.string.plan_clear_deadline))
+                }
+            }
+
             // 4. Intervalos (Km / Meses opcionales)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -231,8 +293,8 @@ fun MaintenanceFormScreen(
                 OutlinedTextField(
                     value = intervalKmText,
                     onValueChange = { input -> intervalKmText = input.filter { it.isDigit() } },
-                    label = { Text("Cada (km)") },
-                    placeholder = { Text("Opcional") },
+                    label = { Text(stringResource(R.string.plan_every_km_field)) },
+                    placeholder = { Text(stringResource(R.string.plan_optional)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     singleLine = true
@@ -241,8 +303,8 @@ fun MaintenanceFormScreen(
                 OutlinedTextField(
                     value = intervalMonthsText,
                     onValueChange = { input -> intervalMonthsText = input.filter { it.isDigit() } },
-                    label = { Text("Cada (meses)") },
-                    placeholder = { Text("Opcional") },
+                    label = { Text(stringResource(R.string.plan_every_months_field)) },
+                    placeholder = { Text(stringResource(R.string.plan_optional)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     singleLine = true
@@ -256,27 +318,38 @@ fun MaintenanceFormScreen(
                 onClick = {
                     val targetVehicle = selectedVehicle
                     if (targetVehicle == null) {
-                        Toast.makeText(context, "Debes registrar o seleccionar un vehículo", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.plan_need_vehicle), Toast.LENGTH_SHORT).show()
                         return@Button
                     }
 
+                    viewModel.rememberCategory(resolvedCategory)
+                    categories = viewModel.categoryOptions()
+                    val base = loadedPlan
                     val newPlan = MaintenancePlan(
+                        id = base?.id ?: java.util.UUID.randomUUID().toString(),
                         vehicleId = targetVehicle.id.toString(),
                         title = title.trim(),
-                        category = category,
+                        category = resolvedCategory,
+                        description = description.trim(),
                         intervalMileage = kmInt,
-                        intervalMonths = monthsInt
+                        intervalMonths = monthsInt,
+                        isActive = base?.isActive ?: true,
+                        nextDeadlineDate = deadlineMillis,
+                        nextLimitMileage = base?.nextLimitMileage,
+                        marginDays = base?.marginDays ?: 15,
+                        marginKm = base?.marginKm ?: 500,
+                        alertsEnabled = base?.alertsEnabled ?: true
                     )
 
-                    viewModel.savePlan(newPlan)
-                    Toast.makeText(context, "Actividad guardada para ${targetVehicle.plate}", Toast.LENGTH_SHORT).show()
+                    if (base == null) viewModel.savePlan(newPlan) else viewModel.updatePlan(newPlan)
+                    Toast.makeText(context, context.getString(R.string.plan_saved, targetVehicle.plate), Toast.LENGTH_SHORT).show()
                     onNavigateBack()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isFormValid,
                 shape = MaterialTheme.shapes.medium
             ) {
-                Text("Guardar Plan")
+                Text(stringResource(R.string.plan_save))
             }
         }
     }

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PauseCircle
@@ -48,7 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.micarro.R
 import com.micarro.domain.model.MaintenancePlan
 import com.micarro.domain.model.Part
 import com.micarro.domain.model.Vehicle
@@ -70,6 +73,7 @@ fun MaintenancePlanScreen(
     viewModel: MaintenanceViewModel,
     onAddPlan: () -> Unit,
     onRegisterService: (String) -> Unit,
+    onEditPlan: (String) -> Unit,
     onOpenAlertSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -77,16 +81,44 @@ fun MaintenancePlanScreen(
     val context = LocalContext.current
 
     var selectedTab by remember { mutableIntStateOf(0) }
+    var planToPostpone by remember { mutableStateOf<MaintenancePlan?>(null) }
     var planToDelete by remember { mutableStateOf<MaintenancePlan?>(null) }
     var showDeleteRejectedDialog by remember { mutableStateOf(false) }
+
+    planToPostpone?.let { plan ->
+        AlertDialog(
+            onDismissRequest = { planToPostpone = null },
+            title = { Text(stringResource(R.string.maintenance_postpone)) },
+            text = { Text(stringResource(R.string.maintenance_postpone_message)) },
+            confirmButton = {
+                Row {
+                    listOf(1 to R.string.maintenance_postpone_1, 3 to R.string.maintenance_postpone_3, 7 to R.string.maintenance_postpone_7)
+                        .forEach { (days, label) ->
+                            TextButton(onClick = {
+                                viewModel.postponePlan(
+                                    plan,
+                                    System.currentTimeMillis() + days * 24L * 60L * 60L * 1000L
+                                )
+                                planToPostpone = null
+                            }) { Text(stringResource(label)) }
+                        }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { planToPostpone = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
 
     // Dialogo de confirmación para eliminar plan (RF-15)
     planToDelete?.let { plan ->
         AlertDialog(
             onDismissRequest = { planToDelete = null },
             icon = { Icon(Icons.Default.Delete, contentDescription = null, tint = StatusError) },
-            title = { Text("Eliminar Actividad") },
-            text = { Text("¿Deseas eliminar '${plan.title}'? Recuerda que solo se puede eliminar si no tiene un historial de servicios registrado.") },
+            title = { Text(stringResource(R.string.maintenance_delete_title)) },
+            text = { Text(stringResource(R.string.maintenance_delete_message, plan.title)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -96,17 +128,17 @@ fun MaintenancePlanScreen(
                             if (!success) {
                                 showDeleteRejectedDialog = true
                             } else {
-                                Toast.makeText(context, "Actividad eliminada", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.plan_deleted), Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
                 ) {
-                    Text("Eliminar", color = StatusError)
+                    Text(stringResource(R.string.action_delete), color = StatusError)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { planToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -117,13 +149,13 @@ fun MaintenancePlanScreen(
         AlertDialog(
             onDismissRequest = { showDeleteRejectedDialog = false },
             icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = StatusWarning) },
-            title = { Text("Acción no permitida") },
+            title = { Text(stringResource(R.string.plan_delete_blocked_title)) },
             text = {
-                Text("No es posible eliminar esta actividad porque ya cuenta con un historial de servicios registrado. Puedes pausarla para que no genere más avisos.")
+                Text(stringResource(R.string.plan_delete_blocked))
             },
             confirmButton = {
                 TextButton(onClick = { showDeleteRejectedDialog = false }) {
-                    Text("Entendido")
+                    Text(stringResource(R.string.plan_understood))
                 }
             }
         )
@@ -132,24 +164,24 @@ fun MaintenancePlanScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mantenimiento") },
+                title = { Text(stringResource(R.string.plan_screen_title)) },
                 actions = {
                     IconButton(onClick = onOpenAlertSettings) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
-                            contentDescription = "Configuración de Alertas"
+                            contentDescription = stringResource(R.string.plan_alerts_settings)
                         )
                     }
                     IconButton(
                         onClick = {
                             uiState.selectedVehicle?.let { vehicle ->
-                                viewModel.exportHistory(context, vehicle.plate)
+                                viewModel.exportHistory(context, vehicle.id.toString())
                             }
                         }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Share,
-                            contentDescription = "Exportar CSV"
+                            contentDescription = stringResource(R.string.plan_export_csv)
                         )
                     }
                 }
@@ -162,7 +194,7 @@ fun MaintenancePlanScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Nuevo Plan")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.plan_new_fab))
                 }
             }
         },
@@ -179,12 +211,12 @@ fun MaintenancePlanScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Planes (${uiState.plans.size})") }
+                    text = { Text(stringResource(R.string.plan_tab_plans, uiState.plans.size)) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Repuestos Instalados (${uiState.installedParts.size})") }
+                    text = { Text(stringResource(R.string.plan_tab_parts, uiState.installedParts.size)) }
                 )
             }
 
@@ -192,8 +224,8 @@ fun MaintenancePlanScreen(
                 if (uiState.plans.isEmpty()) {
                     EmptyState(
                         icon = Icons.Default.Build,
-                        title = "Sin planes registrados",
-                        message = "Pulsa el botón + para crear un plan de mantenimiento preventivo para este vehículo."
+                        title = stringResource(R.string.plan_empty_title),
+                        message = stringResource(R.string.plan_empty_message)
                     )
                 } else {
                     LazyColumn(
@@ -206,6 +238,8 @@ fun MaintenancePlanScreen(
                                 planWithStatus = planWithStatus,
                                 dateFormat = dateFormat,
                                 onRegisterService = { onRegisterService(planWithStatus.plan.id) },
+                                onEdit = { onEditPlan(planWithStatus.plan.id) },
+                                onPostpone = { planToPostpone = planWithStatus.plan },
                                 onToggleActive = {
                                     viewModel.togglePlanActiveStatus(
                                         planWithStatus.plan.id,
@@ -222,8 +256,8 @@ fun MaintenancePlanScreen(
                 if (uiState.installedParts.isEmpty()) {
                     EmptyState(
                         icon = Icons.Default.ShoppingBag,
-                        title = "Sin repuestos instalados",
-                        message = "Los repuestos y piezas asociados a los servicios realizados en este vehículo aparecerán aquí."
+                        title = stringResource(R.string.plan_parts_empty_title),
+                        message = stringResource(R.string.plan_parts_empty_message)
                     )
                 } else {
                     LazyColumn(
@@ -274,6 +308,8 @@ fun MaintenancePlanCard(
     planWithStatus: MaintenancePlanWithStatus,
     dateFormat: SimpleDateFormat,
     onRegisterService: () -> Unit,
+    onEdit: () -> Unit,
+    onPostpone: () -> Unit,
     onToggleActive: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -293,7 +329,7 @@ fun MaintenancePlanCard(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = "Categoría: ${plan.category}",
+                        text = stringResource(R.string.plan_category_line, plan.category),
                         style = MaterialTheme.typography.bodySmall,
                         color = muted
                     )
@@ -302,16 +338,16 @@ fun MaintenancePlanCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (!plan.isActive) {
                         StatusChip(
-                            text = "Pausado",
+                            text = stringResource(R.string.plan_status_paused),
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             icon = Icons.Default.PauseCircle
                         )
                     } else {
                         val statusInfo = when (planWithStatus.status) {
-                            MaintenanceStatus.AL_DIA -> Triple("Al día", StatusSuccess, Icons.Default.CheckCircle)
-                            MaintenanceStatus.PROXIMA -> Triple("Próxima", StatusWarning, Icons.Default.Warning)
-                            MaintenanceStatus.VENCIDA -> Triple("Vencida", StatusError, Icons.Default.Info)
-                            MaintenanceStatus.SIN_PROGRAMACION -> Triple("Sin programar", StatusInfo, Icons.Default.Info)
+                            MaintenanceStatus.AL_DIA -> Triple(stringResource(R.string.plan_status_ok), StatusSuccess, Icons.Default.CheckCircle)
+                            MaintenanceStatus.PROXIMA -> Triple(stringResource(R.string.plan_status_soon), StatusWarning, Icons.Default.Warning)
+                            MaintenanceStatus.VENCIDA -> Triple(stringResource(R.string.plan_status_overdue), StatusError, Icons.Default.Info)
+                            MaintenanceStatus.SIN_PROGRAMACION -> Triple(stringResource(R.string.plan_status_none), StatusInfo, Icons.Default.Info)
                         }
 
                         StatusChip(
@@ -327,7 +363,7 @@ fun MaintenancePlanCard(
 
             planWithStatus.nextDeadlineDate?.let {
                 Text(
-                    text = "Próxima fecha: ${dateFormat.format(Date(it))}",
+                    text = stringResource(R.string.plan_next_date, dateFormat.format(Date(it))),
                     style = MaterialTheme.typography.bodySmall,
                     color = muted
                 )
@@ -335,19 +371,26 @@ fun MaintenancePlanCard(
 
             planWithStatus.nextLimitMileage?.let {
                 Text(
-                    text = "Próximo km: $it km",
+                    text = stringResource(R.string.plan_next_km, it),
                     style = MaterialTheme.typography.bodySmall,
                     color = muted
                 )
             }
 
             if (plan.intervalMileage > 0 || plan.intervalMonths > 0) {
-                val intervalDesc = buildList {
-                    if (plan.intervalMileage > 0) add("cada ${plan.intervalMileage} km")
-                    if (plan.intervalMonths > 0) add("cada ${plan.intervalMonths} meses")
-                }.joinToString(" o ")
+                val everyKm = if (plan.intervalMileage > 0) {
+                    stringResource(R.string.plan_every_km, plan.intervalMileage)
+                } else {
+                    null
+                }
+                val everyMonths = if (plan.intervalMonths > 0) {
+                    stringResource(R.string.plan_every_months, plan.intervalMonths)
+                } else {
+                    null
+                }
+                val intervalDesc = listOfNotNull(everyKm, everyMonths).joinToString(" · ")
                 Text(
-                    text = "Frecuencia: $intervalDesc",
+                    text = stringResource(R.string.plan_frequency, intervalDesc),
                     style = MaterialTheme.typography.bodySmall,
                     color = muted
                 )
@@ -361,11 +404,24 @@ fun MaintenancePlanCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row {
-                    // Botón Pausar / Reactivar (RF-15)
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.maintenance_edit),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = onPostpone) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = stringResource(R.string.maintenance_postpone),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     IconButton(onClick = onToggleActive) {
                         Icon(
                             imageVector = if (plan.isActive) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
-                            contentDescription = if (plan.isActive) "Pausar actividad" else "Reactivar actividad",
+                            contentDescription = if (plan.isActive) stringResource(R.string.plan_pause) else stringResource(R.string.plan_resume),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -373,7 +429,7 @@ fun MaintenancePlanCard(
                     IconButton(onClick = onDelete) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Eliminar actividad",
+                            contentDescription = stringResource(R.string.plan_delete_cd),
                             tint = StatusError
                         )
                     }
@@ -383,7 +439,7 @@ fun MaintenancePlanCard(
                     onClick = onRegisterService,
                     shape = MaterialTheme.shapes.small
                 ) {
-                    Text("Registrar Servicio")
+                    Text(stringResource(R.string.plan_register_service))
                 }
             }
         }
@@ -405,7 +461,7 @@ fun InstalledPartCard(part: Part) {
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "$${String.format(Locale.US, "%.2f", part.cost * part.quantity)}",
+                    text = stringResource(R.string.currency_symbol) + String.format(Locale.US, "%.2f", part.cost * part.quantity),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -419,9 +475,20 @@ fun InstalledPartCard(part: Part) {
                     color = muted
                 )
             }
+            part.originTitle?.let { origin ->
+                Text(
+                    text = stringResource(R.string.maintenance_origin, origin),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = muted
+                )
+            }
 
             Text(
-                text = "Cantidad: ${part.quantity}  (Unitario: $${String.format(Locale.US, "%.2f", part.cost)})",
+                text = stringResource(
+                    R.string.plan_part_qty,
+                    part.quantity,
+                    stringResource(R.string.currency_symbol) + String.format(Locale.US, "%.2f", part.cost)
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = muted
             )

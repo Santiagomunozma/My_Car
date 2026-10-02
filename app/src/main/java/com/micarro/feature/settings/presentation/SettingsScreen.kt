@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.micarro.R
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,7 +35,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
-    onNavigateToWelcome: () -> Unit
+    onNavigateToWelcome: () -> Unit,
+    onOpenBackup: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -44,7 +47,7 @@ fun SettingsScreen(
         if (uiState.isDataCleared) {
             Toast.makeText(
                 context,
-                "Todos los datos han sido eliminados correctamente",
+                context.getString(R.string.settings_deleted_toast),
                 Toast.LENGTH_LONG
             ).show()
 
@@ -56,7 +59,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Ajustes y Privacidad") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -65,7 +68,7 @@ fun SettingsScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Gestión de Datos",
+                text = stringResource(R.string.settings_data),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -73,12 +76,21 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Esta acción eliminará de forma permanente todos los vehículos, registros de kilometraje, servicios e historial almacenados en el dispositivo.",
+                text = stringResource(R.string.settings_delete_help),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onOpenBackup,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.settings_backup))
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = { showDeleteDialog = true },
@@ -94,7 +106,7 @@ fun SettingsScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Eliminar Todos los Datos")
+                    Text(stringResource(R.string.settings_delete))
                 }
             }
         }
@@ -104,10 +116,8 @@ fun SettingsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("¿Eliminar todos los datos?") },
-            text = {
-                Text("Esta acción es irreversible. Se borrará toda la información registrada en MiCarro y la aplicación volverá a su estado inicial.")
-            },
+            title = { Text(stringResource(R.string.settings_delete_title)) },
+            text = { Text(stringResource(R.string.settings_delete_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -116,14 +126,14 @@ fun SettingsScreen(
                     }
                 ) {
                     Text(
-                        "Eliminar Definitivamente",
+                        stringResource(R.string.settings_delete_confirm),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )

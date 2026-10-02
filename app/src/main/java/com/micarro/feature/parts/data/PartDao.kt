@@ -13,10 +13,21 @@ interface PartDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(parts: List<PartEntity>)
 
+    @Query("DELETE FROM parts WHERE serviceId = :serviceId")
+    suspend fun deleteByService(serviceId: String)
+
+    @Query("SELECT * FROM parts")
+    suspend fun getAll(): List<PartEntity>
+
     @Query("""
-        SELECT p.* FROM parts p 
-        INNER JOIN maintenance_services s ON p.serviceId = s.id 
+        SELECT p.*, s.title AS originTitle FROM parts p
+        INNER JOIN maintenance_services s ON p.serviceId = s.id
         WHERE s.vehicleId = :vehicleId
     """)
-    fun observeInstalledParts(vehicleId: String): kotlinx.coroutines.flow.Flow<List<PartEntity>>
+    fun observeInstalledParts(vehicleId: String): kotlinx.coroutines.flow.Flow<List<PartWithOrigin>>
 }
+
+data class PartWithOrigin(
+    @androidx.room.Embedded val part: PartEntity,
+    val originTitle: String
+)

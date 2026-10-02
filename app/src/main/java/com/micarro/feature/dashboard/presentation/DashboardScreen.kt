@@ -102,16 +102,52 @@ fun DashboardScreen(
                         tint = StatusWarning
                     )
                     Text(
-                        stringResource(R.string.dashboard_alerts_count, activeAlerts),
+                        stringResource(R.string.dashboard_alerts_count, viewModel.documentAlertCount.collectAsStateWithLifecycle().value),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    if (activeAlerts > 0) {
-                        StatusChip(
-                            text = activeAlerts.toString(),
-                            containerColor = StatusWarning,
-                            icon = Icons.Filled.Warning
-                        )
+                }
+            }
+
+            Text(
+                stringResource(R.string.dashboard_maintenance_alerts, activeAlerts),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(stringResource(R.string.dashboard_upcoming), style = MaterialTheme.typography.titleSmall)
+            val upcoming = summary?.upcomingMaintenances.orEmpty()
+            if (upcoming.isEmpty()) {
+                Text(stringResource(R.string.dashboard_upcoming_empty))
+            } else {
+                upcoming.forEach { plan ->
+                    MiCarroCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(plan.title, style = MaterialTheme.typography.titleSmall)
+                            Text(plan.category, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+
+            Text(stringResource(R.string.dashboard_recent), style = MaterialTheme.typography.titleSmall)
+            Text(
+                stringResource(
+                    R.string.dashboard_recent_total,
+                    stringResource(R.string.currency_symbol) + String.format(java.util.Locale.US, "%.2f", summary?.totalRecentExpenses ?: 0.0)
+                )
+            )
+            val recent = summary?.recentServices.orEmpty()
+            if (recent.isEmpty()) {
+                Text(stringResource(R.string.dashboard_recent_empty))
+            } else {
+                recent.forEach { service ->
+                    MiCarroCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(service.title, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                stringResource(R.string.currency_symbol) + String.format(java.util.Locale.US, "%.2f", service.totalCost),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                 }
             }

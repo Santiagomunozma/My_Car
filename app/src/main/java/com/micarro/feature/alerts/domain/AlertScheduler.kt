@@ -2,69 +2,101 @@ package com.micarro.feature.alerts.domain
 
 import com.micarro.core.worker.AlertScheduler as CoreAlertScheduler
 import com.micarro.domain.model.MaintenancePlan
-import javax.inject.Inject
-import javax.inject.Singleton
+import com.micarro.domain.repository.AlertSettingsRepository
+import com.micarro.domain.rules.MaintenanceTiming
 
 /**
- * Programador de alertas locales para la capa de dominio.
- * Consume el core/worker/AlertScheduler provisto e integra las alertas de mantenimiento.
- * Implementa los contratos comunes del equipo (scheduleForActivity, cancelForActivity, postpone)
- * y la regla RN-08 (posponer mueve el aviso, no la fecha de vencimiento).
+ * Programa alertas locales con un trabajo único por actividad.
+ * Posponer (RN-08) reemplaza el aviso y no modifica el vencimiento del plan.
  */
-@Singleton
-class AlertScheduler @Inject constructor(
-    private val coreAlertScheduler: CoreAlertScheduler
+class AlertScheduler constructor(
+    private val coreAlertScheduler: CoreAlertScheduler,
+    private val settingsRepository: AlertSettingsRepository
 ) {
 
-    /**
-     * Contrato del equipo: programa una alerta para una actividad/plan de mantenimiento.
-     */
-    fun scheduleForActivity(activity: MaintenancePlan) {
-        val delayMinutes = if (activity.intervalMonths > 0) {
-            activity.intervalMonths.toLong() * 30L * 24L * 60L
-        } else {
-            0L
+    fun scheduleForActivity(
+        activity: MaintenancePlan,
+        vehicleLabel: String = activity.vehicleId,
+        cause: String = "programada"
+    ) {
+        val settings = settingsRepository.current()
+        val workName = CoreAlertScheduler.workName(activity.id)
+        if (!settings.maintenanceAlertsEnabled || !activity.isActive || !activity.alertsEnabled) {
+            coreAlertScheduler.cancelAlert(workName)
+            return
         }
-        scheduleMaintenanceAlert(
+
+        val dueAt = activity.nextDeadlineDate
+        val now = System.currentTimeMillis()
+        val marginDays = settings.maintenanceMarginDays
+        val notifyImmediately = dueAt == null && (
+            cause.contains("vencida", ignoreCase = true) ||
+                cause.contains("próxima", ignoreCase = true) ||
+                cause.contains("proxima", ignoreCase = true)
+            )
+        val delayMinutes = MaintenanceTiming.alertDelayMinutes(
+            dueAt = dueAt,
+            marginDays = marginDays,
+            now = now,
+            intervalMonths = activity.intervalMonths,
+            notifyImmediately = notifyImmediately
+        )
+        if (delayMinutes == null) {
+            coreAlertScheduler.cancelAlert(workName)
+            return
+        }
+        val resolvedCause = if (dueAt != null && dueAt <= now) "vencida" else cause
+        coreAlertScheduler.scheduleAlert(
+            uniqueWorkName = workName,
             delayInMinutes = delayMinutes,
             title = "Mantenimiento: ${activity.title}",
-            message = "Próximo mantenimiento programado (${activity.category})."
+            message = "Vehículo $vehicleLabel. Actividad: ${activity.title} (${activity.category}). Causa: $resolvedCause.",
+            vehicleLabel = vehicleLabel,
+            activityTitle = activity.title,
+            cause = resolvedCause
         )
     }
 
-    /**
-     * Contrato del equipo: cancela la alerta programada para una actividad.
-     */
     fun cancelForActivity(activityId: String) {
-        coreAlertScheduler.cancelAlert("activity_$activityId")
+        coreAlertScheduler.cancelAlert(CoreAlertScheduler.workName(activityId))
     }
 
-    /**
-     * Contrato del equipo: pospone una alerta para una nueva fecha (RN-08).
-     * Mueve el aviso, manteniendo intacta la fecha de vencimiento real.
-     */
-    fun postpone(alertId: String, newDate: Long) {
+    fun postpone(
+        alertId: String,
+        newDate: Long,
+        activityTitle: String = "mantenimiento",
+        vehicleLabel: String = ""
+    ) {
         val now = System.currentTimeMillis()
-        val delayMinutes = ((newDate - now) / (1000 * 60)).coerceAtLeast(0L)
+        val delayMinutes = ((newDate - now) / 60_000L).coerceAtLeast(0L)
         coreAlertScheduler.scheduleAlert(
-            delayMinutes,
-            "Recordatorio pospuesto",
-            "Aviso de mantenimiento pospuesto"
+            uniqueWorkName = CoreAlertScheduler.workName(alertId),
+            delayInMinutes = delayMinutes,
+            title = "Recordatorio pospuesto",
+            message = "Vehículo $vehicleLabel. Actividad: $activityTitle. Causa: aviso pospuesto. El vencimiento de la actividad no cambia.",
+            vehicleLabel = vehicleLabel,
+            activityTitle = activityTitle,
+            cause = "pospuesta"
         )
     }
 
-    /**
-     * Programa una alerta de mantenimiento utilizando el programador base.
-     */
     fun scheduleMaintenanceAlert(delayInMinutes: Long, title: String, message: String) {
-        coreAlertScheduler.scheduleAlert(delayInMinutes, title, message)
+        coreAlertScheduler.scheduleAlert(
+            uniqueWorkName = CoreAlertScheduler.workName(title),
+            delayInMinutes = delayInMinutes,
+            title = title,
+            message = message
+        )
     }
 
-    /**
-     * Implementa la regla RN-08: Posponer mueve el aviso, no la fecha de vencimiento.
-     * Reprograma el aviso de la alerta para un tiempo determinado (en minutos).
-     */
     fun snoozeAlert(snoozeDurationInMinutes: Long, title: String, message: String) {
-        coreAlertScheduler.scheduleAlert(snoozeDurationInMinutes, "Recordatorio: $title", message)
+        coreAlertScheduler.scheduleAlert(
+            uniqueWorkName = CoreAlertScheduler.workName("snooze_$title"),
+            delayInMinutes = snoozeDurationInMinutes,
+            title = "Recordatorio: $title",
+            message = message,
+            activityTitle = title,
+            cause = "pospuesta"
+        )
     }
 }

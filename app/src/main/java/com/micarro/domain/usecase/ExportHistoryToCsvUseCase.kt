@@ -20,20 +20,22 @@ class ExportHistoryToCsvUseCase @Inject constructor(
      */
     suspend operator fun invoke(
         outputStream: OutputStream,
-        vehiclePlate: String? = null
+        vehiclePlate: String? = null,
+        currencySymbol: String = "$"
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             // 1. Obtener los servicios realizados desde el repositorio
-            val services = maintenanceRepository.observeServices(vehiclePlate ?: "")
-                .firstOrNull() ?: emptyList()
+            val items = maintenanceRepository.observeHistory(vehiclePlate, com.micarro.domain.model.HistoryFilter())
+                .firstOrNull()
+                .orEmpty()
 
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
             val currentDate = dateFormat.format(Date())
 
             // 2. Cargar métricas del reporte
-            val totalRecords = services.size
-            val totalExpenditure = services.sumOf { it.totalCost }
-            val formattedTotalExpenditure = String.format(Locale.US, "$%.2f", totalExpenditure)
+            val totalRecords = items.size
+            val totalExpenditure = items.sumOf { it.totalCost }
+            val formattedTotalExpenditure = currencySymbol + String.format(Locale.US, "%.2f", totalExpenditure)
 
             // Kotlin aplica smart-cast automático a String dentro del bloque 'if' al usar isNullOrBlank()
             val vehicleLabel = if (!vehiclePlate.isNullOrBlank()) {
@@ -57,14 +59,14 @@ class ExportHistoryToCsvUseCase @Inject constructor(
                 // SECCIÓN 2: TABLA DE DATOS
                 appendLine("Placa,Fecha,Servicio,Categoría,Kilometraje (km),Costo Total,Taller / Responsable")
 
-                services.forEach { service ->
+                items.forEach { service ->
                     val serviceDate = dateFormat.format(Date(service.date))
                     val safeTitle = escapeCsv(service.title)
                     val safeCategory = escapeCsv(service.category)
-                    val safeWorkshop = escapeCsv(service.workshopName ?: "N/A")
-                    val formattedCost = String.format(Locale.US, "%.2f", service.totalCost)
+                    val safeWorkshop = escapeCsv(service.workshopName)
+                    val formattedCost = currencySymbol + String.format(Locale.US, "%.2f", service.totalCost)
 
-                    appendLine("${service.vehicleId},$serviceDate,$safeTitle,$safeCategory,${service.mileage},$formattedCost,$safeWorkshop")
+                    appendLine("${service.vehiclePlate},$serviceDate,$safeTitle,$safeCategory,${service.mileage},$formattedCost,$safeWorkshop")
                 }
             }
 

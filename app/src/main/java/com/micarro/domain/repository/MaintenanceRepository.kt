@@ -16,7 +16,11 @@ interface MaintenanceRepository {
     suspend fun updatePlan(plan: MaintenancePlan)
     suspend fun updatePlanActiveStatus(planId: String, isActive: Boolean)
     suspend fun deletePlanIfWithoutHistory(planId: String): Boolean
+    suspend fun getPlanById(planId: String): MaintenancePlan?
     suspend fun registerService(service: MaintenanceService, parts: List<Part>)
+    suspend fun updateService(service: MaintenanceService, parts: List<Part>)
+    suspend fun deleteService(serviceId: String)
+    suspend fun getServiceById(serviceId: String): MaintenanceService?
     fun observeServices(vehicleId: String): Flow<List<MaintenanceService>>
     fun observeExpensesByCategory(vehicleId: String, startDateTimestamp: Long): Flow<List<CategoryExpenseDto>>
 }
