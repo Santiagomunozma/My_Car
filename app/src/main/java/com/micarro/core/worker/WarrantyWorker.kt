@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.micarro.core.notification.NotificationHelper
 import com.micarro.domain.repository.PartRepository
 import com.micarro.domain.repository.VehicleRepository
+import com.micarro.domain.rules.WarrantyText
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.firstOrNull
@@ -32,7 +33,7 @@ class WarrantyWorker @AssistedInject constructor(
 
             for (part in parts) {
                 val installationMillis = part.installationDate ?: continue
-                val warrantyMonths = part.warranty?.toLongOrNull() ?: continue
+                val warrantyMonths = WarrantyText.months(part.warranty) ?: continue
 
                 val installationDate = Instant.ofEpochMilli(installationMillis)
                     .atZone(ZoneId.systemDefault())

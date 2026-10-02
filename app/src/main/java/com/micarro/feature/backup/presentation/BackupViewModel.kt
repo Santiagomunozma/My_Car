@@ -4,12 +4,16 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.micarro.domain.repository.MaintenanceRepository
+import com.micarro.domain.repository.VehicleRepository
 import com.micarro.domain.usecase.BackupUseCase
+import com.micarro.feature.alerts.domain.AlertScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,6 +27,9 @@ data class BackupUiState(
 @HiltViewModel
 class BackupViewModel @Inject constructor(
     private val backupUseCase: BackupUseCase,
+    private val maintenanceRepository: MaintenanceRepository,
+    private val vehicleRepository: VehicleRepository,
+    private val alertScheduler: AlertScheduler,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -61,11 +68,26 @@ class BackupViewModel @Inject constructor(
 
             backupUseCase.restore(inputStream)
                 .onSuccess {
+                    rescheduleRestoredAlerts()
                     _uiState.update { it.copy(isLoading = false, successMessage = "Copia de seguridad restaurada correctamente") }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = "Error al restaurar: ${error.message}") }
                 }
+        }
+    }
+
+    private suspend fun rescheduleRestoredAlerts() {
+        val vehicles = vehicleRepository.observeAllVehicles().first()
+        vehicles.forEach { vehicle ->
+            val plans = maintenanceRepository.observePlans(vehicle.id.toString()).first()
+            plans.forEach { plan ->
+                if (vehicle.isArchived) {
+                    alertScheduler.cancelForActivity(plan.id)
+                } else {
+                    alertScheduler.scheduleForActivity(plan, vehicleLabel = vehicle.plate)
+                }
+            }
         }
     }
 
