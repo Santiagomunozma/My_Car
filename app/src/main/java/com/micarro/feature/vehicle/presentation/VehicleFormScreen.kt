@@ -20,6 +20,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Info
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -89,6 +92,7 @@ fun VehicleFormScreen(
     onBack: () -> Unit,
     viewModel: VehicleFormViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.saved) {
@@ -342,7 +346,18 @@ fun VehicleFormScreen(
                     onValueChange = viewModel::onVinChanged,
                     label = stringResource(R.string.field_vin),
                     supportingText = "17 caracteres alfanuméricos (opcional)",
-                    errorMessage = state.errors[VehicleField.VIN]?.let { errorText(it) }
+                    errorMessage = state.errors[VehicleField.VIN]?.let { errorText(it) },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            Toast.makeText(context, "Número de Identificación Vehicular. Lo encuentras en la tarjeta de propiedad.", Toast.LENGTH_LONG).show()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Info,
+                                contentDescription = "Información del VIN",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 )
 
                 // 9. Cilindraje (cc)

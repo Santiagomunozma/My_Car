@@ -15,7 +15,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.TextButton
+import com.micarro.core.settings.ThemeMode
+import com.micarro.MainActivity
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,13 +46,18 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    val themeManager = remember { (context as MainActivity).themeManager }
+    val themeMode by themeManager.themeMode.collectAsStateWithLifecycle()
+
+    val deletedToast = stringResource(R.string.settings_deleted_toast)
 
     // Reaccionar a la finalización del borrado
     LaunchedEffect(uiState.isDataCleared) {
         if (uiState.isDataCleared) {
             Toast.makeText(
                 context,
-                context.getString(R.string.settings_deleted_toast),
+                deletedToast,
                 Toast.LENGTH_LONG
             ).show()
 
@@ -67,6 +77,37 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
+            Text(
+                text = "Apariencia",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            val themeOptions = listOf(
+                ThemeMode.LIGHT to "Claro",
+                ThemeMode.SYSTEM to "Sistema",
+                ThemeMode.DARK to "Oscuro"
+            )
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                themeOptions.forEachIndexed { index, (mode, label) ->
+                    SegmentedButton(
+                        selected = themeMode == mode,
+                        onClick = { themeManager.setThemeMode(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = themeOptions.size
+                        )
+                    ) {
+                        Text(label)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 text = stringResource(R.string.settings_data),
                 style = MaterialTheme.typography.titleMedium,
