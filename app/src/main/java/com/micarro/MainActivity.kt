@@ -57,12 +57,19 @@ import com.micarro.ui.theme.MyCarTheme
 import com.micarro.core.worker.WarrantyWorker
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
+import com.micarro.core.settings.ThemeManager
+import com.micarro.core.settings.ThemeMode
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    lateinit var themeManager: ThemeManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        themeManager = ThemeManager(this)
 
         // 1. Inicializar canal de notificaciones nativo
         NotificationHelper.createNotificationChannel(this)
@@ -83,7 +90,14 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            MyCarTheme {
+            val themeMode by themeManager.themeMode.collectAsStateWithLifecycle()
+            val darkTheme = when (themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+            
+            MyCarTheme(darkTheme = darkTheme) {
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()
                 ) {}

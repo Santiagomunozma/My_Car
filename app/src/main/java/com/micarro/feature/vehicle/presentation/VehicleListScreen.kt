@@ -218,7 +218,10 @@ private fun VehicleCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(vehicle.plate, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "${vehicle.brand} ${vehicle.line} ${vehicle.model}".trim(),
+                    listOf(vehicle.brand, vehicle.line, vehicle.model)
+                        .filter { it.isNotBlank() }
+                        .distinct()
+                        .joinToString(" "),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

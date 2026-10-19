@@ -72,7 +72,7 @@ import java.util.Locale
 fun MaintenancePlanScreen(
     viewModel: MaintenanceViewModel,
     onAddPlan: () -> Unit,
-    onRegisterService: (String) -> Unit,
+    onRegisterService: (String?) -> Unit,
     onEditPlan: (String) -> Unit,
     onOpenAlertSettings: () -> Unit = {}
 ) {
@@ -195,6 +195,14 @@ fun MaintenancePlanScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = stringResource(R.string.plan_new_fab))
+                }
+            } else if (selectedTab == 1) {
+                FloatingActionButton(
+                    onClick = { onRegisterService(null) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Registrar repuesto directo")
                 }
             }
         },
