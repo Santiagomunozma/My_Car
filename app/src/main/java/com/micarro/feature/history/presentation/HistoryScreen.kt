@@ -63,13 +63,13 @@ fun HistoryScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Launcher de SAF para seleccionar dónde guardar el CSV de forma segura (RF-38)
+    // Launcher de SAF para seleccionar dónde guardar el Excel de forma segura
     val currency = stringResource(R.string.currency_symbol)
-    val exportCsvLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv")
+    val exportExcelLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     ) { uri ->
         uri?.let {
-            viewModel.exportToCsv(
+            viewModel.exportToExcel(
                 uri = it,
                 contentResolver = context.contentResolver,
                 currencySymbol = currency
@@ -111,8 +111,8 @@ fun HistoryScreen(
                 title = { Text(stringResource(R.string.history_title)) },
                 actions = {
                     IconButton(onClick = {
-                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.csv"
-                        exportCsvLauncher.launch(fileName)
+                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.xlsx"
+                        exportExcelLauncher.launch(fileName)
                     }) {
                         Icon(
                             imageVector = Icons.Default.FileDownload,

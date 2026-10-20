@@ -9,6 +9,7 @@ import com.micarro.domain.model.Vehicle
 import com.micarro.domain.repository.MaintenanceRepository
 import com.micarro.domain.repository.VehicleRepository
 import com.micarro.domain.usecase.ExportHistoryToCsvUseCase
+import com.micarro.domain.usecase.ExportHistoryToExcelUseCase
 import com.micarro.domain.usecase.ExportHistoryToPdfUseCase
 import com.micarro.feature.alerts.domain.AlertScheduler
 import com.micarro.feature.maintenance.domain.DeleteMaintenanceServiceUseCase
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val repository: MaintenanceRepository,
     private val exportHistoryToCsvUseCase: ExportHistoryToCsvUseCase,
+    private val exportHistoryToExcelUseCase: ExportHistoryToExcelUseCase,
     private val exportHistoryToPdfUseCase: ExportHistoryToPdfUseCase,
     private val deleteMaintenanceService: DeleteMaintenanceServiceUseCase,
     private val alertScheduler: AlertScheduler,
@@ -130,6 +132,32 @@ class HistoryViewModel @Inject constructor(
                 .onSuccess {
                     _uiState.update {
                         it.copy(isLoading = false, userMessage = "Historial exportado a CSV con éxito.")
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, userMessage = "Error al exportar: ${error.message}")
+                    }
+                }
+        }
+    }
+
+    fun exportToExcel(uri: Uri, contentResolver: ContentResolver, vehiclePlate: String? = null, currencySymbol: String = "$") {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, userMessage = null) }
+
+            val outputStream = contentResolver.openOutputStream(uri)
+            if (outputStream == null) {
+                _uiState.update {
+                    it.copy(isLoading = false, userMessage = "No se pudo crear el archivo de destino.")
+                }
+                return@launch
+            }
+
+            exportHistoryToExcelUseCase(outputStream, vehiclePlate, currencySymbol)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(isLoading = false, userMessage = "Historial exportado a Excel con éxito.")
                     }
                 }
                 .onFailure { error ->

@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.micarro"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -78,6 +78,10 @@ dependencies {
     // System Utilities & Coroutines
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    // Apache POI for Excel export
+    implementation("org.apache.poi:poi:5.2.5")
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
