@@ -36,6 +36,24 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/NOTICE",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE.txt",
+                "META-INF/INDEX.LIST"
+            )
+            pickFirsts += setOf(
+                "META-INF/services/javax.xml.stream.XMLInputFactory",
+                "META-INF/services/javax.xml.stream.XMLOutputFactory",
+                "META-INF/services/javax.xml.stream.XMLEventFactory"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -79,9 +97,10 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
-    // Apache POI for Excel export
+    // Apache POI for Excel export (Aalto reemplaza StAX, que no está completo en Android)
     implementation("org.apache.poi:poi:5.2.5")
     implementation("org.apache.poi:poi-ooxml:5.2.5")
+    implementation("com.fasterxml:aalto-xml:1.3.2")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

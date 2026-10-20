@@ -72,6 +72,7 @@ fun HistoryScreen(
             viewModel.exportToExcel(
                 uri = it,
                 contentResolver = context.contentResolver,
+                vehicleId = state.filter.vehicleId,
                 currencySymbol = currency
             )
         }

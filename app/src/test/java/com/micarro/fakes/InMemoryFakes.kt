@@ -24,6 +24,9 @@ class InMemoryVehicleRepository : VehicleRepository {
 
     override fun observeAllVehicles(): Flow<List<Vehicle>> = vehicles
 
+    override fun observeArchivedVehicles(): Flow<List<Vehicle>> =
+        vehicles.map { list -> list.filter { it.isArchived } }
+
     override suspend fun getVehicleById(id: Long): Vehicle? =
         vehicles.value.firstOrNull { it.id == id }
 

@@ -142,11 +142,11 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun exportToExcel(uri: Uri, contentResolver: ContentResolver, vehiclePlate: String? = null, currencySymbol: String = "$") {
+    fun exportToExcel(uri: Uri, contentResolver: ContentResolver, vehicleId: String? = null, currencySymbol: String = "$") {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, userMessage = null) }
 
-            val outputStream = contentResolver.openOutputStream(uri)
+            val outputStream = contentResolver.openOutputStream(uri, "w")
             if (outputStream == null) {
                 _uiState.update {
                     it.copy(isLoading = false, userMessage = "No se pudo crear el archivo de destino.")
@@ -154,7 +154,7 @@ class HistoryViewModel @Inject constructor(
                 return@launch
             }
 
-            exportHistoryToExcelUseCase(outputStream, vehiclePlate, currencySymbol)
+            exportHistoryToExcelUseCase(outputStream, vehicleId, currencySymbol)
                 .onSuccess {
                     _uiState.update {
                         it.copy(isLoading = false, userMessage = "Historial exportado a Excel con éxito.")
