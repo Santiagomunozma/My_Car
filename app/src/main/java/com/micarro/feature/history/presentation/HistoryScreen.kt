@@ -258,7 +258,8 @@ fun HistoryScreen(
                         label = stringResource(R.string.history_to),
                         selectedDateMillis = state.filter.endDate,
                         onDateSelected = { viewModel.onDateRangeChanged(state.filter.startDate, it) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        minDateMillis = state.filter.startDate
                     )
                 }
             }

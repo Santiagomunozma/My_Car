@@ -122,6 +122,15 @@ fun MaintenanceFormScreen(
                 intervalMonthsText = plan.intervalMonths.takeIf { it > 0 }?.toString().orEmpty()
                 deadlineMillis = plan.nextDeadlineDate
             }
+        } else {
+            // Limpiar campos cuando se crea una nueva actividad
+            loadedPlan = null
+            title = ""
+            description = ""
+            customCategory = ""
+            intervalKmText = ""
+            intervalMonthsText = ""
+            deadlineMillis = null
         }
     }
 
@@ -343,7 +352,18 @@ fun MaintenanceFormScreen(
                         alertsEnabled = base?.alertsEnabled ?: true
                     )
 
-                    if (base == null) viewModel.savePlan(newPlan) else viewModel.updatePlan(newPlan)
+                    if (base == null) {
+                        viewModel.savePlan(newPlan)
+                        // Limpiar campos después de guardar una nueva actividad
+                        title = ""
+                        description = ""
+                        customCategory = ""
+                        intervalKmText = ""
+                        intervalMonthsText = ""
+                        deadlineMillis = null
+                    } else {
+                        viewModel.updatePlan(newPlan)
+                    }
                     Toast.makeText(context, context.getString(R.string.plan_saved, targetVehicle.plate), Toast.LENGTH_SHORT).show()
                     onNavigateBack()
                 },

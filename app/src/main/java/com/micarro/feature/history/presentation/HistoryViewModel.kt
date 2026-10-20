@@ -88,7 +88,14 @@ class HistoryViewModel @Inject constructor(
     }
 
     fun onDateRangeChanged(start: Long?, end: Long?) {
-        _filterState.value = _filterState.value.copy(startDate = start, endDate = end)
+        // Si cambiamos la fecha de inicio y la fecha de fin es anterior a la nueva fecha de inicio,
+        // ajustamos o limpiamos la fecha de fin
+        val adjustedEnd = if (start != null && end != null && end < start) {
+            null
+        } else {
+            end
+        }
+        _filterState.value = _filterState.value.copy(startDate = start, endDate = adjustedEnd)
     }
 
     fun deleteService(serviceId: String) {

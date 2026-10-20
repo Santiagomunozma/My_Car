@@ -12,6 +12,9 @@ interface VehicleDao {
     @Query("SELECT * FROM vehicles WHERE is_archived = 0 ORDER BY is_primary DESC, brand ASC")
     fun observeActive(): Flow<List<VehicleEntity>>
 
+    @Query("SELECT * FROM vehicles WHERE is_archived = 1 ORDER BY is_primary DESC, brand ASC")
+    fun observeArchived(): Flow<List<VehicleEntity>>
+
     @Query("SELECT * FROM vehicles ORDER BY is_primary DESC, brand ASC")
     fun observeAll(): Flow<List<VehicleEntity>>
 
