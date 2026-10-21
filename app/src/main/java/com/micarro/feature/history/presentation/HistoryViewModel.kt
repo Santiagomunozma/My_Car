@@ -168,7 +168,7 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun exportToPdf(uri: Uri, contentResolver: ContentResolver, vehiclePlate: String? = null, currencySymbol: String = "$") {
+    fun exportToPdf(uri: Uri, contentResolver: ContentResolver, vehicleId: String? = null, currencySymbol: String = "$") {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, userMessage = null) }
             val outputStream = contentResolver.openOutputStream(uri)
@@ -176,7 +176,7 @@ class HistoryViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, userMessage = "No se pudo crear el archivo de destino.") }
                 return@launch
             }
-            exportHistoryToPdfUseCase(outputStream, vehiclePlate, currencySymbol)
+            exportHistoryToPdfUseCase(outputStream, vehicleId, currencySymbol)
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false, userMessage = "Historial exportado a PDF con éxito.") }
                 }

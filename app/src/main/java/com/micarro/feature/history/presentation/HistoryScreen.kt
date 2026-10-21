@@ -81,7 +81,7 @@ fun HistoryScreen(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
         uri?.let {
-            viewModel.exportToPdf(uri = it, contentResolver = context.contentResolver, currencySymbol = currency)
+            viewModel.exportToPdf(uri = it, contentResolver = context.contentResolver, vehicleId = state.filter.vehicleId, currencySymbol = currency)
         }
     }
 
