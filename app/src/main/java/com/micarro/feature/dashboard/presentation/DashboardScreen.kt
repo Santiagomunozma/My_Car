@@ -112,7 +112,8 @@ fun DashboardScreen(
                     icon = Icons.Default.Speed,
                     iconTint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
-                    expandable = false
+                    expandable = true,
+                    expandedValue = state.mileageDetails
                 )
                 QuickStatCard(
                     title = "Próximo Mant.",
@@ -121,7 +122,7 @@ fun DashboardScreen(
                     iconTint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.weight(1f),
                     expandable = true,
-                    expandedValue = state.nextMaintenanceDetails ?: "No hay detalles disponibles"
+                    expandedValue = state.nextMaintenanceDetails
                 )
                 QuickStatCard(
                     title = "Gastos Mes",
@@ -129,7 +130,8 @@ fun DashboardScreen(
                     icon = Icons.Default.AttachMoney,
                     iconTint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f),
-                    expandable = false
+                    expandable = true,
+                    expandedValue = state.expensesDetails
                 )
             }
 
@@ -578,7 +580,8 @@ fun QuickStatCard(
                     Text(
                         text = expandedValue,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
                     )
                 }
             }
