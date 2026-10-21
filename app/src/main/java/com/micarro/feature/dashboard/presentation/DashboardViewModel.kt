@@ -43,8 +43,18 @@ class DashboardViewModel @Inject constructor(
         documentAlertCount
     ) { vehicles, summary, docAlerts ->
         val vehicle = summary?.selectedVehicle
-        val nextMaintenance = summary?.upcomingMaintenances?.firstOrNull()?.title
+        val nextMaintenance = summary?.upcomingMaintenances?.firstOrNull()
         val maintenanceAlerts = summary?.activeAlertsCount ?: 0
+
+        // Generar detalles del próximo mantenimiento
+        val nextMaintenanceDetails = nextMaintenance?.let { plan ->
+            val details = mutableListOf<String>()
+            details.add("Categoría: ${plan.category}")
+            plan.intervalMileage.takeIf { it > 0 }?.let { details.add("Intervalo: $it km") }
+            plan.intervalMonths.takeIf { it > 0 }?.let { details.add("Cada: $it meses") }
+            plan.nextDeadlineDate?.let { details.add("Fecha límite: ${java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(it))}") }
+            if (details.isEmpty()) "No hay información adicional disponible" else details.joinToString("\n")
+        } ?: "No hay mantenimiento programado"
 
         DashboardUiState(
             isLoading = false,
@@ -52,7 +62,8 @@ class DashboardViewModel @Inject constructor(
             allVehicles = vehicles,
             totalActiveAlerts = docAlerts + maintenanceAlerts,
             lastMileage = vehicle?.currentMileage ?: 0L,
-            nextMaintenanceTitle = nextMaintenance,
+            nextMaintenanceTitle = nextMaintenance?.title ?: "Sin pendientes",
+            nextMaintenanceDetails = nextMaintenanceDetails,
             currentMonthExpenses = summary?.totalRecentExpenses ?: 0.0,
             upcomingMaintenances = summary?.upcomingMaintenances.orEmpty(),
             recentServices = summary?.recentServices.orEmpty()

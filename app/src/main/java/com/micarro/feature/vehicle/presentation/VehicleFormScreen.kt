@@ -202,7 +202,7 @@ fun VehicleFormScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
                 val typeOptions = listOf(
-                    "CARRO" to "Automóvil / Camioneta",
+                    "CARRO" to "Automóvil",
                     "MOTO" to "Motocicleta"
                 )
                 SingleChoiceSegmentedButtonRow(
@@ -215,7 +215,8 @@ fun VehicleFormScreen(
                             shape = SegmentedButtonDefaults.itemShape(
                                 index = index,
                                 count = typeOptions.size
-                            )
+                            ),
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 text = label,
