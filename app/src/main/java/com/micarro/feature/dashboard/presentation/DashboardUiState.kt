@@ -10,8 +10,11 @@ data class DashboardUiState(
     val allVehicles: List<Vehicle> = emptyList(),
     val totalActiveAlerts: Int = 0,
     val lastMileage: Long = 0L,
+    val mileageDetails: String = "",
     val nextMaintenanceTitle: String? = null,
+    val nextMaintenanceDetails: String = "",
     val currentMonthExpenses: Double = 0.0,
+    val expensesDetails: String = "",
     val upcomingMaintenances: List<MaintenancePlan> = emptyList(),
     val recentServices: List<MaintenanceService> = emptyList()
 )

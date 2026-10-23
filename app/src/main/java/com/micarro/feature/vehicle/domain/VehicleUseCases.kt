@@ -33,7 +33,7 @@ class ObserveVehiclesUseCase @Inject constructor(
     private val repository: VehicleRepository
 ) {
     operator fun invoke(showArchived: Boolean): Flow<List<Vehicle>> =
-        if (showArchived) repository.observeAllVehicles() else repository.observeVehicles()
+        if (showArchived) repository.observeArchivedVehicles() else repository.observeVehicles()
 }
 
 class GetVehicleUseCase @Inject constructor(

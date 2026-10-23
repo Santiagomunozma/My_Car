@@ -47,13 +47,14 @@ class ExportHistoryToCsvUseCase @Inject constructor(
             // 3. Construir el reporte en formato plantilla + tabla
             val csvContent = buildString {
                 // SECCIÓN 1: PLANTILLA / ENCABEZADO FORMAL
-                appendLine("==================================================================")
+                appendLine("===================================================================")
                 appendLine("   MICARRO - INFORME OFICIAL DE HISTORIAL DE MANTENIMIENTO")
-                appendLine("==================================================================")
+                appendLine("===================================================================")
                 appendLine("Fecha de Generación:, $currentDate")
                 appendLine("Vehículo / Filtro:, $vehicleLabel")
                 appendLine("Total de Mantenimientos:, $totalRecords")
                 appendLine("Gasto Total Acumulado:, $formattedTotalExpenditure")
+                appendLine("-------------------------------------------------------------------")
                 appendLine()
 
                 // SECCIÓN 2: TABLA DE DATOS
@@ -66,7 +67,7 @@ class ExportHistoryToCsvUseCase @Inject constructor(
                     val safeWorkshop = escapeCsv(service.workshopName)
                     val formattedCost = currencySymbol + String.format(Locale.US, "%.2f", service.totalCost)
 
-                    appendLine("${service.vehiclePlate},$serviceDate,$safeTitle,$safeCategory,${service.mileage},$formattedCost,$safeWorkshop")
+                    appendLine("${escapeCsv(service.vehiclePlate)},$serviceDate,$safeTitle,$safeCategory,${service.mileage},$formattedCost,$safeWorkshop")
                 }
             }
 

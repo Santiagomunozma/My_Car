@@ -78,6 +78,11 @@ class HistoryViewModelTest {
         viewModel = HistoryViewModel(
             fakeRepository,
             com.micarro.domain.usecase.ExportHistoryToCsvUseCase(fakeRepository),
+            com.micarro.domain.usecase.ExportHistoryToExcelUseCase(
+                fakeRepository,
+                com.micarro.fakes.InMemoryPartRepository(),
+                com.micarro.fakes.InMemoryVehicleRepository()
+            ),
             com.micarro.domain.usecase.ExportHistoryToPdfUseCase(fakeRepository),
             com.micarro.feature.maintenance.domain.DeleteMaintenanceServiceUseCase(fakeRepository),
             com.micarro.feature.alerts.domain.AlertScheduler(

@@ -63,15 +63,16 @@ fun HistoryScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Launcher de SAF para seleccionar dónde guardar el CSV de forma segura (RF-38)
+    // Launcher de SAF para seleccionar dónde guardar el Excel de forma segura
     val currency = stringResource(R.string.currency_symbol)
-    val exportCsvLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv")
+    val exportExcelLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     ) { uri ->
         uri?.let {
-            viewModel.exportToCsv(
+            viewModel.exportToExcel(
                 uri = it,
                 contentResolver = context.contentResolver,
+                vehicleId = state.filter.vehicleId,
                 currencySymbol = currency
             )
         }
@@ -80,7 +81,7 @@ fun HistoryScreen(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
         uri?.let {
-            viewModel.exportToPdf(uri = it, contentResolver = context.contentResolver, currencySymbol = currency)
+            viewModel.exportToPdf(uri = it, contentResolver = context.contentResolver, vehicleId = state.filter.vehicleId, currencySymbol = currency)
         }
     }
 
@@ -111,8 +112,8 @@ fun HistoryScreen(
                 title = { Text(stringResource(R.string.history_title)) },
                 actions = {
                     IconButton(onClick = {
-                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.csv"
-                        exportCsvLauncher.launch(fileName)
+                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.xlsx"
+                        exportExcelLauncher.launch(fileName)
                     }) {
                         Icon(
                             imageVector = Icons.Default.FileDownload,
@@ -258,7 +259,8 @@ fun HistoryScreen(
                         label = stringResource(R.string.history_to),
                         selectedDateMillis = state.filter.endDate,
                         onDateSelected = { viewModel.onDateRangeChanged(state.filter.startDate, it) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        minDateMillis = state.filter.startDate
                     )
                 }
             }
