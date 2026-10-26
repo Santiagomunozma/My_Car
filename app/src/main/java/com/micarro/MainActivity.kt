@@ -14,6 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -26,21 +28,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -51,16 +56,17 @@ import androidx.work.WorkManager
 import com.micarro.core.navigation.MiCarroNavGraph
 import com.micarro.core.navigation.Screen
 import com.micarro.core.notification.NotificationHelper
+import com.micarro.core.settings.ThemeManager
 import com.micarro.core.worker.DocumentWorker
 import com.micarro.core.worker.MaintenanceWorker
+import com.micarro.ui.theme.LocalThemeController
 import com.micarro.ui.theme.MyCarTheme
+import com.micarro.ui.theme.ThemeController
+import com.micarro.ui.theme.ThemeMode
 import com.micarro.core.worker.WarrantyWorker
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
-import com.micarro.core.settings.ThemeManager
-import com.micarro.core.settings.ThemeMode
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -77,27 +83,33 @@ class MainActivity : ComponentActivity() {
         // 2. Programar la tarea periódica en segundo plano (cada 24 horas)
         setupBackgroundWorker()
 
-        // Habilita el renderizado Edge-to-Edge nativo de Android 14+
+        val initialTheme = themeManager.themeMode.value
+        val darkBars = when (initialTheme) {
+            ThemeMode.DARK -> true
+            ThemeMode.LIGHT -> false
+            ThemeMode.SYSTEM ->
+                resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
+        val barStyle = if (darkBars) {
+            SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+        } else {
+            SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+        }
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                AndroidColor.TRANSPARENT,
-                AndroidColor.TRANSPARENT
-            ),
-            navigationBarStyle = SystemBarStyle.auto(
-                AndroidColor.TRANSPARENT,
-                AndroidColor.TRANSPARENT
-            )
+            statusBarStyle = barStyle,
+            navigationBarStyle = barStyle
         )
 
         setContent {
             val themeMode by themeManager.themeMode.collectAsStateWithLifecycle()
-            val darkTheme = when (themeMode) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
-            
-            MyCarTheme(darkTheme = darkTheme) {
+            CompositionLocalProvider(
+                LocalThemeController provides ThemeController(
+                    mode = themeMode,
+                    onChange = themeManager::setThemeMode
+                )
+            ) {
+            MyCarTheme(themeMode = themeMode) {
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()
                 ) {}
@@ -118,6 +130,7 @@ class MainActivity : ComponentActivity() {
                         alertCause = intent?.getStringExtra(com.micarro.core.worker.MaintenanceAlertWorker.KEY_CAUSE)
                     )
                 }
+            }
             }
         }
     }
@@ -207,52 +220,80 @@ fun MiCarroAppShell(
         )
     }
 
-    // Muestra la BottomBar solo si la ruta actual coincide con una de las pestañas principales
     val shouldShowBottomBar = bottomNavItems.any { it.screen.route == currentRoute }
+    val openTab: (String) -> Unit = { route ->
+        navController.navigate(route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            AnimatedVisibility(
-                visible = shouldShowBottomBar,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
-            ) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val useRail = maxWidth >= 600.dp
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = shouldShowBottomBar && !useRail,
+                    enter = slideInVertically(initialOffsetY = { it }),
+                    exit = slideOutVertically(targetOffsetY = { it })
                 ) {
-                    bottomNavItems.forEach { item ->
-                        val selected = currentRoute == item.screen.route
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                if (!selected) {
-                                    navController.navigate(item.screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = stringResource(item.labelRes)
-                                )
-                            },
-                            label = { Text(stringResource(item.labelRes)) }
-                        )
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ) {
+                        bottomNavItems.forEach { item ->
+                            val selected = currentRoute == item.screen.route
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { if (!selected) openTab(item.screen.route) },
+                                icon = {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = stringResource(item.labelRes)
+                                    )
+                                },
+                                label = { Text(stringResource(item.labelRes)) }
+                            )
+                        }
                     }
                 }
             }
+        ) { padding ->
+            Row(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+                if (shouldShowBottomBar && useRail) {
+                    NavigationRail(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ) {
+                        bottomNavItems.forEach { item ->
+                            val selected = currentRoute == item.screen.route
+                            NavigationRailItem(
+                                selected = selected,
+                                onClick = { if (!selected) openTab(item.screen.route) },
+                                icon = {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = stringResource(item.labelRes)
+                                    )
+                                },
+                                label = { Text(stringResource(item.labelRes)) }
+                            )
+                        }
+                    }
+                }
+                MiCarroNavGraph(
+                    navController = navController,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
-    ) { padding ->
-        MiCarroNavGraph(
-            navController = navController,
-            modifier = Modifier.padding(padding)
-        )
     }
 }

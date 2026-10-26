@@ -1,16 +1,15 @@
 package com.micarro.feature.settings.presentation
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -19,8 +18,6 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.TextButton
-import com.micarro.core.settings.ThemeMode
-import com.micarro.MainActivity
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +32,10 @@ import com.micarro.R
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.micarro.ui.components.DestructiveButton
+import com.micarro.ui.components.PrimaryButton
+import com.micarro.ui.theme.LocalThemeController
+import com.micarro.ui.theme.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,10 +46,8 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val theme = LocalThemeController.current
     var showDeleteDialog by remember { mutableStateOf(false) }
-    
-    val themeManager = remember { (context as MainActivity).themeManager }
-    val themeMode by themeManager.themeMode.collectAsStateWithLifecycle()
 
     val deletedToast = stringResource(R.string.settings_deleted_toast)
 
@@ -78,24 +77,29 @@ fun SettingsScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Apariencia",
+                text = stringResource(R.string.settings_appearance),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
-            
+            Text(
+                text = stringResource(R.string.settings_theme_help),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             val themeOptions = listOf(
-                ThemeMode.LIGHT to "Claro",
-                ThemeMode.SYSTEM to "Sistema",
-                ThemeMode.DARK to "Oscuro"
+                ThemeMode.LIGHT to stringResource(R.string.settings_theme_light),
+                ThemeMode.SYSTEM to stringResource(R.string.settings_theme_system),
+                ThemeMode.DARK to stringResource(R.string.settings_theme_dark)
             )
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 themeOptions.forEachIndexed { index, (mode, label) ->
                     SegmentedButton(
-                        selected = themeMode == mode,
-                        onClick = { themeManager.setThemeMode(mode) },
+                        selected = theme.mode == mode,
+                        onClick = { theme.onChange(mode) },
                         shape = SegmentedButtonDefaults.itemShape(
                             index = index,
                             count = themeOptions.size
@@ -124,32 +128,28 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = onOpenBackup,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.settings_backup))
+            uiState.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
+
+            PrimaryButton(
+                text = stringResource(R.string.settings_backup),
+                onClick = onOpenBackup
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
+            DestructiveButton(
+                text = stringResource(R.string.settings_delete),
                 onClick = { showDeleteDialog = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                ),
                 enabled = !uiState.isDeleting,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (uiState.isDeleting) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onError,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(stringResource(R.string.settings_delete))
-                }
-            }
+                loading = uiState.isDeleting
+            )
         }
     }
 

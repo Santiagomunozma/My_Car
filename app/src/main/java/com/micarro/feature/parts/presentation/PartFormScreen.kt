@@ -11,8 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import com.micarro.ui.components.SecondaryButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +31,8 @@ import com.micarro.domain.model.Part
 import com.micarro.ui.components.DateField
 import com.micarro.ui.components.MiCarroCard
 import com.micarro.ui.components.MiCarroTextField
-import com.micarro.ui.theme.StatusError
+import com.micarro.ui.components.StatusTone
+import com.micarro.ui.components.statusAccent
 
 @Composable
 fun PartFormScreen(
@@ -69,15 +69,19 @@ fun PartFormScreen(
                     Column {
                         val displayName = if (!part.brand.isNullOrBlank()) "${part.name} (${part.brand})" else part.name
                         Text(displayName, style = MaterialTheme.typography.bodyMedium)
-                        val refText = if (!part.reference.isNullOrBlank()) "Ref: ${part.reference} • " else ""
+                        val refText = if (!part.reference.isNullOrBlank()) {
+                            stringResource(R.string.part_reference_prefix, part.reference) + " • "
+                        } else {
+                            ""
+                        }
                         Text(
-                            "$refText${part.quantity} x $${String.format("%.2f", part.cost)}",
+                            "$refText${part.quantity} x " + String.format(java.util.Locale.getDefault(), "$%,.2f", part.cost),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     IconButton(onClick = { onRemovePart(part) }) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.part_remove), tint = StatusError)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.part_remove), tint = statusAccent(StatusTone.Error))
                     }
                 }
             }
@@ -161,7 +165,8 @@ fun PartFormScreen(
                     onValueChange = { notes = it },
                     label = stringResource(R.string.part_notes)
                 )
-                Button(
+                SecondaryButton(
+                    text = stringResource(R.string.part_add),
                     onClick = {
                         val unitCost = cost.toDoubleOrNull()
                         val qty = quantity.toIntOrNull()
@@ -195,18 +200,8 @@ fun PartFormScreen(
                             warrantyKm = ""
                             installationDate = System.currentTimeMillis()
                         }
-                    },
-                    modifier = Modifier.align(Alignment.End),
-                    shape = MaterialTheme.shapes.small,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    )
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.part_add))
-                }
+                    }
+                )
             }
         }
     }

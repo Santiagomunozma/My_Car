@@ -36,8 +36,4 @@ class DocumentsAlertsViewModel @Inject constructor(
     fun setGlobalAlertsEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setGlobalAlertsEnabled(enabled) }
     }
-
-    fun setAnticipationDays(days: Int) {
-        viewModelScope.launch { settingsRepository.setAnticipationDays(days) }
-    }
 }

@@ -51,7 +51,7 @@ import com.micarro.domain.model.VehicleType
 import com.micarro.ui.components.EmptyState
 import com.micarro.ui.components.MiCarroCard
 import com.micarro.ui.components.StatusChip
-import com.micarro.ui.theme.StatusSuccess
+import com.micarro.ui.components.StatusTone
 import java.io.File
 
 fun vehicleTypeLabel(type: VehicleType): Int = when (type) {
@@ -240,14 +240,14 @@ private fun VehicleCard(
             if (vehicle.isPrimary) {
                 StatusChip(
                     text = stringResource(R.string.vehicle_main_badge),
-                    containerColor = StatusSuccess,
+                    tone = StatusTone.Success,
                     icon = Icons.Filled.Star
                 )
             }
             if (vehicle.isArchived) {
                 StatusChip(
                     text = stringResource(R.string.vehicle_archived_badge),
-                    containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tone = StatusTone.Neutral,
                     icon = Icons.Filled.Archive
                 )
             }

@@ -38,7 +38,8 @@ import com.micarro.ui.components.MiCarroCard
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.formatDate
-import com.micarro.ui.theme.StatusError
+import com.micarro.ui.components.StatusTone
+import com.micarro.ui.components.statusAccent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,7 +118,7 @@ fun MileageScreen(
                         if (state.saveFailed) {
                             Text(
                                 stringResource(R.string.error_save_failed),
-                                color = StatusError,
+                                color = statusAccent(StatusTone.Error),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -138,7 +139,16 @@ fun MileageScreen(
                 )
             }
 
-            if (state.readings.isEmpty()) {
+            if (state.isLoading) {
+                item {
+                    Text(
+                        text = stringResource(R.string.common_loading),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            } else if (state.readings.isEmpty()) {
                 item {
                     EmptyState(
                         icon = Icons.Filled.Speed,

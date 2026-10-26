@@ -61,7 +61,10 @@ class BackupRepositoryImpl @Inject constructor(
                             expirationDate = doc.expirationDate,
                             issuer = doc.issuer,
                             alertsEnabled = doc.alertsEnabled,
-                            notes = doc.notes
+                            notes = doc.notes,
+                            referenceNumber = doc.referenceNumber,
+                            filePath = doc.filePath,
+                            mimeType = doc.mimeType
                         )
                     },
                     plans = database.maintenancePlanDao().getAll().map { plan ->
@@ -113,8 +116,12 @@ class BackupRepositoryImpl @Inject constructor(
                             notes = part.notes
                         )
                     },
-                    files = collectFiles(vehicles.mapNotNull { it.photoUri } + database.maintenanceServiceDao().getAll()
-                        .flatMap { EvidenceCodec.decode(it.evidenceUri) })
+                    files = collectFiles(
+                        vehicles.mapNotNull { it.photoUri } +
+                            database.maintenanceServiceDao().getAll()
+                                .flatMap { EvidenceCodec.decode(it.evidenceUri) } +
+                            database.documentDao().getAll().mapNotNull { it.filePath }
+                    )
                 )
                 outputStream.use { it.write(gson.toJson(backup).toByteArray(Charsets.UTF_8)) }
             }
@@ -168,7 +175,10 @@ class BackupRepositoryImpl @Inject constructor(
                                 expirationDate = dto.expirationDate,
                                 issuer = dto.issuer,
                                 alertsEnabled = dto.alertsEnabled,
-                                notes = dto.notes
+                                notes = dto.notes,
+                                referenceNumber = dto.referenceNumber,
+                                filePath = rewritePath(dto.filePath, pathMap),
+                                mimeType = dto.mimeType
                             )
                         )
                     }
@@ -253,7 +263,11 @@ class BackupRepositoryImpl @Inject constructor(
         val rewritten = mutableMapOf<String, String>()
         files.forEach { item ->
             if (item.path.isBlank() || item.contentBase64.isBlank()) return@forEach
-            val folder = if (item.path.contains("service_evidence")) "service_evidence" else "vehicle_photos"
+            val folder = when {
+                item.path.contains("service_evidence") -> "service_evidence"
+                item.path.contains("document_files") -> "document_files"
+                else -> "vehicle_photos"
+            }
             val dir = File(context.filesDir, folder).apply { mkdirs() }
             val dest = File(dir, File(item.path).name)
             dest.writeBytes(Base64.decode(item.contentBase64, Base64.DEFAULT))

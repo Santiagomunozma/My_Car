@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -64,8 +66,12 @@ import com.micarro.R
 import com.micarro.domain.model.Vehicle
 import com.micarro.domain.model.VehicleType
 import com.micarro.feature.vehicle.presentation.VehicleColors
+import com.micarro.ui.components.LoadingState
 import com.micarro.ui.components.MiCarroCard
 import com.micarro.ui.components.PrimaryButton
+import com.micarro.ui.theme.BrandCyan
+import com.micarro.ui.theme.BrandIndigo
+import com.micarro.ui.theme.PlateTextStyle
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,6 +91,10 @@ fun DashboardScreen(
             )
         }
     ) { padding ->
+        if (state.isLoading) {
+            LoadingState(Modifier.padding(padding))
+            return@Scaffold
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -107,8 +117,12 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 QuickStatCard(
-                    title = "Kilometraje",
-                    value = if (state.selectedVehicle != null) String.format(Locale.US, "%,d km", state.lastMileage) else "N/A",
+                    title = stringResource(R.string.dashboard_mileage),
+                    value = if (state.selectedVehicle != null) {
+                        String.format(Locale.getDefault(), "%,d km", state.lastMileage)
+                    } else {
+                        stringResource(R.string.dashboard_mileage_empty)
+                    },
                     icon = Icons.Default.Speed,
                     iconTint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
@@ -116,8 +130,8 @@ fun DashboardScreen(
                     expandedValue = state.mileageDetails
                 )
                 QuickStatCard(
-                    title = "Próximo Mant.",
-                    value = state.nextMaintenanceTitle ?: "Sin pendientes",
+                    title = stringResource(R.string.dashboard_next_short),
+                    value = state.nextMaintenanceTitle ?: stringResource(R.string.dashboard_none_pending),
                     icon = Icons.Default.Build,
                     iconTint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.weight(1f),
@@ -125,8 +139,8 @@ fun DashboardScreen(
                     expandedValue = state.nextMaintenanceDetails
                 )
                 QuickStatCard(
-                    title = "Gastos Mes",
-                    value = "$ " + String.format(Locale.US, "%,.0f", state.currentMonthExpenses),
+                    title = stringResource(R.string.dashboard_month_expenses),
+                    value = String.format(Locale.getDefault(), "$%,.0f", state.currentMonthExpenses),
                     icon = Icons.Default.AttachMoney,
                     iconTint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f),
@@ -137,7 +151,7 @@ fun DashboardScreen(
 
             // 3. Próximos Mantenimientos Preventivos
             Text(
-                text = "Próximos Mantenimientos",
+                text = stringResource(R.string.dashboard_upcoming),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -172,7 +186,7 @@ fun DashboardScreen(
 
             // 4. Servicios Recientes / Historial de Gastos
             Text(
-                text = "Servicios Recientes",
+                text = stringResource(R.string.dashboard_recent),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -209,7 +223,7 @@ fun DashboardScreen(
                                 )
                             }
                             Text(
-                                text = "$ " + String.format(Locale.US, "%,.2f", service.totalCost),
+                                text = String.format(Locale.getDefault(), "$%,.2f", service.totalCost),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -231,53 +245,62 @@ fun DashboardHeader(
     onOpenAlerts: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_logo),
-                contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier.size(40.dp)
-            )
-            Text(
-                text = "MiCarro",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        IconButton(onClick = onOpenAlerts) {
-            if (alertCount > 0) {
-                BadgedBox(
-                    badge = {
-                        Badge(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
-                        ) {
-                            Text(if (alertCount > 99) "99+" else alertCount.toString())
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Alertas y Notificaciones"
-                    )
-                }
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Alertas y Notificaciones"
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_logo),
+                    contentDescription = stringResource(R.string.app_name),
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+                Text(
+                    text = stringResource(R.string.dashboard_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
+            IconButton(onClick = onOpenAlerts) {
+                if (alertCount > 0) {
+                    BadgedBox(
+                        badge = {
+                            Badge(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            ) {
+                                Text(if (alertCount > 99) "99+" else alertCount.toString())
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = stringResource(R.string.dashboard_alerts_cd)
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = stringResource(R.string.dashboard_alerts_cd)
+                    )
+                }
+            }
         }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(Brush.horizontalGradient(listOf(BrandCyan, BrandIndigo)))
+        )
     }
 }
 
@@ -325,7 +348,7 @@ fun VehicleSelectorCard(
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Vehículo Activo",
+                            text = stringResource(R.string.dashboard_active_vehicle),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -337,12 +360,16 @@ fun VehicleSelectorCard(
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = if (allVehicles.size > 1) "Cambiar" else "Opciones",
+                                text = if (allVehicles.size > 1) {
+                                    stringResource(R.string.dashboard_change_vehicle)
+                                } else {
+                                    stringResource(R.string.dashboard_vehicle_options)
+                                },
                                 style = MaterialTheme.typography.labelLarge
                             )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Seleccionar vehículo"
+                                contentDescription = stringResource(R.string.maintenance_select_vehicle)
                             )
                         }
 
@@ -376,7 +403,7 @@ fun VehicleSelectorCard(
                             }
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("Registrar nuevo vehículo") },
+                                text = { Text(stringResource(R.string.dashboard_register_vehicle)) },
                                 onClick = {
                                     expanded = false
                                     onAddVehicle()
@@ -409,9 +436,9 @@ fun VehicleSelectorCard(
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                         ) {
                             Text(
-                                text = selectedVehicle.plate,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
+                                text = selectedVehicle.plate.uppercase(Locale.getDefault()),
+                                style = PlateTextStyle,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
                         }
@@ -455,17 +482,17 @@ fun VehicleSelectorCard(
                     modifier = Modifier.size(48.dp)
                 )
                 Text(
-                    text = "No tienes ningún vehículo registrado",
+                    text = stringResource(R.string.dashboard_empty_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Registra tu vehículo para llevar el control de sus mantenimientos y gastos.",
+                    text = stringResource(R.string.dashboard_empty_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 PrimaryButton(
-                    text = "Agregar mi primer vehículo",
+                    text = stringResource(R.string.dashboard_add_first),
                     onClick = onAddVehicle,
                     modifier = Modifier.fillMaxWidth()
                 )

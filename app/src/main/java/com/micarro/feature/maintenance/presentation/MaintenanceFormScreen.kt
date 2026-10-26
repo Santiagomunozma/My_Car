@@ -42,6 +42,7 @@ import com.micarro.R
 import com.micarro.domain.model.MaintenancePlan
 import com.micarro.domain.model.Vehicle
 import com.micarro.ui.components.DateField
+import com.micarro.ui.components.PrimaryButton
 
 val DEFAULT_CATEGORIES = listOf(
     "Aceite",
@@ -60,13 +61,6 @@ data class MaintenanceTemplate(
     val category: String,
     val km: Int,
     val months: Int
-)
-
-val COMMON_TEMPLATES = listOf(
-    MaintenanceTemplate("Cambio de Aceite", "Aceite", 5000, 6),
-    MaintenanceTemplate("Filtros (Aire/Combustible)", "Filtros", 10000, 12),
-    MaintenanceTemplate("Revisión de Frenos", "Frenos", 15000, 12),
-    MaintenanceTemplate("Batería y Eléctrico", "Batería", 0, 24)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,7 +139,7 @@ fun MaintenanceFormScreen(
                 title = { Text(stringResource(if (loadedPlan == null) R.string.plan_new else R.string.plan_edit)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -169,7 +163,7 @@ fun MaintenanceFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = selectedVehicle?.let { "${it.plate} - ${it.brand} ${it.model}" } ?: "Seleccionar vehículo",
+                        value = selectedVehicle?.let { "${it.plate.uppercase()} - ${it.brand} ${it.model}" } ?: stringResource(R.string.maintenance_select_vehicle),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.plan_vehicle)) },
@@ -207,7 +201,7 @@ fun MaintenanceFormScreen(
             // Sugerencias / Plantillas rápidas (RF-16)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Plantillas rápidas:",
+                    text = stringResource(R.string.maintenance_templates),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -215,7 +209,12 @@ fun MaintenanceFormScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    COMMON_TEMPLATES.forEach { template ->
+                    listOf(
+                        MaintenanceTemplate(stringResource(R.string.template_oil), "Aceite", 5000, 6),
+                        MaintenanceTemplate(stringResource(R.string.template_filters), "Filtros", 10000, 12),
+                        MaintenanceTemplate(stringResource(R.string.template_brakes), "Frenos", 15000, 12),
+                        MaintenanceTemplate(stringResource(R.string.template_battery), "Batería", 0, 24)
+                    ).forEach { template ->
                         androidx.compose.material3.FilterChip(
                             selected = title == template.name,
                             onClick = {
@@ -325,12 +324,14 @@ fun MaintenanceFormScreen(
             }
 
             // 5. Botón de guardado
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.plan_save),
+                enabled = isFormValid,
                 onClick = {
                     val targetVehicle = selectedVehicle
                     if (targetVehicle == null) {
                         Toast.makeText(context, context.getString(R.string.plan_need_vehicle), Toast.LENGTH_SHORT).show()
-                        return@Button
+                        return@PrimaryButton
                     }
 
                     viewModel.rememberCategory(resolvedCategory)
@@ -366,13 +367,8 @@ fun MaintenanceFormScreen(
                     }
                     Toast.makeText(context, context.getString(R.string.plan_saved, targetVehicle.plate), Toast.LENGTH_SHORT).show()
                     onNavigateBack()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = isFormValid,
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Text(stringResource(R.string.plan_save))
-            }
+                }
+            )
         }
     }
 }

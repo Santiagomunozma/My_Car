@@ -27,4 +27,7 @@ class DocumentRepositoryImpl @Inject constructor(
 
     override suspend fun setAlertsEnabled(id: Long, enabled: Boolean) =
         dao.setAlertsEnabled(id, enabled)
+
+    override suspend fun markReminders(id: Long, month: Boolean, fortnight: Boolean, expired: Boolean) =
+        dao.markReminders(id, month, fortnight, expired)
 }

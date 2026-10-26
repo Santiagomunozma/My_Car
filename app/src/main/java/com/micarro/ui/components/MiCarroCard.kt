@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.micarro.ui.theme.LocalDarkTheme
 
 @Composable
 fun MiCarroCard(
@@ -16,10 +17,11 @@ fun MiCarroCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val dark = LocalDarkTheme.current
     val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+    val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     val shape = MaterialTheme.shapes.medium
-    val elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    val elevation = CardDefaults.cardElevation(defaultElevation = if (dark) 0.dp else 1.dp)
 
     if (onClick != null) {
         Card(

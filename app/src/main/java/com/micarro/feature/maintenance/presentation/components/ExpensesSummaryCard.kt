@@ -21,9 +21,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.res.stringResource
+import com.micarro.R
 import com.micarro.domain.usecase.CategoryExpense
 import com.micarro.domain.usecase.ExpensesSummary
 import com.micarro.domain.usecase.TimePeriod
+import com.micarro.ui.components.MiCarroCard
 import java.util.Locale
 
 @Composable
@@ -33,18 +36,11 @@ fun ExpensesSummaryCard(
     onPeriodSelected: (TimePeriod) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    ) {
+    MiCarroCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Resumen de Gastos",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = stringResource(R.string.expenses_title),
+                style = MaterialTheme.typography.titleMedium
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -61,10 +57,10 @@ fun ExpensesSummaryCard(
                         label = {
                             Text(
                                 text = when (period) {
-                                    TimePeriod.THIS_MONTH -> "Mes"
-                                    TimePeriod.LAST_6_MONTHS -> "6 Meses"
-                                    TimePeriod.THIS_YEAR -> "Año"
-                                    TimePeriod.ALL_TIME -> "Todo"
+                                    TimePeriod.THIS_MONTH -> stringResource(R.string.expenses_month)
+                                    TimePeriod.LAST_6_MONTHS -> stringResource(R.string.expenses_six_months)
+                                    TimePeriod.THIS_YEAR -> stringResource(R.string.expenses_year)
+                                    TimePeriod.ALL_TIME -> stringResource(R.string.expenses_all)
                                 },
                                 style = MaterialTheme.typography.labelSmall
                             )
@@ -77,7 +73,7 @@ fun ExpensesSummaryCard(
 
             val totalSpent = summary?.totalSpent ?: 0.0
             Text(
-                text = String.format(Locale.US, "$%.2f", totalSpent),
+                text = String.format(Locale.getDefault(), "$%,.2f", totalSpent),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -88,7 +84,7 @@ fun ExpensesSummaryCard(
             // Desglose visual por categorías
             if (summary == null || summary.breakdown.isEmpty()) {
                 Text(
-                    text = "No hay registros de gastos para el periodo seleccionado.",
+                    text = stringResource(R.string.expenses_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -116,7 +112,7 @@ private fun CategoryExpenseRow(expense: CategoryExpense) {
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = String.format(Locale.US, "$%.2f (%.1f%%)", expense.totalAmount, expense.percentage),
+                text = String.format(Locale.getDefault(), "$%,.2f (%.1f%%)", expense.totalAmount, expense.percentage),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -129,7 +125,7 @@ private fun CategoryExpenseRow(expense: CategoryExpense) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
+                .clip(MaterialTheme.shapes.extraSmall),
             color = MaterialTheme.colorScheme.primary,
             trackColor = MaterialTheme.colorScheme.surfaceVariant
         )

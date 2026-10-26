@@ -86,15 +86,25 @@ fun HistoryScreen(
     }
 
     // Muestra notificaciones tipo Snackbar en pantalla cuando haya mensajes en el estado
-    LaunchedEffect(state.userMessage) {
-        state.userMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+    val notice = state.notice?.let { notice ->
+        if (notice.detail != null) {
+            stringResource(notice.messageRes, notice.detail)
+        } else {
+            stringResource(notice.messageRes)
+        }
+    }
+    LaunchedEffect(notice) {
+        if (notice != null) {
+            snackbarHostState.showSnackbar(notice)
             viewModel.clearUserMessage()
         }
     }
 
     val categories = com.micarro.feature.maintenance.presentation.DEFAULT_CATEGORIES
-    val serviceTypes = listOf("PREVENTIVE" to "Preventivo", "CORRECTIVE" to "Correctivo")
+    val serviceTypes = listOf(
+        "PREVENTIVE" to stringResource(R.string.service_preventive),
+        "CORRECTIVE" to stringResource(R.string.service_corrective)
+    )
     var minCost by remember { mutableStateOf("") }
     var maxCost by remember { mutableStateOf("") }
     var workshop by remember { mutableStateOf("") }
@@ -117,7 +127,7 @@ fun HistoryScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Default.FileDownload,
-                            contentDescription = stringResource(R.string.history_export_csv)
+                            contentDescription = stringResource(R.string.history_export_excel)
                         )
                     }
                     IconButton(onClick = {
@@ -161,7 +171,7 @@ fun HistoryScreen(
                     label = stringResource(R.string.history_search),
                     placeholder = stringResource(R.string.history_search_hint),
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.history_search))
                     }
                 )
             }
@@ -275,10 +285,28 @@ fun HistoryScreen(
             }
 
             // Lista detallada de mantenimientos o estado vacío
-            if (state.items.isEmpty()) {
+            if (state.isLoading && state.items.isEmpty()) {
                 item {
                     Text(
-                        text = stringResource(R.string.history_empty),
+                        text = stringResource(R.string.common_loading),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+            } else if (state.items.isEmpty()) {
+                val filtered = !state.filter.query.isNullOrBlank() ||
+                    state.filter.category != null ||
+                    state.filter.serviceType != null ||
+                    !state.filter.workshop.isNullOrBlank() ||
+                    state.filter.vehicleId != null ||
+                    state.filter.minCost != null ||
+                    state.filter.maxCost != null ||
+                    state.filter.startDate != null ||
+                    state.filter.endDate != null
+                item {
+                    Text(
+                        text = stringResource(if (filtered) R.string.history_empty else R.string.history_empty_all),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 16.dp)

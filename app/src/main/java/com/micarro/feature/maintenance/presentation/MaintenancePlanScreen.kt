@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PauseCircle
@@ -58,11 +59,10 @@ import com.micarro.domain.model.Vehicle
 import com.micarro.feature.maintenance.domain.MaintenanceStatus
 import com.micarro.ui.components.EmptyState
 import com.micarro.ui.components.MiCarroCard
+import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.StatusChip
-import com.micarro.ui.theme.StatusError
-import com.micarro.ui.theme.StatusInfo
-import com.micarro.ui.theme.StatusSuccess
-import com.micarro.ui.theme.StatusWarning
+import com.micarro.ui.components.StatusTone
+import com.micarro.ui.components.statusAccent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -116,7 +116,7 @@ fun MaintenancePlanScreen(
     planToDelete?.let { plan ->
         AlertDialog(
             onDismissRequest = { planToDelete = null },
-            icon = { Icon(Icons.Default.Delete, contentDescription = null, tint = StatusError) },
+            icon = { Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = statusAccent(StatusTone.Error)) },
             title = { Text(stringResource(R.string.maintenance_delete_title)) },
             text = { Text(stringResource(R.string.maintenance_delete_message, plan.title)) },
             confirmButton = {
@@ -133,7 +133,7 @@ fun MaintenancePlanScreen(
                         }
                     }
                 ) {
-                    Text(stringResource(R.string.action_delete), color = StatusError)
+                    Text(stringResource(R.string.action_delete), color = statusAccent(StatusTone.Error))
                 }
             },
             dismissButton = {
@@ -148,7 +148,7 @@ fun MaintenancePlanScreen(
     if (showDeleteRejectedDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteRejectedDialog = false },
-            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = StatusWarning) },
+            icon = { Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.maintenance_postpone), tint = statusAccent(StatusTone.Warning)) },
             title = { Text(stringResource(R.string.plan_delete_blocked_title)) },
             text = {
                 Text(stringResource(R.string.plan_delete_blocked))
@@ -347,20 +347,20 @@ fun MaintenancePlanCard(
                     if (!plan.isActive) {
                         StatusChip(
                             text = stringResource(R.string.plan_status_paused),
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            tone = StatusTone.Neutral,
                             icon = Icons.Default.PauseCircle
                         )
                     } else {
                         val statusInfo = when (planWithStatus.status) {
-                            MaintenanceStatus.AL_DIA -> Triple(stringResource(R.string.plan_status_ok), StatusSuccess, Icons.Default.CheckCircle)
-                            MaintenanceStatus.PROXIMA -> Triple(stringResource(R.string.plan_status_soon), StatusWarning, Icons.Default.Warning)
-                            MaintenanceStatus.VENCIDA -> Triple(stringResource(R.string.plan_status_overdue), StatusError, Icons.Default.Info)
-                            MaintenanceStatus.SIN_PROGRAMACION -> Triple(stringResource(R.string.plan_status_none), StatusInfo, Icons.Default.Info)
+                            MaintenanceStatus.AL_DIA -> Triple(stringResource(R.string.plan_status_ok), StatusTone.Success, Icons.Default.CheckCircle)
+                            MaintenanceStatus.PROXIMA -> Triple(stringResource(R.string.plan_status_soon), StatusTone.Warning, Icons.Default.Warning)
+                            MaintenanceStatus.VENCIDA -> Triple(stringResource(R.string.plan_status_overdue), StatusTone.Error, Icons.Default.Error)
+                            MaintenanceStatus.SIN_PROGRAMACION -> Triple(stringResource(R.string.plan_status_none), StatusTone.Info, Icons.Default.Info)
                         }
 
                         StatusChip(
                             text = statusInfo.first,
-                            containerColor = statusInfo.second,
+                            tone = statusInfo.second,
                             icon = statusInfo.third
                         )
                     }
@@ -438,17 +438,15 @@ fun MaintenancePlanCard(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = stringResource(R.string.plan_delete_cd),
-                            tint = StatusError
+                            tint = statusAccent(StatusTone.Error)
                         )
                     }
                 }
 
-                Button(
-                    onClick = onRegisterService,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(stringResource(R.string.plan_register_service))
-                }
+                PrimaryButton(
+                    text = stringResource(R.string.plan_register_service),
+                    onClick = onRegisterService
+                )
             }
         }
     }

@@ -58,7 +58,9 @@ import com.micarro.ui.components.MiCarroDropdownField
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.SecondaryButton
-import com.micarro.ui.theme.StatusError
+import com.micarro.ui.components.StatusTone
+import com.micarro.ui.components.statusAccent
+import com.micarro.ui.theme.PlateTextStyle
 import java.io.File
 
 fun fuelTypeLabel(type: FuelType): Int = when (type) {
@@ -191,19 +193,19 @@ fun VehicleFormScreen(
                 if (state.photoImportFailed) {
                     Text(
                         stringResource(R.string.vehicle_photo_error),
-                        color = StatusError,
+                        color = statusAccent(StatusTone.Error),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
 
                 // 2. Selector de Tipo de Vehículo (CARRO / MOTO)
                 Text(
-                    text = "Tipo de Vehículo",
+                    text = stringResource(R.string.field_type),
                     style = MaterialTheme.typography.titleMedium
                 )
                 val typeOptions = listOf(
-                    "CARRO" to "Automóvil",
-                    "MOTO" to "Motocicleta"
+                    "CARRO" to stringResource(R.string.vehicle_type_car),
+                    "MOTO" to stringResource(R.string.vehicle_type_motorcycle)
                 )
                 SingleChoiceSegmentedButtonRow(
                     modifier = Modifier.fillMaxWidth()
@@ -232,19 +234,17 @@ fun VehicleFormScreen(
                         when (state.errors[VehicleField.PLATE]) {
                             VehicleError.REQUIRED -> stringResource(R.string.error_required)
                             VehicleError.DUPLICATE_PLATE -> stringResource(R.string.error_plate_duplicate)
-                            else -> if (state.typeKey == "MOTO") {
-                                "Formato inválido. Ejemplo: AAA12A (3 letras, 2 números y 1 letra)"
-                            } else {
-                                "Formato inválido. Ejemplo: AAA123 (3 letras y 3 números)"
-                            }
+                            else -> stringResource(
+                                if (state.typeKey == "MOTO") R.string.plate_invalid_moto
+                                else R.string.plate_invalid_car
+                            )
                         }
                     }
                     state.draft.plate.isNotBlank() && !VehicleRules.isPlateValid(state.draft.plate, state.typeKey) -> {
-                        if (state.typeKey == "MOTO") {
-                            "Formato inválido. Ejemplo: AAA12A (3 letras, 2 números y 1 letra)"
-                        } else {
-                            "Formato inválido. Ejemplo: AAA123 (3 letras y 3 números)"
-                        }
+                        stringResource(
+                            if (state.typeKey == "MOTO") R.string.plate_invalid_moto
+                            else R.string.plate_invalid_car
+                        )
                     }
                     else -> null
                 }
@@ -255,10 +255,13 @@ fun VehicleFormScreen(
                     label = stringResource(R.string.field_plate),
                     errorMessage = plateErrorText,
                     supportingText = if (plateErrorText == null) {
-                        if (state.typeKey == "MOTO") "Ejemplo: AAA12A (máximo 6 caracteres)"
-                        else "Ejemplo: AAA123 (máximo 6 caracteres)"
+                        stringResource(
+                            if (state.typeKey == "MOTO") R.string.plate_hint_moto
+                            else R.string.plate_hint_car
+                        )
                     } else null,
-                    singleLine = true
+                    singleLine = true,
+                    textStyle = PlateTextStyle
                 )
 
                 // 4. Desplegables en Cascada: Marca, Línea, Año del Modelo
@@ -266,7 +269,7 @@ fun VehicleFormScreen(
                     label = stringResource(R.string.field_brand),
                     options = state.availableBrands,
                     selected = state.draft.brand.ifEmpty { null },
-                    placeholder = "Selecciona una marca",
+                    placeholder = stringResource(R.string.placeholder_brand),
                     optionLabel = { it },
                     onSelected = viewModel::onBrandSelected,
                     errorMessage = state.errors[VehicleField.BRAND]?.let { errorText(it) }
@@ -277,7 +280,11 @@ fun VehicleFormScreen(
                     options = state.availableLines,
                     selected = state.draft.line.ifEmpty { null },
                     enabled = state.draft.brand.isNotBlank(),
-                    placeholder = if (state.draft.brand.isBlank()) "Selecciona una marca primero" else "Selecciona una línea",
+                    placeholder = if (state.draft.brand.isBlank()) {
+                        stringResource(R.string.placeholder_brand_first)
+                    } else {
+                        stringResource(R.string.placeholder_line)
+                    },
                     optionLabel = { it },
                     onSelected = viewModel::onLineSelected,
                     errorMessage = state.errors[VehicleField.LINE]?.let { errorText(it) }
@@ -287,7 +294,7 @@ fun VehicleFormScreen(
                     label = stringResource(R.string.field_year),
                     options = state.availableYears,
                     selected = state.draft.year.ifEmpty { null },
-                    placeholder = "Selecciona el año",
+                    placeholder = stringResource(R.string.placeholder_year),
                     optionLabel = { it },
                     onSelected = viewModel::onYearSelected,
                     errorMessage = state.errors[VehicleField.YEAR]?.let { errorText(it) }
@@ -299,7 +306,7 @@ fun VehicleFormScreen(
                     label = stringResource(R.string.field_color),
                     options = VehicleColors.options,
                     selected = selectedColorOption,
-                    placeholder = "Selecciona un color",
+                    placeholder = stringResource(R.string.placeholder_color),
                     optionLabel = { it.name },
                     onSelected = { viewModel.onColorSelected(it.name) },
                     leadingIcon = selectedColorOption?.let { colorOpt ->
@@ -378,7 +385,7 @@ fun VehicleFormScreen(
                             if (state.vehicleGone) R.string.error_vehicle_gone
                             else R.string.error_save_failed
                         ),
-                        color = StatusError,
+                        color = statusAccent(StatusTone.Error),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

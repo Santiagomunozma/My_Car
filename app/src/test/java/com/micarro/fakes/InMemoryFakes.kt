@@ -5,6 +5,8 @@ import com.micarro.domain.model.AlertSettings
 import com.micarro.domain.model.MileageReading
 import com.micarro.domain.model.Vehicle
 import com.micarro.domain.model.VehicleDocument
+import com.micarro.feature.documents.domain.DocumentFileStore
+import com.micarro.feature.documents.domain.StoredDocumentFile
 import com.micarro.domain.repository.AlertSettingsRepository
 import com.micarro.domain.repository.DocumentRepository
 import com.micarro.domain.repository.MileageRepository
@@ -112,9 +114,42 @@ class InMemoryDocumentRepository : DocumentRepository {
         }
     }
 
+    override suspend fun markReminders(id: Long, month: Boolean, fortnight: Boolean, expired: Boolean) {
+        documents.update { list ->
+            list.map {
+                if (it.id == id) {
+                    it.copy(
+                        remindedMonth = month,
+                        remindedFortnight = fortnight,
+                        remindedExpired = expired
+                    )
+                } else {
+                    it
+                }
+            }
+        }
+    }
+
     fun seed(vararg items: VehicleDocument) {
         documents.value = items.toList()
     }
+}
+
+class FakeDocumentFileStore : DocumentFileStore {
+    val deleted = mutableListOf<String>()
+
+    override suspend fun importUri(sourceUri: String) = StoredDocumentFile(sourceUri, "image/jpeg")
+
+    override suspend fun importLocalFile(path: String, mimeType: String) =
+        StoredDocumentFile(path, mimeType)
+
+    override fun createCameraFile(): String = "camera.jpg"
+
+    override suspend fun delete(path: String?) {
+        if (path != null) deleted += path
+    }
+
+    override suspend fun deleteAll() = Unit
 }
 
 class InMemoryAlertSettingsRepository : AlertSettingsRepository {

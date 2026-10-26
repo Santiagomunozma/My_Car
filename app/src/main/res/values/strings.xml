@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Car</string>
+    <string name="app_name">Mi Carro</string>
 
     <!-- Navegación inferior -->
     <string name="nav_dashboard">Inicio</string>
@@ -22,7 +22,7 @@
     <string name="vehicles_add">Agregar vehículo</string>
     <string name="vehicles_edit_title">Editar vehículo</string>
     <string name="vehicles_empty_title">Sin vehículos</string>
-    <string name="vehicles_empty_message">Registra tu primer vehículo para empezar a gestionar kilometraje y documentos.</string>
+    <string name="vehicles_empty_message">Aún no tienes vehículos. Agrega el primero para llevar el kilometraje y los documentos.</string>
     <string name="vehicles_show_archived">Mostrar archivados</string>
     <string name="vehicles_filter_active">Activos</string>
     <string name="vehicles_filter_archived">Archivados</string>
@@ -101,12 +101,23 @@
     <string name="documents_add">Agregar documento</string>
     <string name="documents_edit">Editar documento</string>
     <string name="documents_empty_title">Sin documentos</string>
-    <string name="documents_empty_message">Registra el SOAT, la revisión técnico-mecánica u otros documentos del vehículo.</string>
+    <string name="documents_empty_message">Aún no tienes documentos. Agrega el primero para recibir alertas de vencimiento.</string>
     <string name="document_type">Tipo de documento</string>
     <string name="document_name">Nombre del documento</string>
     <string name="document_expiration">Fecha de vencimiento</string>
     <string name="document_issuer">Expedido por (opcional)</string>
+    <string name="document_reference">Número de documento (opcional)</string>
     <string name="document_notes">Notas (opcional)</string>
+    <string name="document_attach">Adjuntar foto o PDF</string>
+    <string name="document_take_photo">Tomar foto</string>
+    <string name="document_open_file">Ver archivo</string>
+    <string name="document_attached">Archivo adjunto</string>
+    <string name="document_reading">Leyendo el documento…</string>
+    <string name="document_read_missing_key">No hay clave de Gemini. El archivo queda guardado; completa los datos a mano. Agrega GEMINI_API_KEY en local.properties.</string>
+    <string name="document_read_failed">No se pudo leer el documento. Completa los datos a mano.</string>
+    <string name="document_file_too_large">El archivo supera 8 MB.</string>
+    <string name="document_plate_mismatch">La placa del documento (%1$s) no coincide con la del vehículo (%2$s).</string>
+    <string name="document_plate_confirm">Guardar de todas formas</string>
     <string name="document_alerts_switch">Alertas de vencimiento</string>
     <string name="document_delete_confirm_title">Eliminar documento</string>
     <string name="document_delete_confirm_message">Esta acción no se puede deshacer.</string>
@@ -114,10 +125,12 @@
     <string name="document_type_soat">SOAT</string>
     <string name="document_type_technical">Revisión técnico-mecánica</string>
     <string name="document_type_insurance">Seguro</string>
+    <string name="document_type_tax">Impuesto</string>
+    <string name="document_type_traffic_light">Semaforización</string>
     <string name="document_type_other">Otro</string>
 
     <string name="doc_status_valid">Vigente</string>
-    <string name="doc_status_expiring">Próximo a vencer</string>
+    <string name="doc_status_expiring">Por vencer</string>
     <string name="doc_status_expired">Vencido</string>
 
     <!-- Bandeja de alertas documentales -->
@@ -125,7 +138,7 @@
     <string name="alerts_empty_title">Todo en orden</string>
     <string name="alerts_empty_message">No hay documentos vencidos ni próximos a vencer.</string>
     <string name="alerts_global_switch">Alertas de vencimiento</string>
-    <string name="alerts_anticipation_label">Anticipación: %1$d días</string>
+    <string name="alerts_two_reminders">Te avisamos una vez a los 30 días, otra a los 14 y una más cuando el documento vence.</string>
     <string name="alert_expires_today">Vence hoy</string>
     <plurals name="alert_days_remaining">
         <item quantity="one">Falta %1$d día</item>
@@ -137,14 +150,14 @@
     </plurals>
 
     <!-- Dashboard -->
-    <string name="dashboard_title">MiCarro</string>
+    <string name="dashboard_title">Mi Carro</string>
     <string name="dashboard_main_vehicle">Vehículo principal</string>
-    <string name="dashboard_no_vehicle">Aún no tienes un vehículo principal</string>
-    <string name="dashboard_add_first">Registrar mi primer vehículo</string>
+    <string name="dashboard_no_vehicle">Aún no tienes un vehículo</string>
+    <string name="dashboard_add_first">Agregar mi primer vehículo</string>
     <string name="dashboard_alerts_count">Alertas documentales pendientes: %1$d</string>
 
     <!-- Existentes del repo -->
-    <string name="status_ok">OK</string>
+    <string name="status_ok">En orden</string>
     <string name="status_pending">Pendiente</string>
     <string name="status_overdue">Vencido</string>
     <string name="cd_vehicle_photo">Foto del vehículo</string>
@@ -171,7 +184,7 @@
     <string name="maintenance_empty_parts">Sin repuestos instalados</string>
     <string name="maintenance_empty_parts_message">Los repuestos de los servicios de este vehículo aparecerán aquí.</string>
     <string name="maintenance_delete_title">Eliminar actividad</string>
-    <string name="maintenance_delete_message">¿Deseas eliminar \"%1$s\"? Solo se puede eliminar si no tiene historial.</string>
+    <string name="maintenance_delete_message">¿Eliminas \"%1$s\"? Solo puedes hacerlo si no tiene historial.</string>
     <string name="maintenance_delete_rejected_title">Acción no permitida</string>
     <string name="maintenance_delete_rejected_message">No se puede eliminar porque ya tiene servicios. Puedes pausarla.</string>
     <string name="maintenance_understood">Entendido</string>
@@ -240,7 +253,7 @@
     <string name="part_warranty_months">Garantía (meses)</string>
     <string name="part_warranty_km">Garantía (km)</string>
     <string name="part_notes">Observaciones</string>
-    <string name="part_add">Añadir</string>
+    <string name="part_add">Agregar</string>
     <string name="part_remove">Eliminar repuesto</string>
 
     <!-- Alertas de mantenimiento -->
@@ -259,6 +272,7 @@
     <string name="history_search">Buscar</string>
     <string name="history_search_hint">Servicio o taller</string>
     <string name="history_empty">No hay registros con esos filtros.</string>
+    <string name="history_empty_all">Aún no tienes servicios. Registra el primero desde Mantenimiento.</string>
     <string name="history_vehicle">Vehículo</string>
     <string name="history_all_vehicles">Todos los vehículos</string>
     <string name="history_workshop">Taller</string>
@@ -269,8 +283,11 @@
     <string name="history_clear_filters">Limpiar filtros</string>
     <string name="history_type">Tipo</string>
     <string name="history_workshop_label">Taller: %1$s</string>
-    <string name="history_export_ok">Historial exportado a CSV con éxito.</string>
-    <string name="history_export_error">Error al exportar: %1$s</string>
+    <string name="history_export_ok">Historial exportado a CSV.</string>
+    <string name="history_export_excel">Exportar a Excel</string>
+    <string name="history_export_excel_ok">Historial exportado a Excel.</string>
+    <string name="history_export_pdf_ok">Historial exportado a PDF.</string>
+    <string name="history_export_error">No se pudo exportar: %1$s</string>
     <string name="history_file_error">No se pudo crear el archivo de destino.</string>
 
     <!-- Ajustes y respaldo -->
@@ -279,7 +296,7 @@
     <string name="settings_delete_help">Esta acción elimina de forma permanente vehículos, kilometraje, servicios, documentos y fotos de este dispositivo.</string>
     <string name="settings_delete">Eliminar todos los datos</string>
     <string name="settings_delete_title">¿Eliminar todos los datos?</string>
-    <string name="settings_delete_message">Esta acción es irreversible. MiCarro volverá a su estado inicial.</string>
+    <string name="settings_delete_message">Esta acción es irreversible. Mi Carro volverá a su estado inicial.</string>
     <string name="settings_delete_confirm">Eliminar definitivamente</string>
     <string name="settings_deleted_toast">Todos los datos han sido eliminados</string>
     <string name="settings_backup">Copia de seguridad</string>
@@ -287,16 +304,18 @@
     <string name="backup_help">Exporta o restaura vehículos, kilometraje, documentos, planes, servicios, repuestos y los archivos de fotos o soportes. Restaurar actualiza los registros con el mismo identificador y no duplica placas.</string>
     <string name="backup_export">Crear copia</string>
     <string name="backup_restore">Restaurar copia</string>
-    <string name="backup_export_ok">Respaldo exportado</string>
+    <string name="backup_export_ok">Copia exportada</string>
     <string name="backup_restore_ok">Copia restaurada sin duplicar registros existentes</string>
     <string name="backup_export_error">No se pudo exportar: %1$s</string>
     <string name="backup_restore_error">No se pudo restaurar: %1$s</string>
     <string name="backup_open_error">No se pudo abrir el archivo</string>
+    <string name="backup_restore_title">¿Restauras esta copia?</string>
+    <string name="backup_restore_message">Se actualizarán los registros con el mismo identificador. Las placas no se duplican.</string>
 
     <!-- Dashboard -->
     <string name="dashboard_upcoming">Próximos mantenimientos</string>
     <string name="dashboard_upcoming_empty">No hay actividades programadas.</string>
-    <string name="dashboard_recent">Gastos recientes</string>
+    <string name="dashboard_recent">Servicios recientes</string>
     <string name="dashboard_recent_empty">Aún no hay servicios registrados.</string>
     <string name="dashboard_recent_total">Total reciente: %1$s</string>
     <string name="dashboard_maintenance_alerts">Alertas de mantenimiento: %1$d</string>
@@ -334,7 +353,7 @@
     <string name="plan_empty_title">Sin planes registrados</string>
     <string name="plan_empty_message">Pulsa el botón + para crear un plan de mantenimiento preventivo para este vehículo.</string>
     <string name="plan_parts_empty_title">Sin repuestos instalados</string>
-    <string name="plan_parts_empty_message">Los repuestos y piezas asociados a los servicios realizados en este vehículo aparecerán aquí.</string>
+    <string name="plan_parts_empty_message">Los repuestos de los servicios de este vehículo aparecerán aquí.</string>
     <string name="plan_category_line">Categoría: %1$s</string>
     <string name="plan_status_ok">Al día</string>
     <string name="plan_status_soon">Próxima</string>
@@ -354,5 +373,46 @@
     <string name="part_name_hint">Filtro de aceite</string>
     <string name="part_brand_hint">Bosch, Mobil...</string>
     <string name="part_reference_hint">OEM-12345</string>
-    <string name="part_warranty_hint">Ej: 6</string>
+    <string name="part_warranty_hint">Ejemplo: 6</string>
+    <string name="common_loading">Cargando…</string>
+    <string name="dashboard_mileage">Kilometraje</string>
+    <string name="dashboard_mileage_empty">Sin lectura</string>
+    <string name="dashboard_next_short">Próximo mantenimiento</string>
+    <string name="dashboard_none_pending">Sin pendientes</string>
+    <string name="dashboard_month_expenses">Gastos del mes</string>
+    <string name="dashboard_active_vehicle">Vehículo activo</string>
+    <string name="dashboard_change_vehicle">Cambiar</string>
+    <string name="dashboard_vehicle_options">Opciones</string>
+    <string name="dashboard_register_vehicle">Agregar vehículo</string>
+    <string name="dashboard_empty_title">Aún no tienes vehículos</string>
+    <string name="dashboard_empty_message">Agrega el primero para llevar el control de sus mantenimientos y gastos.</string>
+    <string name="dashboard_alerts_cd">Alertas y notificaciones</string>
+    <string name="expenses_title">Resumen de gastos</string>
+    <string name="expenses_month">Mes</string>
+    <string name="expenses_six_months">6 meses</string>
+    <string name="expenses_year">Año</string>
+    <string name="expenses_all">Todo</string>
+    <string name="expenses_empty">No hay registros de gastos para el periodo seleccionado.</string>
+    <string name="part_reference_prefix">Referencia: %1$s</string>
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_theme_help">Elige claro, oscuro o el mismo modo del sistema.</string>
+    <string name="settings_theme_system">Sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_delete_error">No se pudieron eliminar los datos: %1$s</string>
+    <string name="alerts_saved">Cambios guardados</string>
+    <string name="field_type_label">Tipo de vehículo</string>
+    <string name="plate_invalid_car">Formato no válido. Ejemplo: AAA123 (3 letras y 3 números)</string>
+    <string name="plate_invalid_moto">Formato no válido. Ejemplo: AAA12A (3 letras, 2 números y 1 letra)</string>
+    <string name="plate_hint_car">Ejemplo: AAA123 (máximo 6 caracteres)</string>
+    <string name="plate_hint_moto">Ejemplo: AAA12A (máximo 6 caracteres)</string>
+    <string name="placeholder_brand">Selecciona una marca</string>
+    <string name="placeholder_brand_first">Selecciona una marca primero</string>
+    <string name="placeholder_line">Selecciona una línea</string>
+    <string name="placeholder_year">Selecciona el año</string>
+    <string name="placeholder_color">Selecciona un color</string>
+    <string name="template_oil">Cambio de aceite</string>
+    <string name="template_filters">Filtros (aire y combustible)</string>
+    <string name="template_brakes">Revisión de frenos</string>
+    <string name="template_battery">Batería y sistema eléctrico</string>
 </resources>

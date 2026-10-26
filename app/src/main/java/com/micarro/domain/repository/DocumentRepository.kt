@@ -10,4 +10,5 @@ interface DocumentRepository {
     suspend fun saveDocument(document: VehicleDocument)
     suspend fun deleteDocument(id: Long)
     suspend fun setAlertsEnabled(id: Long, enabled: Boolean)
+    suspend fun markReminders(id: Long, month: Boolean, fortnight: Boolean, expired: Boolean)
 }

@@ -24,7 +24,7 @@ import com.micarro.feature.vehicle.data.VehicleEntity
         MaintenanceServiceEntity::class,
         PartEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

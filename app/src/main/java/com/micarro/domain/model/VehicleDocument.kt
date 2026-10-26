@@ -6,6 +6,8 @@ enum class DocumentType {
     SOAT,
     TECHNICAL_INSPECTION,
     INSURANCE,
+    TAX,
+    TRAFFIC_LIGHT,
     OTHER
 }
 
@@ -23,5 +25,11 @@ data class VehicleDocument(
     val expirationDate: LocalDate,
     val issuer: String? = null,
     val alertsEnabled: Boolean = true,
-    val notes: String? = null
+    val notes: String? = null,
+    val referenceNumber: String? = null,
+    val filePath: String? = null,
+    val mimeType: String? = null,
+    val remindedMonth: Boolean = false,
+    val remindedFortnight: Boolean = false,
+    val remindedExpired: Boolean = false
 )
