@@ -33,10 +33,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -166,24 +166,24 @@ fun MaintenancePlanScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.plan_screen_title)) },
                 actions = {
-                    IconButton(onClick = onOpenAlertSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = stringResource(R.string.plan_alerts_settings)
+                    com.micarro.ui.components.OverflowMenu(
+                        actions = listOf(
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.plan_alerts_settings),
+                                icon = Icons.Default.Notifications,
+                                onClick = onOpenAlertSettings
+                            ),
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.plan_export_csv),
+                                icon = Icons.Default.Share,
+                                onClick = {
+                                    uiState.selectedVehicle?.let { vehicle ->
+                                        viewModel.exportHistory(context, vehicle.id.toString())
+                                    }
+                                }
+                            )
                         )
-                    }
-                    IconButton(
-                        onClick = {
-                            uiState.selectedVehicle?.let { vehicle ->
-                                viewModel.exportHistory(context, vehicle.id.toString())
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.plan_export_csv)
-                        )
-                    }
+                    )
                 }
             )
         },
@@ -215,17 +215,24 @@ fun MaintenancePlanScreen(
                 onVehicleSelected = { viewModel.selectVehicle(it) }
             )
 
-            PrimaryTabRow(selectedTabIndex = selectedTab) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text(stringResource(R.string.plan_tab_plans, uiState.plans.size)) }
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                val tabs = listOf(
+                    stringResource(R.string.plan_tab_plans, uiState.plans.size),
+                    stringResource(R.string.plan_tab_parts, uiState.installedParts.size)
                 )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text(stringResource(R.string.plan_tab_parts, uiState.installedParts.size)) }
-                )
+                tabs.forEachIndexed { index, label ->
+                    SegmentedButton(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index, count = tabs.size
+                        )
+                    ) { Text(label) }
+                }
             }
 
             if (selectedTab == 0) {
@@ -291,20 +298,15 @@ fun VehicleSelector(
     onVehicleSelected: (Vehicle) -> Unit
 ) {
     if (vehicles.isNotEmpty()) {
-        val safeIndex = vehicles.indexOf(selectedVehicle).coerceIn(0, vehicles.size - 1)
-
-        PrimaryScrollableTabRow(
-            selectedTabIndex = safeIndex,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary,
-            edgePadding = 16.dp,
-            divider = {}
+        androidx.compose.foundation.lazy.LazyRow(
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            vehicles.forEach { vehicle ->
-                Tab(
+            items(vehicles, key = { it.id }) { vehicle ->
+                androidx.compose.material3.FilterChip(
                     selected = vehicle == selectedVehicle,
                     onClick = { onVehicleSelected(vehicle) },
-                    text = { Text(vehicle.plate) }
+                    label = { Text(vehicle.plate) }
                 )
             }
         }
@@ -411,41 +413,38 @@ fun MaintenancePlanCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.maintenance_edit),
-                            tint = MaterialTheme.colorScheme.primary
+                com.micarro.ui.components.OverflowMenu(
+                    actions = listOf(
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.maintenance_edit),
+                            icon = Icons.Default.Edit,
+                            onClick = onEdit
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.maintenance_postpone),
+                            icon = Icons.Default.Notifications,
+                            onClick = onPostpone
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(
+                                if (plan.isActive) R.string.plan_pause else R.string.plan_resume
+                            ),
+                            icon = if (plan.isActive) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
+                            onClick = onToggleActive
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.action_delete),
+                            icon = Icons.Default.Delete,
+                            destructive = true,
+                            onClick = onDelete
                         )
-                    }
-                    IconButton(onClick = onPostpone) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = stringResource(R.string.maintenance_postpone),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    IconButton(onClick = onToggleActive) {
-                        Icon(
-                            imageVector = if (plan.isActive) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
-                            contentDescription = if (plan.isActive) stringResource(R.string.plan_pause) else stringResource(R.string.plan_resume),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    // Botón Eliminar (RF-15)
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(R.string.plan_delete_cd),
-                            tint = statusAccent(StatusTone.Error)
-                        )
-                    }
-                }
-
+                    )
+                )
                 PrimaryButton(
                     text = stringResource(R.string.plan_register_service),
-                    onClick = onRegisterService
+                    onClick = onRegisterService,
+                    icon = Icons.Default.Build,
+                    fillWidth = false
                 )
             }
         }

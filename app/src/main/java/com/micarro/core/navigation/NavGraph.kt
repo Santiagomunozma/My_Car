@@ -36,7 +36,10 @@ fun MiCarroNavGraph(
         composable(route = Screen.Dashboard.route) {
             DashboardScreen(
                 onAddVehicle = { navController.navigate(Screen.AddVehicle.createRoute()) },
-                onOpenAlerts = { navController.navigate(Screen.DocumentsAlerts.route) }
+                onOpenAlerts = { navController.navigate(Screen.DocumentsAlerts.route) },
+                onOpenMaintenance = { navController.navigate(Screen.MaintenancePlan.route) },
+                onOpenMileage = { id -> navController.navigate(Screen.Mileage.createRoute(id)) },
+                onOpenDocuments = { id -> navController.navigate(Screen.Documents.createRoute(id)) }
             )
         }
 
@@ -219,7 +222,8 @@ fun MiCarroNavGraph(
                         launchSingleTop = true
                     }
                 },
-                onOpenBackup = { navController.navigate(Screen.Backup.route) }
+                onOpenBackup = { navController.navigate(Screen.Backup.route) },
+                onOpenAlerts = { navController.navigate(Screen.AlertSettings.route) }
             )
         }
 

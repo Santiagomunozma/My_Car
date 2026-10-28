@@ -80,15 +80,21 @@ Plus Jakarta Sans (latin, OFL) en `res/font`. JetBrains Mono Medium para placa, 
 | 2xl | 28 | 34 | SemiBold | headlineMedium |
 | 3xl | 32 | 40 | SemiBold | headlineLarge |
 
-## Forma y espacio
+## Forma y espacio — Aqua
 
 | Uso | Radio |
 | --- | --- |
-| Controles | 8 dp |
-| Tarjetas | 12 dp |
-| Diálogos | 16 dp |
+| Controles | 16 dp |
+| Tarjetas | 20–24 dp |
+| Hojas y diálogos | 28 dp |
 
-Espacio en pasos de 4 dp: 4, 8, 12, 16, 24, 32.
+Espacio en pasos de 4 dp: 4, 8, 12, 16, 20, 24, 32. Pantallas principales: 20 dp laterales y 20 dp entre secciones.
+
+«Agua» sin blur real: fondo con lavado vertical cian→índigo de alpha bajo (`rememberAquaWash`) y superficies del tema encima. El degradado de marca solo aparece en una acción principal por pantalla y en el indicador de pestaña activa.
+
+Regla de densidad: una acción principal visible por pantalla, máximo tres acciones en el primer pantallazo, el resto en ⋮ (`OverflowMenu`) o en hoja inferior (`MiCarroSheet`). Ninguna tarjeta lleva fila de botones de texto; tocarla abre su destino o su hoja.
+
+Navegación: 4 pestañas (Inicio, Vehículos, Mantenimiento, Historial) + «Más», que no es ruta y abre la hoja con Ajustes, alertas y respaldo (rutas actuales). `ActionTile` es el botón con icono grande; `GroupedList`/`MiCarroListRow` son la lista agrupada de Ajustes y «Más».
 
 Foco: anillo de 2 dp en el cian de marca. Hover y pressed usan el ripple de Material, 200 ms.
 

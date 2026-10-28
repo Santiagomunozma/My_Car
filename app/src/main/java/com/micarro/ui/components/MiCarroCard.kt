@@ -20,7 +20,7 @@ fun MiCarroCard(
     val dark = LocalDarkTheme.current
     val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    val shape = MaterialTheme.shapes.medium
+    val shape = MaterialTheme.shapes.large
     val elevation = CardDefaults.cardElevation(defaultElevation = if (dark) 0.dp else 1.dp)
 
     if (onClick != null) {

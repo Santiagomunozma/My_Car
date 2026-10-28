@@ -7,6 +7,14 @@
     <string name="nav_maintenance">Mantenimiento</string>
     <string name="nav_history">Historial</string>
     <string name="nav_settings">Ajustes</string>
+    <string name="nav_more">Más</string>
+    <string name="action_more">Más opciones</string>
+    <string name="more_title">Más</string>
+    <string name="history_filters">Filtros</string>
+    <string name="history_filters_active">Filtros (%1$d)</string>
+    <string name="dashboard_quick_service">Registrar servicio</string>
+    <string name="dashboard_quick_mileage">Kilometraje</string>
+    <string name="dashboard_quick_documents">Documentos</string>
 
     <!-- Acciones comunes -->
     <string name="action_save">Guardar</string>
@@ -380,6 +388,7 @@
     <string name="dashboard_next_short">Próximo mantenimiento</string>
     <string name="dashboard_none_pending">Sin pendientes</string>
     <string name="dashboard_month_expenses">Gastos del mes</string>
+    <string name="dashboard_vehicle_summary">%1$s km · %2$s este mes</string>
     <string name="dashboard_active_vehicle">Vehículo activo</string>
     <string name="dashboard_change_vehicle">Cambiar</string>
     <string name="dashboard_vehicle_options">Opciones</string>

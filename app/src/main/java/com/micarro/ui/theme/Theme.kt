@@ -108,6 +108,20 @@ fun MyCarTheme(
     }
 }
 
+/**
+ * Lavado vertical Aqua para el fondo de pantallas principales.
+ * Solo decorativo: el contenido va sobre superficies del tema.
+ */
+@Composable
+fun rememberAquaWash(): androidx.compose.ui.graphics.Brush {
+    val dark = LocalDarkTheme.current
+    val top = if (dark) AquaWashCyanDark else AquaWashCyanLight
+    val mid = if (dark) AquaWashIndigoDark else AquaWashIndigoLight
+    return androidx.compose.ui.graphics.Brush.verticalGradient(
+        colors = listOf(top, mid, androidx.compose.ui.graphics.Color.Transparent)
+    )
+}
+
 @Composable
 private fun androidx.compose.material3.ColorScheme.animateRoles(): androidx.compose.material3.ColorScheme {
     val spec = motionTween<Color>(200)

@@ -21,8 +21,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +46,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -182,8 +187,15 @@ private val bottomNavItems = listOf(
     BottomNavItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Home),
     BottomNavItem(Screen.VehicleList, R.string.nav_vehicles, Icons.Filled.DirectionsCar),
     BottomNavItem(Screen.MaintenancePlan, R.string.nav_maintenance, Icons.Filled.Build),
-    BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
-    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
+    BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History)
+)
+
+/** Rutas accesibles desde la hoja «Más». Sus rutas no cambian. */
+private val moreRoutes = setOf(
+    Screen.Settings.route,
+    Screen.DocumentsAlerts.route,
+    Screen.AlertSettings.route,
+    Screen.Backup.route
 )
 
 @Composable
@@ -220,7 +232,10 @@ fun MiCarroAppShell(
         )
     }
 
-    val shouldShowBottomBar = bottomNavItems.any { it.screen.route == currentRoute }
+    var showMore by remember { mutableStateOf(false) }
+    val shouldShowBottomBar = bottomNavItems.any { it.screen.route == currentRoute } ||
+        currentRoute in moreRoutes
+    val moreSelected = currentRoute in moreRoutes
     val openTab: (String) -> Unit = { route ->
         navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) {
@@ -241,22 +256,43 @@ fun MiCarroAppShell(
                     enter = slideInVertically(initialOffsetY = { it }),
                     exit = slideOutVertically(targetOffsetY = { it })
                 ) {
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
-                        bottomNavItems.forEach { item ->
-                            val selected = currentRoute == item.screen.route
+                        NavigationBar(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(28.dp))
+                                .shadow(
+                                    8.dp,
+                                    androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                                )
+                        ) {
+                            bottomNavItems.forEach { item ->
+                                val selected = currentRoute == item.screen.route
+                                NavigationBarItem(
+                                    selected = selected,
+                                    onClick = { if (!selected) openTab(item.screen.route) },
+                                    icon = {
+                                        Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = stringResource(item.labelRes)
+                                        )
+                                    },
+                                    label = { Text(stringResource(item.labelRes)) }
+                                )
+                            }
                             NavigationBarItem(
-                                selected = selected,
-                                onClick = { if (!selected) openTab(item.screen.route) },
+                                selected = moreSelected,
+                                onClick = { showMore = true },
                                 icon = {
                                     Icon(
-                                        imageVector = item.icon,
-                                        contentDescription = stringResource(item.labelRes)
+                                        imageVector = Icons.Filled.MoreHoriz,
+                                        contentDescription = stringResource(R.string.nav_more)
                                     )
                                 },
-                                label = { Text(stringResource(item.labelRes)) }
+                                label = { Text(stringResource(R.string.nav_more)) }
                             )
                         }
                     }
@@ -287,6 +323,17 @@ fun MiCarroAppShell(
                                 label = { Text(stringResource(item.labelRes)) }
                             )
                         }
+                        NavigationRailItem(
+                            selected = moreSelected,
+                            onClick = { showMore = true },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreHoriz,
+                                    contentDescription = stringResource(R.string.nav_more)
+                                )
+                            },
+                            label = { Text(stringResource(R.string.nav_more)) }
+                        )
                     }
                 }
                 MiCarroNavGraph(
@@ -294,6 +341,42 @@ fun MiCarroAppShell(
                     modifier = Modifier.weight(1f)
                 )
             }
+        }
+    }
+
+    if (showMore) {
+        com.micarro.ui.components.MiCarroSheet(
+            onDismiss = { showMore = false },
+            title = stringResource(R.string.more_title)
+        ) {
+            val go: (String) -> Unit = { route ->
+                showMore = false
+                if (currentRoute != route) openTab(route)
+            }
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.nav_settings),
+                icon = Icons.Filled.Settings,
+                showChevron = true,
+                onClick = { go(Screen.Settings.route) }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.alerts_title),
+                icon = Icons.Filled.Notifications,
+                showChevron = true,
+                onClick = { go(Screen.DocumentsAlerts.route) }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.maintenance_alerts_title),
+                icon = Icons.Filled.Build,
+                showChevron = true,
+                onClick = { go(Screen.AlertSettings.route) }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.settings_backup),
+                icon = Icons.Filled.Backup,
+                showChevron = true,
+                onClick = { go(Screen.Backup.route) }
+            )
         }
     }
 }

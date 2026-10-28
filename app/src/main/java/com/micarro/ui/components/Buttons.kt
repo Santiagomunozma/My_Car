@@ -46,15 +46,17 @@ fun PrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    loading: Boolean = false
+    loading: Boolean = false,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    fillWidth: Boolean = true
 ) {
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(16.dp)
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val active = enabled && !loading
     Box(
         modifier = modifier
-            .fillMaxWidth()
+            .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
             .heightIn(min = 52.dp)
             .clip(shape)
             .background(if (enabled) BrandGradient else SolidColor(MaterialTheme.colorScheme.surfaceVariant))
@@ -81,11 +83,24 @@ fun PrimaryButton(
                 strokeWidth = 2.dp
             )
         } else {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (enabled) OnBrandGradient else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            androidx.compose.foundation.layout.Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            ) {
+                if (icon != null) {
+                    androidx.compose.material3.Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = if (enabled) OnBrandGradient else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (enabled) OnBrandGradient else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

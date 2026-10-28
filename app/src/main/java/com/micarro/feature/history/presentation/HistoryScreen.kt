@@ -14,9 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -109,6 +112,16 @@ fun HistoryScreen(
     var maxCost by remember { mutableStateOf("") }
     var workshop by remember { mutableStateOf("") }
     var pendingDelete by remember { mutableStateOf<MaintenanceHistoryItem?>(null) }
+    var showFilters by remember { mutableStateOf(false) }
+    val activeFilterCount = listOfNotNull(
+        state.filter.category,
+        state.filter.serviceType,
+        state.filter.workshop?.takeIf { it.isNotBlank() },
+        state.filter.minCost,
+        state.filter.maxCost,
+        state.filter.startDate,
+        state.filter.endDate
+    ).size
     val vehicles by viewModel.vehicles.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.filter.vehicleId) {
@@ -121,24 +134,26 @@ fun HistoryScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.history_title)) },
                 actions = {
-                    IconButton(onClick = {
-                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.xlsx"
-                        exportExcelLauncher.launch(fileName)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.FileDownload,
-                            contentDescription = stringResource(R.string.history_export_excel)
+                    com.micarro.ui.components.OverflowMenu(
+                        actions = listOf(
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.history_export_excel),
+                                icon = Icons.Default.FileDownload,
+                                onClick = {
+                                    val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.xlsx"
+                                    exportExcelLauncher.launch(fileName)
+                                }
+                            ),
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.history_export_pdf),
+                                icon = Icons.Default.PictureAsPdf,
+                                onClick = {
+                                    val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.pdf"
+                                    exportPdfLauncher.launch(fileName)
+                                }
+                            )
                         )
-                    }
-                    IconButton(onClick = {
-                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.pdf"
-                        exportPdfLauncher.launch(fileName)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.PictureAsPdf,
-                            contentDescription = stringResource(R.string.history_export_pdf)
-                        )
-                    }
+                    )
                 }
             )
         },
@@ -177,6 +192,26 @@ fun HistoryScreen(
             }
 
             item {
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { showFilters = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = if (activeFilterCount > 0) {
+                            stringResource(R.string.history_filters_active, activeFilterCount)
+                        } else {
+                            stringResource(R.string.history_filters)
+                        }
+                    )
+                }
+            }
+
+            item {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     item {
                         FilterChip(
@@ -193,95 +228,6 @@ fun HistoryScreen(
                         )
                     }
                 }
-            }
-
-            item {
-                Text(stringResource(R.string.maintenance_category), style = MaterialTheme.typography.labelMedium)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(categories) { category ->
-                        FilterChip(
-                            selected = state.filter.category == category,
-                            onClick = { viewModel.onCategorySelected(category) },
-                            label = { Text(category) }
-                        )
-                    }
-                }
-            }
-
-            item {
-                Text(stringResource(R.string.history_type), style = MaterialTheme.typography.labelMedium)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(serviceTypes) { (type, label) ->
-                        FilterChip(
-                            selected = state.filter.serviceType == type,
-                            onClick = { viewModel.onServiceTypeSelected(type) },
-                            label = { Text(label) }
-                        )
-                    }
-                }
-            }
-
-            item {
-                MiCarroTextField(
-                    value = workshop,
-                    onValueChange = {
-                        workshop = it
-                        viewModel.onWorkshopChanged(it)
-                    },
-                    label = stringResource(R.string.history_workshop)
-                )
-            }
-
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MiCarroTextField(
-                        value = minCost,
-                        onValueChange = {
-                            minCost = it
-                            viewModel.onCostRangeChanged(it, maxCost)
-                        },
-                        label = stringResource(R.string.history_min_cost),
-                        keyboardType = KeyboardType.Decimal,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MiCarroTextField(
-                        value = maxCost,
-                        onValueChange = {
-                            maxCost = it
-                            viewModel.onCostRangeChanged(minCost, it)
-                        },
-                        label = stringResource(R.string.history_max_cost),
-                        keyboardType = KeyboardType.Decimal,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DateField(
-                        label = stringResource(R.string.history_from),
-                        selectedDateMillis = state.filter.startDate,
-                        onDateSelected = { viewModel.onDateRangeChanged(it, state.filter.endDate) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    DateField(
-                        label = stringResource(R.string.history_to),
-                        selectedDateMillis = state.filter.endDate,
-                        onDateSelected = { viewModel.onDateRangeChanged(state.filter.startDate, it) },
-                        modifier = Modifier.weight(1f),
-                        minDateMillis = state.filter.startDate
-                    )
-                }
-            }
-
-            item {
-                TextButton(onClick = {
-                    workshop = ""
-                    minCost = ""
-                    maxCost = ""
-                    viewModel.clearFilters()
-                }) { Text(stringResource(R.string.history_clear_filters)) }
             }
 
             // Lista detallada de mantenimientos o estado vacío
@@ -324,6 +270,95 @@ fun HistoryScreen(
 
             item {
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+
+    if (showFilters) {
+        com.micarro.ui.components.MiCarroSheet(
+            onDismiss = { showFilters = false },
+            title = stringResource(R.string.history_filters)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.maintenance_category), style = MaterialTheme.typography.labelMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(categories) { category ->
+                        FilterChip(
+                            selected = state.filter.category == category,
+                            onClick = { viewModel.onCategorySelected(category) },
+                            label = { Text(category) }
+                        )
+                    }
+                }
+                Text(stringResource(R.string.history_type), style = MaterialTheme.typography.labelMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(serviceTypes) { (type, label) ->
+                        FilterChip(
+                            selected = state.filter.serviceType == type,
+                            onClick = { viewModel.onServiceTypeSelected(type) },
+                            label = { Text(label) }
+                        )
+                    }
+                }
+                MiCarroTextField(
+                    value = workshop,
+                    onValueChange = {
+                        workshop = it
+                        viewModel.onWorkshopChanged(it)
+                    },
+                    label = stringResource(R.string.history_workshop)
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MiCarroTextField(
+                        value = minCost,
+                        onValueChange = {
+                            minCost = it
+                            viewModel.onCostRangeChanged(it, maxCost)
+                        },
+                        label = stringResource(R.string.history_min_cost),
+                        keyboardType = KeyboardType.Decimal,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MiCarroTextField(
+                        value = maxCost,
+                        onValueChange = {
+                            maxCost = it
+                            viewModel.onCostRangeChanged(minCost, it)
+                        },
+                        label = stringResource(R.string.history_max_cost),
+                        keyboardType = KeyboardType.Decimal,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DateField(
+                        label = stringResource(R.string.history_from),
+                        selectedDateMillis = state.filter.startDate,
+                        onDateSelected = { viewModel.onDateRangeChanged(it, state.filter.endDate) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    DateField(
+                        label = stringResource(R.string.history_to),
+                        selectedDateMillis = state.filter.endDate,
+                        onDateSelected = { viewModel.onDateRangeChanged(state.filter.startDate, it) },
+                        modifier = Modifier.weight(1f),
+                        minDateMillis = state.filter.startDate
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(onClick = {
+                        workshop = ""
+                        minCost = ""
+                        maxCost = ""
+                        viewModel.clearFilters()
+                    }) { Text(stringResource(R.string.history_clear_filters)) }
+                    TextButton(onClick = { showFilters = false }) {
+                        Text(stringResource(R.string.action_accept))
+                    }
+                }
             }
         }
     }
@@ -381,9 +416,25 @@ fun HistoryCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Row {
-                TextButton(onClick = onEdit) { Text(stringResource(R.string.action_edit)) }
-                TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                com.micarro.ui.components.OverflowMenu(
+                    actions = listOf(
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.action_edit),
+                            icon = Icons.Default.Edit,
+                            onClick = onEdit
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.action_delete),
+                            icon = Icons.Default.Delete,
+                            destructive = true,
+                            onClick = onDelete
+                        )
+                    )
+                )
             }
         }
     }

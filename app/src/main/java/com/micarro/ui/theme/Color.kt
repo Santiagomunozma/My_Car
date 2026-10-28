@@ -42,6 +42,21 @@ val OnErrorLight = Color(0xFFFFFFFF)
 val ErrorContainerLight = Color(0xFFFFE4E6)
 val OnErrorContainerLight = Color(0xFF9F1239)
 
+// --- Aqua: lavado de marca y superficies translúcidas ---
+// El lavado es solo decorativo (alpha bajo); nunca lleva texto encima sin superficie.
+val AquaWashCyanLight = Color(0x1A38BDF8) // cian al 10 %
+val AquaWashIndigoLight = Color(0x14818CF8) // índigo al 8 %
+val AquaWashCyanDark = Color(0x2438BDF8) // cian al 14 %
+val AquaWashIndigoDark = Color(0x1A818CF8) // índigo al 10 %
+
+/** Superficie translúcida Aqua (~85 % opaca) sobre el lavado. */
+val SurfaceTranslucentLight = Color(0xD9FFFFFF)
+val SurfaceTranslucentDark = Color(0xD9111A2E)
+
+/** Tinte suave para círculos de icono en tiles y filas. */
+val AquaIconTintLight = Color(0xFFE0F2FE)
+val AquaIconTintDark = Color(0xFF17233D)
+
 val ErrorDark = Color(0xFFFECDD3)
 val OnErrorDark = Color(0xFF4C0519)
 val ErrorContainerDark = Color(0xFF881337)
