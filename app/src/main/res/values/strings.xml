@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Mi Carro</string>
+    <string name="app_name">My Car</string>
 
     <!-- Navegación inferior -->
     <string name="nav_dashboard">Inicio</string>
@@ -304,7 +304,7 @@
     <string name="settings_delete_help">Esta acción elimina de forma permanente vehículos, kilometraje, servicios, documentos y fotos de este dispositivo.</string>
     <string name="settings_delete">Eliminar todos los datos</string>
     <string name="settings_delete_title">¿Eliminar todos los datos?</string>
-    <string name="settings_delete_message">Esta acción es irreversible. Mi Carro volverá a su estado inicial.</string>
+    <string name="settings_delete_message">Esta acción es irreversible. My Car volverá a su estado inicial.</string>
     <string name="settings_delete_confirm">Eliminar definitivamente</string>
     <string name="settings_deleted_toast">Todos los datos han sido eliminados</string>
     <string name="settings_backup">Copia de seguridad</string>
