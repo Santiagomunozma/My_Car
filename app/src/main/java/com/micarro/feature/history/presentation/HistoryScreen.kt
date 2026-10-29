@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -275,11 +276,10 @@ fun HistoryScreen(
             // Lista detallada de mantenimientos o estado vacío
             if (state.items.isEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.history_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp)
+                    com.micarro.ui.components.EmptyState(
+                        icon = Icons.Default.Build,
+                        title = stringResource(R.string.history_empty_title),
+                        message = stringResource(R.string.history_empty_message)
                     )
                 }
             } else {
@@ -324,6 +324,9 @@ fun HistoryCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val dateFormat = remember { java.text.SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+    val formattedDate = dateFormat.format(java.util.Date(item.date))
+
     MiCarroCard {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -335,19 +338,19 @@ fun HistoryCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = stringResource(R.string.currency_symbol) + String.format(Locale.US, "%.2f", item.totalCost),
+                    text = stringResource(R.string.currency_symbol) + String.format(Locale.getDefault(), "%,.2f", item.totalCost),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "${item.category} • ${item.mileage} km",
+                text = stringResource(R.string.history_card_subtitle, item.vehiclePlate, formattedDate, item.mileage),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = stringResource(R.string.history_workshop_label, item.workshopName),
+                text = "${item.category} • " + stringResource(R.string.history_workshop_label, item.workshopName),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

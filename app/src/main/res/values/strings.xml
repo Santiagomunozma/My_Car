@@ -259,6 +259,9 @@
     <string name="history_search">Buscar</string>
     <string name="history_search_hint">Servicio o taller</string>
     <string name="history_empty">No hay registros con esos filtros.</string>
+    <string name="history_empty_title">Sin historial</string>
+    <string name="history_empty_message">No hay registros de servicios o mantenimientos para los filtros seleccionados.</string>
+    <string name="history_card_subtitle">%1$s • %2$s • %3$,d km</string>
     <string name="history_vehicle">Vehículo</string>
     <string name="history_all_vehicles">Todos los vehículos</string>
     <string name="history_workshop">Taller</string>
