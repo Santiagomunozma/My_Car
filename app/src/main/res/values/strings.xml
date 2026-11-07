@@ -14,6 +14,7 @@
     <string name="assistant_hint">Describe el fallo o la duda</string>
     <string name="assistant_send">Enviar</string>
     <string name="assistant_empty">Pregunta por un ruido, una luz del tablero o un mantenimiento. El asistente mira los servicios y repuestos registrados de este vehículo.</string>
+    <string name="assistant_no_vehicle">Todavía no hay un vehículo. Puedes preguntar igual; la respuesta será general.</string>
     <string name="assistant_thinking">Revisando el historial…</string>
     <string name="assistant_disclaimer">Orientación general. Ante frenos, dirección o pérdida de líquido, ve a un taller.</string>
     <string name="assistant_missing_key">Falta la clave de Gemini. Agrégala en local.properties y vuelve a instalar la app.</string>

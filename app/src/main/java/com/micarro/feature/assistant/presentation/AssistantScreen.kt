@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Place
@@ -43,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -149,6 +152,15 @@ fun AssistantScreen(
                         )
                     }
                 }
+                if (uiState.vehicles.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.assistant_no_vehicle),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 items(uiState.messages) { message ->
                     MessageBubble(message)
                 }
@@ -182,11 +194,13 @@ fun AssistantScreen(
                             .weight(1f)
                             .onFocusChanged { fieldFocused.value = it.isFocused },
                         placeholder = { Text(stringResource(R.string.assistant_hint)) },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(onSend = { viewModel.send() }),
                         maxLines = 4
                     )
                     IconButton(
                         onClick = viewModel::send,
-                        enabled = uiState.draft.isNotBlank() && !uiState.sending && uiState.selectedVehicle != null
+                        enabled = uiState.draft.isNotBlank() && !uiState.sending
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.Send,

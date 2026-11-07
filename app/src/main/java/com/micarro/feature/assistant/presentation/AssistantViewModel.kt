@@ -68,7 +68,7 @@ class AssistantViewModel @Inject constructor(
         val state = _uiState.value
         val question = state.draft.trim()
         val vehicle = state.selectedVehicle
-        if (question.isEmpty() || state.sending || vehicle == null) return
+        if (question.isEmpty() || state.sending) return
         if (!client.isConfigured) {
             _uiState.update { it.copy(configured = false) }
             return
@@ -85,7 +85,8 @@ class AssistantViewModel @Inject constructor(
             val answer = runCatching {
                 client.reply(
                     history = history.map { AssistantTurn(it.fromUser, it.text) },
-                    context = contextOf(vehicle),
+                    context = vehicle?.let { contextOf(it) }
+                        ?: "No hay un vehículo registrado en la app.",
                     question = question
                 )
             }.getOrElse { error ->
