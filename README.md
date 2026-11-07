@@ -150,6 +150,28 @@ Si la caché de Gradle en el perfil de usuario da problemas:
 
 ---
 
+## Ponencia
+
+En el salon, con el computador conectado al proyector:
+
+```powershell
+.\presentar.bat
+```
+
+Eso hace tres cosas:
+
+1. Compila un APK firmado (solo la primera vez, o de nuevo con `.\presentar.bat -Compilar`).
+2. Abre una página en la red local con un código QR. El público, en el **mismo Wi-Fi**, escanea, descarga `MiCarro.apk` y permite instalar desde el navegador.
+3. Si el celular está conectado por USB con depuración activada, lo instala si aún no tiene la app y abre su pantalla en una ventana (scrcpy) para proyectarla. La primera vez instala scrcpy.
+
+Deja abierta la ventana de la consola mientras quieras que el QR siga funcionando. `Ctrl+C` apaga solo la descarga.
+
+La firma del APK es de demostración (`ponencia/micarro-ponencia.keystore`). Sirve para instalar a mano. No sirve para Play Store. Si el teléfono ya tiene la versión de Android Studio, el script no la reemplaza, para no borrar los datos de la demo.
+
+También puedes generar el APK en GitHub: Actions → **APK ponencia** → Run workflow, y descargar el artefacto `MiCarro`.
+
+---
+
 ## Cómo ejecutar
 
 ### Android Studio

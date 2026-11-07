@@ -10,6 +10,15 @@
     <string name="nav_more">Más</string>
     <string name="action_more">Más opciones</string>
     <string name="more_title">Más</string>
+    <string name="assistant_title">Asistente</string>
+    <string name="assistant_hint">Describe el fallo o la duda</string>
+    <string name="assistant_send">Enviar</string>
+    <string name="assistant_empty">Pregunta por un ruido, una luz del tablero o un mantenimiento. El asistente mira los servicios y repuestos registrados de este vehículo.</string>
+    <string name="assistant_thinking">Revisando el historial…</string>
+    <string name="assistant_disclaimer">Orientación general. Ante frenos, dirección o pérdida de líquido, ve a un taller.</string>
+    <string name="assistant_missing_key">Falta la clave de Gemini. Agrégala en local.properties y vuelve a instalar la app.</string>
+    <string name="assistant_workshops">Talleres cercanos</string>
+    <string name="assistant_workshops_hint">El horario y el teléfono se abren en Google Maps. No hay un directorio gratuito que entregue esos datos dentro de la app.</string>
     <string name="history_filters">Filtros</string>
     <string name="history_filters_active">Filtros (%1$d)</string>
     <string name="dashboard_quick_service">Registrar servicio</string>
@@ -357,7 +366,7 @@
     <string name="plan_export_csv">Exportar CSV</string>
     <string name="plan_new_fab">Nuevo plan</string>
     <string name="plan_tab_plans">Planes (%1$d)</string>
-    <string name="plan_tab_parts">Repuestos instalados (%1$d)</string>
+    <string name="plan_tab_parts">Repuestos (%1$d)</string>
     <string name="plan_empty_title">Sin planes registrados</string>
     <string name="plan_empty_message">Pulsa el botón + para crear un plan de mantenimiento preventivo para este vehículo.</string>
     <string name="plan_parts_empty_title">Sin repuestos instalados</string>

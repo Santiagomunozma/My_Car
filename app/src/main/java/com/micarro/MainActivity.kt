@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -45,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.micarro.feature.assistant.presentation.LocalAssistantFieldFocused
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -195,7 +197,8 @@ private val moreRoutes = setOf(
     Screen.Settings.route,
     Screen.DocumentsAlerts.route,
     Screen.AlertSettings.route,
-    Screen.Backup.route
+    Screen.Backup.route,
+    Screen.Assistant.route
 )
 
 @Composable
@@ -233,8 +236,10 @@ fun MiCarroAppShell(
     }
 
     var showMore by remember { mutableStateOf(false) }
+    val assistantFieldFocused = remember { mutableStateOf(false) }
     val shouldShowBottomBar = bottomNavItems.any { it.screen.route == currentRoute } ||
         currentRoute in moreRoutes
+    val keyboardCoversBar = currentRoute == Screen.Assistant.route && assistantFieldFocused.value
     val moreSelected = currentRoute in moreRoutes
     val openTab: (String) -> Unit = { route ->
         navController.navigate(route) {
@@ -246,13 +251,14 @@ fun MiCarroAppShell(
         }
     }
 
+    CompositionLocalProvider(LocalAssistantFieldFocused provides assistantFieldFocused) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val useRail = maxWidth >= 600.dp
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 AnimatedVisibility(
-                    visible = shouldShowBottomBar && !useRail,
+                    visible = shouldShowBottomBar && !useRail && !keyboardCoversBar,
                     enter = slideInVertically(initialOffsetY = { it }),
                     exit = slideOutVertically(targetOffsetY = { it })
                 ) {
@@ -280,7 +286,7 @@ fun MiCarroAppShell(
                                             contentDescription = stringResource(item.labelRes)
                                         )
                                     },
-                                    label = { Text(stringResource(item.labelRes)) }
+                                    label = null
                                 )
                             }
                             NavigationBarItem(
@@ -292,7 +298,7 @@ fun MiCarroAppShell(
                                         contentDescription = stringResource(R.string.nav_more)
                                     )
                                 },
-                                label = { Text(stringResource(R.string.nav_more)) }
+                                label = null
                             )
                         }
                     }
@@ -320,7 +326,7 @@ fun MiCarroAppShell(
                                         contentDescription = stringResource(item.labelRes)
                                     )
                                 },
-                                label = { Text(stringResource(item.labelRes)) }
+                                label = null
                             )
                         }
                         NavigationRailItem(
@@ -332,7 +338,7 @@ fun MiCarroAppShell(
                                     contentDescription = stringResource(R.string.nav_more)
                                 )
                             },
-                            label = { Text(stringResource(R.string.nav_more)) }
+                            label = null
                         )
                     }
                 }
@@ -342,6 +348,7 @@ fun MiCarroAppShell(
                 )
             }
         }
+    }
     }
 
     if (showMore) {
@@ -353,6 +360,12 @@ fun MiCarroAppShell(
                 showMore = false
                 if (currentRoute != route) openTab(route)
             }
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.assistant_title),
+                icon = Icons.Filled.SupportAgent,
+                showChevron = true,
+                onClick = { go(Screen.Assistant.route) }
+            )
             com.micarro.ui.components.MiCarroListRow(
                 title = stringResource(R.string.nav_settings),
                 icon = Icons.Filled.Settings,

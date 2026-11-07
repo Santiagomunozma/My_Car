@@ -32,8 +32,20 @@ android {
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
+    signingConfigs {
+        // Firma solo para instalar el APK en la ponencia (codigo QR / cable).
+        // No sirve para publicar en Play Store.
+        create("ponencia") {
+            storeFile = rootProject.file("ponencia/micarro-ponencia.keystore")
+            storePassword = "micarro-ponencia"
+            keyAlias = "micarro"
+            keyPassword = "micarro-ponencia"
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("ponencia")
             optimization {
                 enable = false
             }

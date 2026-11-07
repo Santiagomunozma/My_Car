@@ -232,5 +232,9 @@ fun MiCarroNavGraph(
                 onBack = { navController.popBackStack() }
             )
         }
+
+        composable(route = Screen.Assistant.route) {
+            com.micarro.feature.assistant.presentation.AssistantScreen()
+        }
     }
 }
