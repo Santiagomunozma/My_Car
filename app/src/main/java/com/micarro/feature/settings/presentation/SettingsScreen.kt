@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,13 +55,24 @@ fun SettingsScreen(
     val context = LocalContext.current
     val theme = LocalThemeController.current
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDemoDialog by remember { mutableStateOf(false) }
+    val busy = uiState.isDeleting || uiState.isSeeding
 
     val deletedToast = stringResource(R.string.settings_deleted_toast)
+    val demoToast = stringResource(R.string.settings_demo_toast)
 
     LaunchedEffect(uiState.isDataCleared) {
         if (uiState.isDataCleared) {
             Toast.makeText(context, deletedToast, Toast.LENGTH_LONG).show()
             viewModel.onNavigationHandled()
+            onNavigateToWelcome()
+        }
+    }
+
+    LaunchedEffect(uiState.demoLoaded) {
+        if (uiState.demoLoaded) {
+            Toast.makeText(context, demoToast, Toast.LENGTH_LONG).show()
+            viewModel.onDemoHandled()
             onNavigateToWelcome()
         }
     }
@@ -121,6 +133,14 @@ fun SettingsScreen(
                 )
                 GroupedList {
                     MiCarroListRow(
+                        title = stringResource(R.string.settings_demo),
+                        subtitle = stringResource(R.string.settings_demo_help),
+                        icon = Icons.Default.DirectionsCar,
+                        showChevron = true,
+                        onClick = { if (!busy) showDemoDialog = true }
+                    )
+                    GroupedDivider()
+                    MiCarroListRow(
                         title = stringResource(R.string.settings_backup),
                         icon = Icons.Default.Backup,
                         showChevron = true,
@@ -149,11 +169,34 @@ fun SettingsScreen(
                         subtitle = stringResource(R.string.settings_delete_help),
                         icon = Icons.Default.Delete,
                         destructive = true,
-                        onClick = { if (!uiState.isDeleting) showDeleteDialog = true }
+                        onClick = { if (!busy) showDeleteDialog = true }
                     )
                 }
             }
         }
+    }
+
+    if (showDemoDialog) {
+        AlertDialog(
+            onDismissRequest = { showDemoDialog = false },
+            title = { Text(stringResource(R.string.settings_demo_title)) },
+            text = { Text(stringResource(R.string.settings_demo_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDemoDialog = false
+                        viewModel.loadDemoData()
+                    }
+                ) {
+                    Text(stringResource(R.string.settings_demo_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDemoDialog = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
     }
 
     if (showDeleteDialog) {

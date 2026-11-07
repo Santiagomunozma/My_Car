@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.micarro.R
 import com.micarro.domain.usecase.ClearAllDataUseCase
+import com.micarro.feature.demo.DemoDataSeeder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val clearAllDataUseCase: ClearAllDataUseCase,
+    private val demoDataSeeder: DemoDataSeeder,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -48,7 +50,32 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun loadDemoData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSeeding = true, errorMessage = null, demoLoaded = false) }
+            runCatching { demoDataSeeder.replaceWithDemo() }
+                .onSuccess {
+                    _uiState.update { it.copy(isSeeding = false, demoLoaded = true) }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isSeeding = false,
+                            errorMessage = context.getString(
+                                R.string.settings_demo_error,
+                                error.message ?: ""
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
     fun onNavigationHandled() {
         _uiState.update { it.copy(isDataCleared = false) }
+    }
+
+    fun onDemoHandled() {
+        _uiState.update { it.copy(demoLoaded = false) }
     }
 }

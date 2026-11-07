@@ -311,6 +311,13 @@
     <!-- Ajustes y respaldo -->
     <string name="settings_title">Ajustes y privacidad</string>
     <string name="settings_data">Gestión de datos</string>
+    <string name="settings_demo">Cargar datos de ensayo</string>
+    <string name="settings_demo_help">Reemplaza lo de este teléfono por un historial para ensayar la ponencia.</string>
+    <string name="settings_demo_title">¿Cargar el ensayo?</string>
+    <string name="settings_demo_message">Se borran los vehículos, servicios y documentos actuales y se carga el escenario de la ponencia.</string>
+    <string name="settings_demo_confirm">Cargar ensayo</string>
+    <string name="settings_demo_toast">Listo. Ya puedes ensayar inicio, mantenimiento, documentos y alertas.</string>
+    <string name="settings_demo_error">No se pudo cargar el ensayo: %1$s</string>
     <string name="settings_delete_help">Esta acción elimina de forma permanente vehículos, kilometraje, servicios, documentos y fotos de este dispositivo.</string>
     <string name="settings_delete">Eliminar todos los datos</string>
     <string name="settings_delete_title">¿Eliminar todos los datos?</string>
