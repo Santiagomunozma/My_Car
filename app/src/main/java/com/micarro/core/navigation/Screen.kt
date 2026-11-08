@@ -45,4 +45,5 @@ sealed class Screen(val route: String) {
 
     object Backup : Screen("backup_screen")
     object Assistant : Screen("assistant_screen")
+    object Premium : Screen("premium_screen")
 }

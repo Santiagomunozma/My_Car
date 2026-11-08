@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.google.android.gms.ads.MobileAds
 import com.micarro.feature.demo.DemoDataSeeder
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,7 @@ class MyCarApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        MobileAds.initialize(this)
         appScope.launch {
             runCatching { demoDataSeeder.seedIfEmpty() }
                 .onFailure { error -> Log.e(TAG, "No se cargó el ensayo", error) }

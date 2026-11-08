@@ -1,12 +1,12 @@
 # Glosario de interfaz — Mi Carro
 
-Una sola palabra por concepto. El nombre de la app es **Mi Carro**. En el resto de la interfaz se dice **vehículo**.
+Una sola palabra por concepto. El nombre de la app es **My Car**, igual en el icono y en la barra. En el resto de la interfaz se dice **vehículo**.
 
 ## Términos
 
 | Usar | No usar | Significado |
 | --- | --- | --- |
-| Mi Carro | My Car, MiCarro, Carro | Nombre de la aplicación |
+| My Car | Mi Carro, MiCarro, Mycar, Carro | Nombre de la aplicación |
 | Vehículo | Carro, auto, coche | El registro (automóvil, camioneta o motocicleta) |
 | Mantenimiento | Reparaciones, arreglos | Módulo de planes y servicios |
 | Actividad | Plan suelto, tarea, arreglo | Un plan preventivo concreto |

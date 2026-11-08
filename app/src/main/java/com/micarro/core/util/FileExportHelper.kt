@@ -18,7 +18,7 @@ object FileExportHelper {
 
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
-            putExtra(Intent.EXTRA_SUBJECT, "Exportación de Historial - MiCarro")
+            putExtra(Intent.EXTRA_SUBJECT, "Exportación de Historial - My Car")
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }

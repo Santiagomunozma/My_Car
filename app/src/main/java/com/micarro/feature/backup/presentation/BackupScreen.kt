@@ -33,14 +33,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.micarro.R
 import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.SecondaryButton
+import com.micarro.feature.premium.presentation.PremiumViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackupScreen(
     onBack: () -> Unit,
-    viewModel: BackupViewModel = hiltViewModel()
+    onOpenPremium: () -> Unit = {},
+    viewModel: BackupViewModel = hiltViewModel(),
+    premiumViewModel: PremiumViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var confirmRestore by remember { mutableStateOf(false) }
 
@@ -80,6 +84,16 @@ fun BackupScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(stringResource(R.string.backup_help), style = MaterialTheme.typography.bodyMedium)
+            if (!premium.hasAccess) {
+                Text(
+                    stringResource(R.string.premium_locked_backup),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.premium_open),
+                    onClick = onOpenPremium
+                )
+            } else {
             PrimaryButton(
                 text = stringResource(R.string.backup_export),
                 enabled = !state.isLoading,
@@ -91,6 +105,7 @@ fun BackupScreen(
                 enabled = !state.isLoading,
                 onClick = { confirmRestore = true }
             )
+            }
         }
     }
     if (confirmRestore) {

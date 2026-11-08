@@ -84,7 +84,10 @@ fun MiCarroNavGraph(
             route = Screen.Documents.route,
             arguments = listOf(navArgument("vehicleId") { type = NavType.StringType })
         ) {
-            DocumentScreen(onBack = { navController.popBackStack() })
+            DocumentScreen(
+                onBack = { navController.popBackStack() },
+                onRequirePremium = { navController.navigate(Screen.Premium.route) }
+            )
         }
 
         composable(route = Screen.DocumentsAlerts.route) {
@@ -209,7 +212,8 @@ fun MiCarroNavGraph(
                             serviceId = item.id
                         )
                     )
-                }
+                },
+                onRequirePremium = { navController.navigate(Screen.Premium.route) }
             )
         }
 
@@ -223,18 +227,34 @@ fun MiCarroNavGraph(
                     }
                 },
                 onOpenBackup = { navController.navigate(Screen.Backup.route) },
-                onOpenAlerts = { navController.navigate(Screen.AlertSettings.route) }
+                onOpenAlerts = { navController.navigate(Screen.AlertSettings.route) },
+                onOpenPremium = { navController.navigate(Screen.Premium.route) }
+            )
+        }
+
+        composable(route = Screen.Premium.route) {
+            com.micarro.feature.premium.presentation.PremiumScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 
         composable(route = Screen.Backup.route) {
             com.micarro.feature.backup.presentation.BackupScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onOpenPremium = { navController.navigate(Screen.Premium.route) }
             )
         }
 
         composable(route = Screen.Assistant.route) {
-            com.micarro.feature.assistant.presentation.AssistantScreen()
+            val premium by hiltViewModel<com.micarro.feature.premium.presentation.PremiumViewModel>()
+                .status.collectAsStateWithLifecycle()
+            if (premium.hasAccess) {
+                com.micarro.feature.assistant.presentation.AssistantScreen()
+            } else {
+                com.micarro.feature.premium.presentation.PremiumScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

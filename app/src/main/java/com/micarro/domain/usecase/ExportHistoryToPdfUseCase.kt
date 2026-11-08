@@ -151,7 +151,7 @@ class ExportHistoryToPdfUseCase @Inject constructor(
             canvas.drawRect(headerRect, headerBgPaint)
 
             // Título principal
-            canvas.drawText("MiCarro", margin, 50f, titlePaint)
+            canvas.drawText("My Car", margin, 50f, titlePaint)
             canvas.drawText("Historial de Mantenimientos", margin, 75f, Paint().apply {
                 color = Color.WHITE
                 textSize = 16f

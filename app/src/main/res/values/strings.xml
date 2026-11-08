@@ -168,7 +168,7 @@
     </plurals>
 
     <!-- Dashboard -->
-    <string name="dashboard_title">Mi Carro</string>
+    <string name="dashboard_title">My Car</string>
     <string name="dashboard_main_vehicle">Vehículo principal</string>
     <string name="dashboard_no_vehicle">Aún no tienes un vehículo</string>
     <string name="dashboard_add_first">Agregar mi primer vehículo</string>
@@ -441,4 +441,40 @@
     <string name="template_filters">Filtros (aire y combustible)</string>
     <string name="template_brakes">Revisión de frenos</string>
     <string name="template_battery">Batería y sistema eléctrico</string>
+
+    <!-- Premium simulado -->
+    <string name="premium_title">My Car Premium</string>
+    <string name="premium_row">My Car Premium</string>
+    <string name="premium_row_free">Prueba 1 mes o paga una sola vez</string>
+    <string name="premium_row_trial">Prueba en curso</string>
+    <string name="premium_row_paid">Activo en este teléfono</string>
+    <string name="premium_free_title">Gratis</string>
+    <string name="premium_paid_title">Premium</string>
+    <string name="premium_benefit_ads">Anuncios</string>
+    <string name="premium_benefit_no_ads">Sin anuncios</string>
+    <string name="premium_benefit_assistant">Asistente</string>
+    <string name="premium_benefit_photos">Fotos de documentos</string>
+    <string name="premium_benefit_export">Excel y PDF</string>
+    <string name="premium_benefit_backup">Copia de seguridad</string>
+    <string name="premium_benefit_csv">Historial y CSV</string>
+    <string name="premium_one_time">Pago único, sin renovación</string>
+    <string name="premium_start_trial">Probar 1 mes gratis</string>
+    <string name="premium_pay">Pagar %1$s</string>
+    <string name="premium_simulated_note">El cobro es una simulación de la sustentación. No se hace ningún cargo.</string>
+    <string name="premium_active">Premium activo</string>
+    <string name="premium_active_body">Pagaste %1$s una sola vez. No hay anuncios, y el asistente, las fotos, Excel, PDF y la copia de seguridad están abiertos.</string>
+    <string name="premium_checkout_title">Confirmar pago</string>
+    <string name="premium_checkout_body">Un solo pago de %1$s. Elige cómo se vería el cobro. No pedimos tarjeta ni cédula.</string>
+    <string name="premium_method_card">Tarjeta</string>
+    <string name="premium_method_nequi">Nequi</string>
+    <string name="premium_paid_done">Pago listo</string>
+    <string name="premium_paid_body">Premium quedó activo en este teléfono.</string>
+    <string name="premium_locked_assistant">Incluido en Premium</string>
+    <string name="premium_locked_backup">La copia de seguridad es de Premium. Con la prueba de 1 mes también se abre.</string>
+    <string name="premium_open">Ver Premium</string>
+    <string name="premium_ad_fallback">Anuncio</string>
+    <plurals name="premium_trial_days">
+        <item quantity="one">Te queda %1$d día de prueba</item>
+        <item quantity="other">Te quedan %1$d días de prueba</item>
+    </plurals>
 </resources>

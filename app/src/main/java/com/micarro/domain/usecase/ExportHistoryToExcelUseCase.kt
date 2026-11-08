@@ -104,7 +104,7 @@ class ExportHistoryToExcelUseCase @Inject constructor(
         val titleRow = sheet.createRow(rowIndex++)
         titleRow.heightInPoints = 28f
         val titleCell = titleRow.createCell(1)
-        titleCell.setCellValue("MiCarro — Informe de historial de mantenimiento")
+        titleCell.setCellValue("My Car — Informe de historial de mantenimiento")
         titleCell.cellStyle = styles.title
         sheet.addMergedRegion(CellRangeAddress(titleRow.rowNum, titleRow.rowNum, 1, 6))
 

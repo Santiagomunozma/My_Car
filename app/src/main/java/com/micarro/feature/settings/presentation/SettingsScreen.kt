@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -42,16 +43,21 @@ import com.micarro.ui.components.GroupedList
 import com.micarro.ui.components.MiCarroListRow
 import com.micarro.ui.theme.LocalThemeController
 import com.micarro.ui.theme.ThemeMode
+import com.micarro.feature.premium.domain.PremiumTier
+import com.micarro.feature.premium.presentation.PremiumViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
+    premiumViewModel: PremiumViewModel = hiltViewModel(),
     onNavigateToWelcome: () -> Unit,
     onOpenBackup: () -> Unit = {},
-    onOpenAlerts: () -> Unit = {}
+    onOpenAlerts: () -> Unit = {},
+    onOpenPremium: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val theme = LocalThemeController.current
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -92,6 +98,22 @@ fun SettingsScreen(
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                GroupedList {
+                    MiCarroListRow(
+                        title = stringResource(R.string.premium_row),
+                        subtitle = stringResource(
+                            when (premium.tier) {
+                                PremiumTier.PREMIUM -> R.string.premium_row_paid
+                                PremiumTier.TRIAL -> R.string.premium_row_trial
+                                PremiumTier.FREE -> R.string.premium_row_free
+                            }
+                        ),
+                        icon = Icons.Default.Star,
+                        showChevron = true,
+                        onClick = onOpenPremium
+                    )
+                }
+
                 Text(
                     text = stringResource(R.string.settings_appearance),
                     style = MaterialTheme.typography.titleMedium

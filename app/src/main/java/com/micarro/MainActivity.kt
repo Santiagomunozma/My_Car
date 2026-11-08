@@ -15,6 +15,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +44,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -71,7 +76,13 @@ import com.micarro.ui.theme.MyCarTheme
 import com.micarro.ui.theme.ThemeController
 import com.micarro.ui.theme.ThemeMode
 import com.micarro.core.worker.WarrantyWorker
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.micarro.feature.premium.domain.PremiumTier
+import com.micarro.feature.premium.presentation.AdBanner
+import com.micarro.feature.premium.presentation.PremiumViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
 
@@ -192,6 +203,8 @@ private val bottomNavItems = listOf(
     BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History)
 )
 
+private val adRoutes = bottomNavItems.map { it.screen.route }.toSet()
+
 /** Rutas accesibles desde la hoja «Más». Sus rutas no cambian. */
 private val moreRoutes = setOf(
     Screen.Settings.route,
@@ -208,6 +221,16 @@ fun MiCarroAppShell(
     alertCause: String? = null
 ) {
     val navController = rememberNavController()
+    val premiumViewModel: PremiumViewModel = hiltViewModel()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) premiumViewModel.refresh()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     var showAlert by remember {
@@ -241,6 +264,7 @@ fun MiCarroAppShell(
         currentRoute in moreRoutes
     val keyboardCoversBar = currentRoute == Screen.Assistant.route && assistantFieldFocused.value
     val moreSelected = currentRoute in moreRoutes
+    val showAd = !premium.hasAccess && currentRoute in adRoutes
     val openTab: (String) -> Unit = { route ->
         navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) {
@@ -305,11 +329,12 @@ fun MiCarroAppShell(
                 }
             }
         ) { padding ->
-            Row(
+            Column(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
             ) {
+            Row(modifier = Modifier.weight(1f).fillMaxSize()) {
                 if (shouldShowBottomBar && useRail) {
                     NavigationRail(
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -347,6 +372,10 @@ fun MiCarroAppShell(
                     modifier = Modifier.weight(1f)
                 )
             }
+            if (showAd) {
+                AdBanner()
+            }
+            }
         }
     }
     }
@@ -360,11 +389,38 @@ fun MiCarroAppShell(
                 showMore = false
                 if (currentRoute != route) openTab(route)
             }
+            val assistantLocked = !premium.hasAccess
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.premium_row),
+                subtitle = when (premium.tier) {
+                    PremiumTier.PREMIUM -> stringResource(R.string.premium_row_paid)
+                    PremiumTier.TRIAL -> pluralStringResource(
+                        R.plurals.premium_trial_days,
+                        premium.trialDaysLeft,
+                        premium.trialDaysLeft
+                    )
+                    PremiumTier.FREE -> stringResource(R.string.premium_row_free)
+                },
+                icon = Icons.Filled.Star,
+                showChevron = true,
+                onClick = {
+                    showMore = false
+                    navController.navigate(Screen.Premium.route)
+                }
+            )
             com.micarro.ui.components.MiCarroListRow(
                 title = stringResource(R.string.assistant_title),
-                icon = Icons.Filled.SupportAgent,
+                subtitle = if (assistantLocked) stringResource(R.string.premium_locked_assistant) else null,
+                icon = if (assistantLocked) Icons.Filled.Lock else Icons.Filled.SupportAgent,
                 showChevron = true,
-                onClick = { go(Screen.Assistant.route) }
+                onClick = {
+                    showMore = false
+                    if (assistantLocked) {
+                        navController.navigate(Screen.Premium.route)
+                    } else if (currentRoute != Screen.Assistant.route) {
+                        openTab(Screen.Assistant.route)
+                    }
+                }
             )
             com.micarro.ui.components.MiCarroListRow(
                 title = stringResource(R.string.nav_settings),

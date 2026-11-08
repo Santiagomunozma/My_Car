@@ -108,9 +108,12 @@ fun documentDisplayName(type: DocumentType, name: String): String =
 @Composable
 fun DocumentScreen(
     onBack: () -> Unit,
-    viewModel: DocumentViewModel = hiltViewModel()
+    onRequirePremium: () -> Unit = {},
+    viewModel: DocumentViewModel = hiltViewModel(),
+    premiumViewModel: com.micarro.feature.premium.presentation.PremiumViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var pendingCamera by remember { mutableStateOf<String?>(null) }
 
@@ -229,8 +232,13 @@ fun DocumentScreen(
             errors = state.formErrors,
             onDismiss = viewModel::dismissForm,
             onSave = viewModel::save,
-            onAttach = { filePicker.launch(arrayOf("image/*", "application/pdf")) },
-            onTakePhoto = onTakePhoto,
+            onAttach = {
+                if (premium.hasAccess) filePicker.launch(arrayOf("image/*", "application/pdf"))
+                else onRequirePremium()
+            },
+            onTakePhoto = {
+                if (premium.hasAccess) onTakePhoto() else onRequirePremium()
+            },
             onOpenFile = onOpenFile
         )
     }

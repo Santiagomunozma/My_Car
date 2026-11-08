@@ -59,10 +59,13 @@ import java.util.Locale
 fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel(),
     expensesViewModel: ExpensesViewModel = hiltViewModel(),
-    onEditService: (MaintenanceHistoryItem) -> Unit = {}
+    premiumViewModel: com.micarro.feature.premium.presentation.PremiumViewModel = hiltViewModel(),
+    onEditService: (MaintenanceHistoryItem) -> Unit = {},
+    onRequirePremium: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val expensesState by expensesViewModel.uiState.collectAsStateWithLifecycle()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -140,16 +143,24 @@ fun HistoryScreen(
                                 label = stringResource(R.string.history_export_excel),
                                 icon = Icons.Default.FileDownload,
                                 onClick = {
-                                    val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.xlsx"
-                                    exportExcelLauncher.launch(fileName)
+                                    if (!premium.hasAccess) {
+                                        onRequirePremium()
+                                    } else {
+                                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.xlsx"
+                                        exportExcelLauncher.launch(fileName)
+                                    }
                                 }
                             ),
                             com.micarro.ui.components.MenuAction(
                                 label = stringResource(R.string.history_export_pdf),
                                 icon = Icons.Default.PictureAsPdf,
                                 onClick = {
-                                    val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.pdf"
-                                    exportPdfLauncher.launch(fileName)
+                                    if (!premium.hasAccess) {
+                                        onRequirePremium()
+                                    } else {
+                                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.pdf"
+                                        exportPdfLauncher.launch(fileName)
+                                    }
                                 }
                             )
                         )

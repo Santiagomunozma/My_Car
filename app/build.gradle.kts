@@ -125,6 +125,7 @@ dependencies {
     implementation("org.apache.poi:poi:5.2.5")
     implementation("org.apache.poi:poi-ooxml:5.2.5")
     implementation("com.fasterxml:aalto-xml:1.3.2")
+    implementation("com.google.android.gms:play-services-ads:24.5.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
