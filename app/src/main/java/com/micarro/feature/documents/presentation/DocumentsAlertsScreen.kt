@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,12 +17,12 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -34,15 +36,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.micarro.R
-import com.micarro.domain.model.AlertSettings
 import com.micarro.domain.model.DocumentStatus
 import com.micarro.feature.documents.domain.DocumentAlert
 import com.micarro.ui.components.EmptyState
 import com.micarro.ui.components.MiCarroCard
+import com.micarro.ui.components.MiCarroTopBar
 import com.micarro.ui.components.StatusChip
-import com.micarro.ui.theme.StatusError
-import com.micarro.ui.theme.StatusWarning
-import kotlin.math.roundToInt
+import com.micarro.ui.components.StatusTone
+import com.micarro.ui.components.statusAccent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,16 +56,9 @@ fun DocumentsAlertsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.alerts_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                }
+            MiCarroTopBar(
+                title = stringResource(R.string.alerts_title),
+                onBack = onBack
             )
         }
     ) { padding ->
@@ -90,28 +84,27 @@ fun DocumentsAlertsScreen(
                             )
                         }
                         Text(
-                            stringResource(
-                                R.string.alerts_anticipation_label,
-                                state.settings.anticipationDays
-                            ),
+                            stringResource(R.string.alerts_two_reminders),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 8.dp)
-                        )
-                        Slider(
-                            value = state.settings.anticipationDays.toFloat(),
-                            onValueChange = {
-                                viewModel.setAnticipationDays(it.roundToInt())
-                            },
-                            valueRange = AlertSettings.MIN_ANTICIPATION_DAYS.toFloat()..
-                                AlertSettings.MAX_ANTICIPATION_DAYS.toFloat(),
-                            enabled = state.settings.globalAlertsEnabled
                         )
                     }
                 }
             }
 
-            if (state.alerts.isEmpty() && !state.isLoading) {
+            if (state.isLoading && state.alerts.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            } else if (state.alerts.isEmpty()) {
                 item {
                     EmptyState(
                         icon = Icons.Filled.CheckCircle,
@@ -156,7 +149,7 @@ private fun AlertCard(alert: DocumentAlert, onClick: () -> Unit) {
             Icon(
                 imageVector = if (isExpired) Icons.Filled.Error else Icons.Filled.Warning,
                 contentDescription = null,
-                tint = if (isExpired) StatusError else StatusWarning
+                tint = statusAccent(if (isExpired) StatusTone.Error else StatusTone.Warning)
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -171,7 +164,7 @@ private fun AlertCard(alert: DocumentAlert, onClick: () -> Unit) {
                 Text(
                     cause,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isExpired) StatusError else StatusWarning
+                    color = statusAccent(if (isExpired) StatusTone.Error else StatusTone.Warning)
                 )
             }
             StatusChip(
@@ -179,7 +172,7 @@ private fun AlertCard(alert: DocumentAlert, onClick: () -> Unit) {
                     if (isExpired) R.string.doc_status_expired
                     else R.string.doc_status_expiring
                 ),
-                containerColor = if (isExpired) StatusError else StatusWarning,
+                tone = if (isExpired) StatusTone.Error else StatusTone.Warning,
                 icon = if (isExpired) Icons.Filled.Error else Icons.Filled.Warning
             )
         }

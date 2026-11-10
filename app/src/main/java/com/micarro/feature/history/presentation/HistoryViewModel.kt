@@ -4,11 +4,13 @@ import android.content.ContentResolver
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.micarro.R
 import com.micarro.domain.model.HistoryFilter
 import com.micarro.domain.model.Vehicle
 import com.micarro.domain.repository.MaintenanceRepository
 import com.micarro.domain.repository.VehicleRepository
 import com.micarro.domain.usecase.ExportHistoryToCsvUseCase
+import com.micarro.domain.usecase.ExportHistoryToExcelUseCase
 import com.micarro.domain.usecase.ExportHistoryToPdfUseCase
 import com.micarro.feature.alerts.domain.AlertScheduler
 import com.micarro.feature.maintenance.domain.DeleteMaintenanceServiceUseCase
@@ -28,6 +30,7 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val repository: MaintenanceRepository,
     private val exportHistoryToCsvUseCase: ExportHistoryToCsvUseCase,
+    private val exportHistoryToExcelUseCase: ExportHistoryToExcelUseCase,
     private val exportHistoryToPdfUseCase: ExportHistoryToPdfUseCase,
     private val deleteMaintenanceService: DeleteMaintenanceServiceUseCase,
     private val alertScheduler: AlertScheduler,
@@ -88,7 +91,14 @@ class HistoryViewModel @Inject constructor(
     }
 
     fun onDateRangeChanged(start: Long?, end: Long?) {
-        _filterState.value = _filterState.value.copy(startDate = start, endDate = end)
+        // Si cambiamos la fecha de inicio y la fecha de fin es anterior a la nueva fecha de inicio,
+        // ajustamos o limpiamos la fecha de fin
+        val adjustedEnd = if (start != null && end != null && end < start) {
+            null
+        } else {
+            end
+        }
+        _filterState.value = _filterState.value.copy(startDate = start, endDate = adjustedEnd)
     }
 
     fun deleteService(serviceId: String) {
@@ -109,12 +119,12 @@ class HistoryViewModel @Inject constructor(
 
     fun exportToCsv(uri: Uri, contentResolver: ContentResolver, vehiclePlate: String? = null, currencySymbol: String = "$") {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, userMessage = null) }
+            _uiState.update { it.copy(isLoading = true, notice = null) }
 
             val outputStream = contentResolver.openOutputStream(uri)
             if (outputStream == null) {
                 _uiState.update {
-                    it.copy(isLoading = false, userMessage = "No se pudo crear el archivo de destino.")
+                    it.copy(isLoading = false, notice = HistoryNotice(R.string.history_file_error))
                 }
                 return@launch
             }
@@ -122,36 +132,73 @@ class HistoryViewModel @Inject constructor(
             exportHistoryToCsvUseCase(outputStream, vehiclePlate, currencySymbol)
                 .onSuccess {
                     _uiState.update {
-                        it.copy(isLoading = false, userMessage = "Historial exportado a CSV con éxito.")
+                        it.copy(isLoading = false, notice = HistoryNotice(R.string.history_export_ok))
                     }
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, userMessage = "Error al exportar: ${error.message}")
+                        it.copy(
+                            isLoading = false,
+                            notice = HistoryNotice(R.string.history_export_error, error.message ?: "")
+                        )
                     }
                 }
         }
     }
 
-    fun exportToPdf(uri: Uri, contentResolver: ContentResolver, vehiclePlate: String? = null, currencySymbol: String = "$") {
+    fun exportToExcel(uri: Uri, contentResolver: ContentResolver, vehicleId: String? = null, currencySymbol: String = "$") {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, userMessage = null) }
-            val outputStream = contentResolver.openOutputStream(uri)
+            _uiState.update { it.copy(isLoading = true, notice = null) }
+
+            val outputStream = contentResolver.openOutputStream(uri, "w")
             if (outputStream == null) {
-                _uiState.update { it.copy(isLoading = false, userMessage = "No se pudo crear el archivo de destino.") }
+                _uiState.update {
+                    it.copy(isLoading = false, notice = HistoryNotice(R.string.history_file_error))
+                }
                 return@launch
             }
-            exportHistoryToPdfUseCase(outputStream, vehiclePlate, currencySymbol)
+
+            exportHistoryToExcelUseCase(outputStream, vehicleId, currencySymbol)
                 .onSuccess {
-                    _uiState.update { it.copy(isLoading = false, userMessage = "Historial exportado a PDF con éxito.") }
+                    _uiState.update {
+                        it.copy(isLoading = false, notice = HistoryNotice(R.string.history_export_excel_ok))
+                    }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, userMessage = "Error al exportar: ${error.message}") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            notice = HistoryNotice(R.string.history_export_error, error.message ?: "")
+                        )
+                    }
+                }
+        }
+    }
+
+    fun exportToPdf(uri: Uri, contentResolver: ContentResolver, vehicleId: String? = null, currencySymbol: String = "$") {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, notice = null) }
+            val outputStream = contentResolver.openOutputStream(uri)
+            if (outputStream == null) {
+                _uiState.update { it.copy(isLoading = false, notice = HistoryNotice(R.string.history_file_error)) }
+                return@launch
+            }
+            exportHistoryToPdfUseCase(outputStream, vehicleId, currencySymbol)
+                .onSuccess {
+                    _uiState.update { it.copy(isLoading = false, notice = HistoryNotice(R.string.history_export_pdf_ok)) }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            notice = HistoryNotice(R.string.history_export_error, error.message ?: "")
+                        )
+                    }
                 }
         }
     }
 
     fun clearUserMessage() {
-        _uiState.update { it.copy(userMessage = null) }
+        _uiState.update { it.copy(notice = null) }
     }
 }

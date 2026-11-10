@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PauseCircle
@@ -32,10 +34,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -50,6 +52,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.micarro.R
 import com.micarro.domain.model.MaintenancePlan
@@ -58,11 +62,10 @@ import com.micarro.domain.model.Vehicle
 import com.micarro.feature.maintenance.domain.MaintenanceStatus
 import com.micarro.ui.components.EmptyState
 import com.micarro.ui.components.MiCarroCard
+import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.StatusChip
-import com.micarro.ui.theme.StatusError
-import com.micarro.ui.theme.StatusInfo
-import com.micarro.ui.theme.StatusSuccess
-import com.micarro.ui.theme.StatusWarning
+import com.micarro.ui.components.StatusTone
+import com.micarro.ui.components.statusAccent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -116,7 +119,7 @@ fun MaintenancePlanScreen(
     planToDelete?.let { plan ->
         AlertDialog(
             onDismissRequest = { planToDelete = null },
-            icon = { Icon(Icons.Default.Delete, contentDescription = null, tint = StatusError) },
+            icon = { Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = statusAccent(StatusTone.Error)) },
             title = { Text(stringResource(R.string.maintenance_delete_title)) },
             text = { Text(stringResource(R.string.maintenance_delete_message, plan.title)) },
             confirmButton = {
@@ -133,7 +136,7 @@ fun MaintenancePlanScreen(
                         }
                     }
                 ) {
-                    Text(stringResource(R.string.action_delete), color = StatusError)
+                    Text(stringResource(R.string.action_delete), color = statusAccent(StatusTone.Error))
                 }
             },
             dismissButton = {
@@ -148,7 +151,7 @@ fun MaintenancePlanScreen(
     if (showDeleteRejectedDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteRejectedDialog = false },
-            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = StatusWarning) },
+            icon = { Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.maintenance_postpone), tint = statusAccent(StatusTone.Warning)) },
             title = { Text(stringResource(R.string.plan_delete_blocked_title)) },
             text = {
                 Text(stringResource(R.string.plan_delete_blocked))
@@ -166,24 +169,24 @@ fun MaintenancePlanScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.plan_screen_title)) },
                 actions = {
-                    IconButton(onClick = onOpenAlertSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = stringResource(R.string.plan_alerts_settings)
+                    com.micarro.ui.components.OverflowMenu(
+                        actions = listOf(
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.plan_alerts_settings),
+                                icon = Icons.Default.Notifications,
+                                onClick = onOpenAlertSettings
+                            ),
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.plan_export_csv),
+                                icon = Icons.Default.Share,
+                                onClick = {
+                                    uiState.selectedVehicle?.let { vehicle ->
+                                        viewModel.exportHistory(context, vehicle.id.toString())
+                                    }
+                                }
+                            )
                         )
-                    }
-                    IconButton(
-                        onClick = {
-                            uiState.selectedVehicle?.let { vehicle ->
-                                viewModel.exportHistory(context, vehicle.id.toString())
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.plan_export_csv)
-                        )
-                    }
+                    )
                 }
             )
         },
@@ -215,17 +218,34 @@ fun MaintenancePlanScreen(
                 onVehicleSelected = { viewModel.selectVehicle(it) }
             )
 
-            PrimaryTabRow(selectedTabIndex = selectedTab) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text(stringResource(R.string.plan_tab_plans, uiState.plans.size)) }
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                val tabs = listOf(
+                    stringResource(R.string.plan_tab_plans, uiState.plans.size),
+                    stringResource(R.string.plan_tab_parts, uiState.installedParts.size)
                 )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text(stringResource(R.string.plan_tab_parts, uiState.installedParts.size)) }
-                )
+                tabs.forEachIndexed { index, label ->
+                    SegmentedButton(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index, count = tabs.size
+                        ),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                        icon = {}
+                    ) {
+                        Text(
+                            text = label,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
 
             if (selectedTab == 0) {
@@ -291,20 +311,15 @@ fun VehicleSelector(
     onVehicleSelected: (Vehicle) -> Unit
 ) {
     if (vehicles.isNotEmpty()) {
-        val safeIndex = vehicles.indexOf(selectedVehicle).coerceIn(0, vehicles.size - 1)
-
-        PrimaryScrollableTabRow(
-            selectedTabIndex = safeIndex,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary,
-            edgePadding = 16.dp,
-            divider = {}
+        androidx.compose.foundation.lazy.LazyRow(
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            vehicles.forEach { vehicle ->
-                Tab(
+            items(vehicles, key = { it.id }) { vehicle ->
+                androidx.compose.material3.FilterChip(
                     selected = vehicle == selectedVehicle,
                     onClick = { onVehicleSelected(vehicle) },
-                    text = { Text(vehicle.plate) }
+                    label = { Text(vehicle.plate) }
                 )
             }
         }
@@ -347,20 +362,20 @@ fun MaintenancePlanCard(
                     if (!plan.isActive) {
                         StatusChip(
                             text = stringResource(R.string.plan_status_paused),
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            tone = StatusTone.Neutral,
                             icon = Icons.Default.PauseCircle
                         )
                     } else {
                         val statusInfo = when (planWithStatus.status) {
-                            MaintenanceStatus.AL_DIA -> Triple(stringResource(R.string.plan_status_ok), StatusSuccess, Icons.Default.CheckCircle)
-                            MaintenanceStatus.PROXIMA -> Triple(stringResource(R.string.plan_status_soon), StatusWarning, Icons.Default.Warning)
-                            MaintenanceStatus.VENCIDA -> Triple(stringResource(R.string.plan_status_overdue), StatusError, Icons.Default.Info)
-                            MaintenanceStatus.SIN_PROGRAMACION -> Triple(stringResource(R.string.plan_status_none), StatusInfo, Icons.Default.Info)
+                            MaintenanceStatus.AL_DIA -> Triple(stringResource(R.string.plan_status_ok), StatusTone.Success, Icons.Default.CheckCircle)
+                            MaintenanceStatus.PROXIMA -> Triple(stringResource(R.string.plan_status_soon), StatusTone.Warning, Icons.Default.Warning)
+                            MaintenanceStatus.VENCIDA -> Triple(stringResource(R.string.plan_status_overdue), StatusTone.Error, Icons.Default.Error)
+                            MaintenanceStatus.SIN_PROGRAMACION -> Triple(stringResource(R.string.plan_status_none), StatusTone.Info, Icons.Default.Info)
                         }
 
                         StatusChip(
                             text = statusInfo.first,
-                            containerColor = statusInfo.second,
+                            tone = statusInfo.second,
                             icon = statusInfo.third
                         )
                     }
@@ -411,44 +426,39 @@ fun MaintenancePlanCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.maintenance_edit),
-                            tint = MaterialTheme.colorScheme.primary
+                com.micarro.ui.components.OverflowMenu(
+                    actions = listOf(
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.maintenance_edit),
+                            icon = Icons.Default.Edit,
+                            onClick = onEdit
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.maintenance_postpone),
+                            icon = Icons.Default.Notifications,
+                            onClick = onPostpone
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(
+                                if (plan.isActive) R.string.plan_pause else R.string.plan_resume
+                            ),
+                            icon = if (plan.isActive) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
+                            onClick = onToggleActive
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.action_delete),
+                            icon = Icons.Default.Delete,
+                            destructive = true,
+                            onClick = onDelete
                         )
-                    }
-                    IconButton(onClick = onPostpone) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = stringResource(R.string.maintenance_postpone),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    IconButton(onClick = onToggleActive) {
-                        Icon(
-                            imageVector = if (plan.isActive) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
-                            contentDescription = if (plan.isActive) stringResource(R.string.plan_pause) else stringResource(R.string.plan_resume),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    // Botón Eliminar (RF-15)
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(R.string.plan_delete_cd),
-                            tint = StatusError
-                        )
-                    }
-                }
-
-                Button(
+                    )
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.plan_register_service),
                     onClick = onRegisterService,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(stringResource(R.string.plan_register_service))
-                }
+                    icon = Icons.Default.Build,
+                    fillWidth = false
+                )
             }
         }
     }

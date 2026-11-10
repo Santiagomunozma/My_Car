@@ -48,7 +48,8 @@ fun DateField(
     selectedDateMillis: Long?,
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    minDateMillis: Long? = null
 ) {
     var showPicker by remember { mutableStateOf(false) }
     val scheme = MaterialTheme.colorScheme
@@ -91,7 +92,14 @@ fun DateField(
     }
 
     if (showPicker) {
-        val pickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDateMillis,
+            selectableDates = object : androidx.compose.material3.SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return minDateMillis?.let { utcTimeMillis >= it } ?: true
+                }
+            }
+        )
         DatePickerDialog(
             onDismissRequest = { showPicker = false },
             confirmButton = {

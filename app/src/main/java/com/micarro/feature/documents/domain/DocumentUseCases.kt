@@ -17,11 +17,11 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 enum class DocumentField {
-    NAME, EXPIRATION_DATE
+    NAME, EXPIRATION_DATE, PLATE
 }
 
 enum class DocumentError {
-    REQUIRED
+    REQUIRED, MISMATCH
 }
 
 data class DocumentDraft(
@@ -32,7 +32,12 @@ data class DocumentDraft(
     val expirationDate: LocalDate? = null,
     val issuer: String = "",
     val alertsEnabled: Boolean = true,
-    val notes: String = ""
+    val notes: String = "",
+    val referenceNumber: String = "",
+    val filePath: String? = null,
+    val mimeType: String? = null,
+    val extractedPlate: String? = null,
+    val plateAcknowledged: Boolean = false
 )
 
 sealed interface SaveDocumentResult {
@@ -65,21 +70,19 @@ private fun todayTicker(): Flow<LocalDate> = flow {
 }.distinctUntilChanged()
 
 class ObserveVehicleDocumentsUseCase @Inject constructor(
-    private val documentRepository: DocumentRepository,
-    private val settingsRepository: AlertSettingsRepository
+    private val documentRepository: DocumentRepository
 ) {
     operator fun invoke(vehicleId: Long): Flow<List<DocumentWithStatus>> =
         combine(
             documentRepository.observeDocuments(vehicleId),
-            settingsRepository.observeSettings(),
             todayTicker()
-        ) { documents, settings, today ->
+        ) { documents, today ->
             documents.map { document ->
                 DocumentWithStatus(
                     document = document,
                     status = DocumentStatusRules.statusFor(
                         document.expirationDate,
-                        settings.anticipationDays,
+                        DocumentReminderRules.MONTH_DAYS,
                         today
                     ),
                     daysUntilExpiration = DocumentStatusRules.daysUntil(
@@ -91,7 +94,8 @@ class ObserveVehicleDocumentsUseCase @Inject constructor(
 }
 
 class SaveDocumentUseCase @Inject constructor(
-    private val repository: DocumentRepository
+    private val repository: DocumentRepository,
+    private val fileStore: DocumentFileStore
 ) {
     suspend operator fun invoke(draft: DocumentDraft): SaveDocumentResult {
         val errors = mutableMapOf<DocumentField, DocumentError>()
@@ -104,6 +108,8 @@ class SaveDocumentUseCase @Inject constructor(
         if (errors.isNotEmpty()) return SaveDocumentResult.Invalid(errors)
 
         return try {
+            val previous = draft.id?.let { repository.getDocumentById(it) }
+            val dateChanged = previous != null && previous.expirationDate != draft.expirationDate
             repository.saveDocument(
                 VehicleDocument(
                     id = draft.id ?: 0L,
@@ -113,9 +119,17 @@ class SaveDocumentUseCase @Inject constructor(
                     expirationDate = draft.expirationDate!!,
                     issuer = draft.issuer.trim().ifEmpty { null },
                     alertsEnabled = draft.alertsEnabled,
-                    notes = draft.notes.trim().ifEmpty { null }
+                    notes = draft.notes.trim().ifEmpty { null },
+                    referenceNumber = draft.referenceNumber.trim().ifEmpty { null },
+                    filePath = draft.filePath,
+                    mimeType = draft.mimeType,
+                    remindedMonth = if (dateChanged) false else previous?.remindedMonth ?: false,
+                    remindedFortnight = if (dateChanged) false else previous?.remindedFortnight ?: false,
+                    remindedExpired = if (dateChanged) false else previous?.remindedExpired ?: false
                 )
             )
+            val oldPath = previous?.filePath
+            if (oldPath != null && oldPath != draft.filePath) fileStore.delete(oldPath)
             SaveDocumentResult.Success
         } catch (e: Exception) {
             SaveDocumentResult.Failure(e)
@@ -124,9 +138,14 @@ class SaveDocumentUseCase @Inject constructor(
 }
 
 class DeleteDocumentUseCase @Inject constructor(
-    private val repository: DocumentRepository
+    private val repository: DocumentRepository,
+    private val fileStore: DocumentFileStore
 ) {
-    suspend operator fun invoke(id: Long) = repository.deleteDocument(id)
+    suspend operator fun invoke(id: Long) {
+        val existing = repository.getDocumentById(id)
+        repository.deleteDocument(id)
+        fileStore.delete(existing?.filePath)
+    }
 }
 
 class ToggleDocumentAlertsUseCase @Inject constructor(
@@ -167,7 +186,7 @@ class ObserveDocumentAlertsUseCase @Inject constructor(
                     val vehicle = vehiclesById[document.vehicleId] ?: return@mapNotNull null
                     if (vehicle.isArchived) return@mapNotNull null
                     val status = DocumentStatusRules.statusFor(
-                        document.expirationDate, settings.anticipationDays, today
+                        document.expirationDate, DocumentReminderRules.MONTH_DAYS, today
                     )
                     if (status == DocumentStatus.UP_TO_DATE) return@mapNotNull null
                     DocumentAlert(

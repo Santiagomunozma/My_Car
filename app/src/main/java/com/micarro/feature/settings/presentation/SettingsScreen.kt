@@ -1,26 +1,28 @@
 package com.micarro.feature.settings.presentation
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import com.micarro.core.settings.ThemeMode
-import com.micarro.MainActivity
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,39 +33,52 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.micarro.R
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.micarro.R
+import com.micarro.ui.components.AquaBackground
+import com.micarro.ui.components.GroupedDivider
+import com.micarro.ui.components.GroupedList
+import com.micarro.ui.components.MiCarroListRow
+import com.micarro.ui.theme.LocalThemeController
+import com.micarro.ui.theme.ThemeMode
+import com.micarro.feature.premium.domain.PremiumTier
+import com.micarro.feature.premium.presentation.PremiumViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
+    premiumViewModel: PremiumViewModel = hiltViewModel(),
     onNavigateToWelcome: () -> Unit,
-    onOpenBackup: () -> Unit = {}
+    onOpenBackup: () -> Unit = {},
+    onOpenAlerts: () -> Unit = {},
+    onOpenPremium: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val theme = LocalThemeController.current
     var showDeleteDialog by remember { mutableStateOf(false) }
-    
-    val themeManager = remember { (context as MainActivity).themeManager }
-    val themeMode by themeManager.themeMode.collectAsStateWithLifecycle()
+    var showDemoDialog by remember { mutableStateOf(false) }
+    val busy = uiState.isDeleting || uiState.isSeeding
 
     val deletedToast = stringResource(R.string.settings_deleted_toast)
+    val demoToast = stringResource(R.string.settings_demo_toast)
 
-    // Reaccionar a la finalización del borrado
     LaunchedEffect(uiState.isDataCleared) {
         if (uiState.isDataCleared) {
-            Toast.makeText(
-                context,
-                deletedToast,
-                Toast.LENGTH_LONG
-            ).show()
-
+            Toast.makeText(context, deletedToast, Toast.LENGTH_LONG).show()
             viewModel.onNavigationHandled()
+            onNavigateToWelcome()
+        }
+    }
 
-            // Invocar la redirección a la pantalla inicial limpiando la pila
+    LaunchedEffect(uiState.demoLoaded) {
+        if (uiState.demoLoaded) {
+            Toast.makeText(context, demoToast, Toast.LENGTH_LONG).show()
+            viewModel.onDemoHandled()
             onNavigateToWelcome()
         }
     }
@@ -71,89 +86,141 @@ fun SettingsScreen(
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
     ) { paddingValues ->
-        Column(
+        AquaBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
         ) {
-            Text(
-                text = "Apariencia",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            val themeOptions = listOf(
-                ThemeMode.LIGHT to "Claro",
-                ThemeMode.SYSTEM to "Sistema",
-                ThemeMode.DARK to "Oscuro"
-            )
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                themeOptions.forEachIndexed { index, (mode, label) ->
-                    SegmentedButton(
-                        selected = themeMode == mode,
-                        onClick = { themeManager.setThemeMode(mode) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = themeOptions.size
+                GroupedList {
+                    MiCarroListRow(
+                        title = stringResource(R.string.premium_row),
+                        subtitle = stringResource(
+                            when (premium.tier) {
+                                PremiumTier.PREMIUM -> R.string.premium_row_paid
+                                PremiumTier.TRIAL -> R.string.premium_row_trial
+                                PremiumTier.FREE -> R.string.premium_row_free
+                            }
+                        ),
+                        icon = Icons.Default.Star,
+                        showChevron = true,
+                        onClick = onOpenPremium
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.settings_appearance),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                GroupedList {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = stringResource(R.string.settings_theme_help),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    ) {
-                        Text(label)
+                        val themeOptions = listOf(
+                            ThemeMode.LIGHT to stringResource(R.string.settings_theme_light),
+                            ThemeMode.SYSTEM to stringResource(R.string.settings_theme_system),
+                            ThemeMode.DARK to stringResource(R.string.settings_theme_dark)
+                        )
+                        SingleChoiceSegmentedButtonRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp)
+                        ) {
+                            themeOptions.forEachIndexed { index, (mode, label) ->
+                                SegmentedButton(
+                                    selected = theme.mode == mode,
+                                    onClick = { theme.onChange(mode) },
+                                    shape = SegmentedButtonDefaults.itemShape(
+                                        index = index,
+                                        count = themeOptions.size
+                                    )
+                                ) { Text(label) }
+                            }
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = stringResource(R.string.settings_data),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(R.string.settings_delete_help),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = onOpenBackup,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.settings_backup))
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = { showDeleteDialog = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                ),
-                enabled = !uiState.isDeleting,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (uiState.isDeleting) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onError,
-                        strokeWidth = 2.dp
+                Text(
+                    text = stringResource(R.string.settings_data),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                GroupedList {
+                    MiCarroListRow(
+                        title = stringResource(R.string.settings_demo),
+                        subtitle = stringResource(R.string.settings_demo_help),
+                        icon = Icons.Default.DirectionsCar,
+                        showChevron = true,
+                        onClick = { if (!busy) showDemoDialog = true }
                     )
-                } else {
-                    Text(stringResource(R.string.settings_delete))
+                    GroupedDivider()
+                    MiCarroListRow(
+                        title = stringResource(R.string.settings_backup),
+                        icon = Icons.Default.Backup,
+                        showChevron = true,
+                        onClick = onOpenBackup
+                    )
+                    GroupedDivider()
+                    MiCarroListRow(
+                        title = stringResource(R.string.maintenance_alerts_title),
+                        icon = Icons.Default.Notifications,
+                        showChevron = true,
+                        onClick = onOpenAlerts
+                    )
+                }
+
+                uiState.errorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                GroupedList {
+                    MiCarroListRow(
+                        title = stringResource(R.string.settings_delete),
+                        subtitle = stringResource(R.string.settings_delete_help),
+                        icon = Icons.Default.Delete,
+                        destructive = true,
+                        onClick = { if (!busy) showDeleteDialog = true }
+                    )
                 }
             }
         }
     }
 
-    // Diálogo de doble confirmación estricta
+    if (showDemoDialog) {
+        AlertDialog(
+            onDismissRequest = { showDemoDialog = false },
+            title = { Text(stringResource(R.string.settings_demo_title)) },
+            text = { Text(stringResource(R.string.settings_demo_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDemoDialog = false
+                        viewModel.loadDemoData()
+                    }
+                ) {
+                    Text(stringResource(R.string.settings_demo_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDemoDialog = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
+
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },

@@ -14,10 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -57,22 +59,26 @@ import java.util.Locale
 fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel(),
     expensesViewModel: ExpensesViewModel = hiltViewModel(),
-    onEditService: (MaintenanceHistoryItem) -> Unit = {}
+    premiumViewModel: com.micarro.feature.premium.presentation.PremiumViewModel = hiltViewModel(),
+    onEditService: (MaintenanceHistoryItem) -> Unit = {},
+    onRequirePremium: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val expensesState by expensesViewModel.uiState.collectAsStateWithLifecycle()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Launcher de SAF para seleccionar dónde guardar el CSV de forma segura (RF-38)
+    // Launcher de SAF para seleccionar dónde guardar el Excel de forma segura
     val currency = stringResource(R.string.currency_symbol)
-    val exportCsvLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv")
+    val exportExcelLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     ) { uri ->
         uri?.let {
-            viewModel.exportToCsv(
+            viewModel.exportToExcel(
                 uri = it,
                 contentResolver = context.contentResolver,
+                vehicleId = state.filter.vehicleId,
                 currencySymbol = currency
             )
         }
@@ -81,24 +87,44 @@ fun HistoryScreen(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
         uri?.let {
-            viewModel.exportToPdf(uri = it, contentResolver = context.contentResolver, currencySymbol = currency)
+            viewModel.exportToPdf(uri = it, contentResolver = context.contentResolver, vehicleId = state.filter.vehicleId, currencySymbol = currency)
         }
     }
 
     // Muestra notificaciones tipo Snackbar en pantalla cuando haya mensajes en el estado
-    LaunchedEffect(state.userMessage) {
-        state.userMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+    val notice = state.notice?.let { notice ->
+        if (notice.detail != null) {
+            stringResource(notice.messageRes, notice.detail)
+        } else {
+            stringResource(notice.messageRes)
+        }
+    }
+    LaunchedEffect(notice) {
+        if (notice != null) {
+            snackbarHostState.showSnackbar(notice)
             viewModel.clearUserMessage()
         }
     }
 
     val categories = com.micarro.feature.maintenance.presentation.DEFAULT_CATEGORIES
-    val serviceTypes = listOf("PREVENTIVE" to "Preventivo", "CORRECTIVE" to "Correctivo")
+    val serviceTypes = listOf(
+        "PREVENTIVE" to stringResource(R.string.service_preventive),
+        "CORRECTIVE" to stringResource(R.string.service_corrective)
+    )
     var minCost by remember { mutableStateOf("") }
     var maxCost by remember { mutableStateOf("") }
     var workshop by remember { mutableStateOf("") }
     var pendingDelete by remember { mutableStateOf<MaintenanceHistoryItem?>(null) }
+    var showFilters by remember { mutableStateOf(false) }
+    val activeFilterCount = listOfNotNull(
+        state.filter.category,
+        state.filter.serviceType,
+        state.filter.workshop?.takeIf { it.isNotBlank() },
+        state.filter.minCost,
+        state.filter.maxCost,
+        state.filter.startDate,
+        state.filter.endDate
+    ).size
     val vehicles by viewModel.vehicles.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.filter.vehicleId) {
@@ -111,24 +137,34 @@ fun HistoryScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.history_title)) },
                 actions = {
-                    IconButton(onClick = {
-                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.csv"
-                        exportCsvLauncher.launch(fileName)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.FileDownload,
-                            contentDescription = stringResource(R.string.history_export_csv)
+                    com.micarro.ui.components.OverflowMenu(
+                        actions = listOf(
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.history_export_excel),
+                                icon = Icons.Default.FileDownload,
+                                onClick = {
+                                    if (!premium.hasAccess) {
+                                        onRequirePremium()
+                                    } else {
+                                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.xlsx"
+                                        exportExcelLauncher.launch(fileName)
+                                    }
+                                }
+                            ),
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.history_export_pdf),
+                                icon = Icons.Default.PictureAsPdf,
+                                onClick = {
+                                    if (!premium.hasAccess) {
+                                        onRequirePremium()
+                                    } else {
+                                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.pdf"
+                                        exportPdfLauncher.launch(fileName)
+                                    }
+                                }
+                            )
                         )
-                    }
-                    IconButton(onClick = {
-                        val fileName = "Historial_Mantenimiento_${System.currentTimeMillis()}.pdf"
-                        exportPdfLauncher.launch(fileName)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.PictureAsPdf,
-                            contentDescription = stringResource(R.string.history_export_pdf)
-                        )
-                    }
+                    )
                 }
             )
         },
@@ -161,9 +197,29 @@ fun HistoryScreen(
                     label = stringResource(R.string.history_search),
                     placeholder = stringResource(R.string.history_search_hint),
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.history_search))
                     }
                 )
+            }
+
+            item {
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { showFilters = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = if (activeFilterCount > 0) {
+                            stringResource(R.string.history_filters_active, activeFilterCount)
+                        } else {
+                            stringResource(R.string.history_filters)
+                        }
+                    )
+                }
             }
 
             item {
@@ -185,7 +241,56 @@ fun HistoryScreen(
                 }
             }
 
+            // Lista detallada de mantenimientos o estado vacío
+            if (state.isLoading && state.items.isEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.common_loading),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+            } else if (state.items.isEmpty()) {
+                val filtered = !state.filter.query.isNullOrBlank() ||
+                    state.filter.category != null ||
+                    state.filter.serviceType != null ||
+                    !state.filter.workshop.isNullOrBlank() ||
+                    state.filter.vehicleId != null ||
+                    state.filter.minCost != null ||
+                    state.filter.maxCost != null ||
+                    state.filter.startDate != null ||
+                    state.filter.endDate != null
+                item {
+                    Text(
+                        text = stringResource(if (filtered) R.string.history_empty else R.string.history_empty_all),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+            } else {
+                items(state.items, key = { it.id }) { item ->
+                    HistoryCard(
+                        item = item,
+                        onEdit = { onEditService(item) },
+                        onDelete = { pendingDelete = item }
+                    )
+                }
+            }
+
             item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+
+    if (showFilters) {
+        com.micarro.ui.components.MiCarroSheet(
+            onDismiss = { showFilters = false },
+            title = stringResource(R.string.history_filters)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.maintenance_category), style = MaterialTheme.typography.labelMedium)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(categories) { category ->
@@ -196,9 +301,6 @@ fun HistoryScreen(
                         )
                     }
                 }
-            }
-
-            item {
                 Text(stringResource(R.string.history_type), style = MaterialTheme.typography.labelMedium)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(serviceTypes) { (type, label) ->
@@ -209,9 +311,6 @@ fun HistoryScreen(
                         )
                     }
                 }
-            }
-
-            item {
                 MiCarroTextField(
                     value = workshop,
                     onValueChange = {
@@ -220,9 +319,6 @@ fun HistoryScreen(
                     },
                     label = stringResource(R.string.history_workshop)
                 )
-            }
-
-            item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     MiCarroTextField(
                         value = minCost,
@@ -245,9 +341,6 @@ fun HistoryScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
-            }
-
-            item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DateField(
                         label = stringResource(R.string.history_from),
@@ -259,41 +352,24 @@ fun HistoryScreen(
                         label = stringResource(R.string.history_to),
                         selectedDateMillis = state.filter.endDate,
                         onDateSelected = { viewModel.onDateRangeChanged(state.filter.startDate, it) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        minDateMillis = state.filter.startDate
                     )
                 }
-            }
-
-            item {
-                TextButton(onClick = {
-                    workshop = ""
-                    minCost = ""
-                    maxCost = ""
-                    viewModel.clearFilters()
-                }) { Text(stringResource(R.string.history_clear_filters)) }
-            }
-
-            // Lista detallada de mantenimientos o estado vacío
-            if (state.items.isEmpty()) {
-                item {
-                    com.micarro.ui.components.EmptyState(
-                        icon = Icons.Default.Build,
-                        title = stringResource(R.string.history_empty_title),
-                        message = stringResource(R.string.history_empty_message)
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(onClick = {
+                        workshop = ""
+                        minCost = ""
+                        maxCost = ""
+                        viewModel.clearFilters()
+                    }) { Text(stringResource(R.string.history_clear_filters)) }
+                    TextButton(onClick = { showFilters = false }) {
+                        Text(stringResource(R.string.action_accept))
+                    }
                 }
-            } else {
-                items(state.items, key = { it.id }) { item ->
-                    HistoryCard(
-                        item = item,
-                        onEdit = { onEditService(item) },
-                        onDelete = { pendingDelete = item }
-                    )
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -324,9 +400,6 @@ fun HistoryCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val dateFormat = remember { java.text.SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    val formattedDate = dateFormat.format(java.util.Date(item.date))
-
     MiCarroCard {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -338,25 +411,41 @@ fun HistoryCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = stringResource(R.string.currency_symbol) + String.format(Locale.getDefault(), "%,.2f", item.totalCost),
+                    text = stringResource(R.string.currency_symbol) + String.format(Locale.US, "%.2f", item.totalCost),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(R.string.history_card_subtitle, item.vehiclePlate, formattedDate, item.mileage),
+                text = "${item.category} • ${item.mileage} km",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${item.category} • " + stringResource(R.string.history_workshop_label, item.workshopName),
+                text = stringResource(R.string.history_workshop_label, item.workshopName),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Row {
-                TextButton(onClick = onEdit) { Text(stringResource(R.string.action_edit)) }
-                TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                com.micarro.ui.components.OverflowMenu(
+                    actions = listOf(
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.action_edit),
+                            icon = Icons.Default.Edit,
+                            onClick = onEdit
+                        ),
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.action_delete),
+                            icon = Icons.Default.Delete,
+                            destructive = true,
+                            onClick = onDelete
+                        )
+                    )
+                )
             }
         }
     }

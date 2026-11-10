@@ -49,7 +49,10 @@ data class DocumentBackupDto(
     @SerializedName("expirationDate") val expirationDate: Long = 0,
     @SerializedName("issuer") val issuer: String? = null,
     @SerializedName("alertsEnabled") val alertsEnabled: Boolean = true,
-    @SerializedName("notes") val notes: String? = null
+    @SerializedName("notes") val notes: String? = null,
+    @SerializedName("referenceNumber") val referenceNumber: String? = null,
+    @SerializedName("filePath") val filePath: String? = null,
+    @SerializedName("mimeType") val mimeType: String? = null
 )
 
 data class PlanBackupDto(

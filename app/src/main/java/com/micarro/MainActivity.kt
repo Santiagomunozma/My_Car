@@ -14,33 +14,50 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
+import com.micarro.feature.assistant.presentation.LocalAssistantFieldFocused
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -51,16 +68,23 @@ import androidx.work.WorkManager
 import com.micarro.core.navigation.MiCarroNavGraph
 import com.micarro.core.navigation.Screen
 import com.micarro.core.notification.NotificationHelper
+import com.micarro.core.settings.ThemeManager
 import com.micarro.core.worker.DocumentWorker
 import com.micarro.core.worker.MaintenanceWorker
+import com.micarro.ui.theme.LocalThemeController
 import com.micarro.ui.theme.MyCarTheme
+import com.micarro.ui.theme.ThemeController
+import com.micarro.ui.theme.ThemeMode
 import com.micarro.core.worker.WarrantyWorker
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.micarro.feature.premium.domain.PremiumTier
+import com.micarro.feature.premium.presentation.AdBanner
+import com.micarro.feature.premium.presentation.PremiumViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
-import com.micarro.core.settings.ThemeManager
-import com.micarro.core.settings.ThemeMode
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -77,27 +101,33 @@ class MainActivity : ComponentActivity() {
         // 2. Programar la tarea periódica en segundo plano (cada 24 horas)
         setupBackgroundWorker()
 
-        // Habilita el renderizado Edge-to-Edge nativo de Android 14+
+        val initialTheme = themeManager.themeMode.value
+        val darkBars = when (initialTheme) {
+            ThemeMode.DARK -> true
+            ThemeMode.LIGHT -> false
+            ThemeMode.SYSTEM ->
+                resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
+        val barStyle = if (darkBars) {
+            SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+        } else {
+            SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+        }
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                AndroidColor.TRANSPARENT,
-                AndroidColor.TRANSPARENT
-            ),
-            navigationBarStyle = SystemBarStyle.auto(
-                AndroidColor.TRANSPARENT,
-                AndroidColor.TRANSPARENT
-            )
+            statusBarStyle = barStyle,
+            navigationBarStyle = barStyle
         )
 
         setContent {
             val themeMode by themeManager.themeMode.collectAsStateWithLifecycle()
-            val darkTheme = when (themeMode) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
-            
-            MyCarTheme(darkTheme = darkTheme) {
+            CompositionLocalProvider(
+                LocalThemeController provides ThemeController(
+                    mode = themeMode,
+                    onChange = themeManager::setThemeMode
+                )
+            ) {
+            MyCarTheme(themeMode = themeMode) {
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()
                 ) {}
@@ -118,6 +148,7 @@ class MainActivity : ComponentActivity() {
                         alertCause = intent?.getStringExtra(com.micarro.core.worker.MaintenanceAlertWorker.KEY_CAUSE)
                     )
                 }
+            }
             }
         }
     }
@@ -169,8 +200,18 @@ private val bottomNavItems = listOf(
     BottomNavItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Home),
     BottomNavItem(Screen.VehicleList, R.string.nav_vehicles, Icons.Filled.DirectionsCar),
     BottomNavItem(Screen.MaintenancePlan, R.string.nav_maintenance, Icons.Filled.Build),
-    BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
-    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
+    BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History)
+)
+
+private val adRoutes = bottomNavItems.map { it.screen.route }.toSet()
+
+/** Rutas accesibles desde la hoja «Más». Sus rutas no cambian. */
+private val moreRoutes = setOf(
+    Screen.Settings.route,
+    Screen.DocumentsAlerts.route,
+    Screen.AlertSettings.route,
+    Screen.Backup.route,
+    Screen.Assistant.route
 )
 
 @Composable
@@ -180,6 +221,16 @@ fun MiCarroAppShell(
     alertCause: String? = null
 ) {
     val navController = rememberNavController()
+    val premiumViewModel: PremiumViewModel = hiltViewModel()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) premiumViewModel.refresh()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     var showAlert by remember {
@@ -207,52 +258,194 @@ fun MiCarroAppShell(
         )
     }
 
-    // Muestra la BottomBar solo si la ruta actual coincide con una de las pestañas principales
-    val shouldShowBottomBar = bottomNavItems.any { it.screen.route == currentRoute }
+    var showMore by remember { mutableStateOf(false) }
+    val assistantFieldFocused = remember { mutableStateOf(false) }
+    val shouldShowBottomBar = bottomNavItems.any { it.screen.route == currentRoute } ||
+        currentRoute in moreRoutes
+    val keyboardCoversBar = currentRoute == Screen.Assistant.route && assistantFieldFocused.value
+    val moreSelected = currentRoute in moreRoutes
+    val showAd = !premium.hasAccess && currentRoute in adRoutes
+    val openTab: (String) -> Unit = { route ->
+        navController.navigate(route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            AnimatedVisibility(
-                visible = shouldShowBottomBar,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
-            ) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+    CompositionLocalProvider(LocalAssistantFieldFocused provides assistantFieldFocused) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val useRail = maxWidth >= 600.dp
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = shouldShowBottomBar && !useRail && !keyboardCoversBar,
+                    enter = slideInVertically(initialOffsetY = { it }),
+                    exit = slideOutVertically(targetOffsetY = { it })
                 ) {
-                    bottomNavItems.forEach { item ->
-                        val selected = currentRoute == item.screen.route
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                if (!selected) {
-                                    navController.navigate(item.screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = stringResource(item.labelRes)
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        NavigationBar(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(28.dp))
+                                .shadow(
+                                    8.dp,
+                                    androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
                                 )
-                            },
-                            label = { Text(stringResource(item.labelRes)) }
-                        )
+                        ) {
+                            bottomNavItems.forEach { item ->
+                                val selected = currentRoute == item.screen.route
+                                NavigationBarItem(
+                                    selected = selected,
+                                    onClick = { if (!selected) openTab(item.screen.route) },
+                                    icon = {
+                                        Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = stringResource(item.labelRes)
+                                        )
+                                    },
+                                    label = null
+                                )
+                            }
+                            NavigationBarItem(
+                                selected = moreSelected,
+                                onClick = { showMore = true },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.MoreHoriz,
+                                        contentDescription = stringResource(R.string.nav_more)
+                                    )
+                                },
+                                label = null
+                            )
+                        }
                     }
                 }
             }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+            Row(modifier = Modifier.weight(1f).fillMaxSize()) {
+                if (shouldShowBottomBar && useRail) {
+                    NavigationRail(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ) {
+                        bottomNavItems.forEach { item ->
+                            val selected = currentRoute == item.screen.route
+                            NavigationRailItem(
+                                selected = selected,
+                                onClick = { if (!selected) openTab(item.screen.route) },
+                                icon = {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = stringResource(item.labelRes)
+                                    )
+                                },
+                                label = null
+                            )
+                        }
+                        NavigationRailItem(
+                            selected = moreSelected,
+                            onClick = { showMore = true },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreHoriz,
+                                    contentDescription = stringResource(R.string.nav_more)
+                                )
+                            },
+                            label = null
+                        )
+                    }
+                }
+                MiCarroNavGraph(
+                    navController = navController,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            if (showAd) {
+                AdBanner()
+            }
+            }
         }
-    ) { padding ->
-        MiCarroNavGraph(
-            navController = navController,
-            modifier = Modifier.padding(padding)
-        )
+    }
+    }
+
+    if (showMore) {
+        com.micarro.ui.components.MiCarroSheet(
+            onDismiss = { showMore = false },
+            title = stringResource(R.string.more_title)
+        ) {
+            val go: (String) -> Unit = { route ->
+                showMore = false
+                if (currentRoute != route) openTab(route)
+            }
+            val assistantLocked = !premium.hasAccess
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.premium_row),
+                subtitle = when (premium.tier) {
+                    PremiumTier.PREMIUM -> stringResource(R.string.premium_row_paid)
+                    PremiumTier.TRIAL -> pluralStringResource(
+                        R.plurals.premium_trial_days,
+                        premium.trialDaysLeft,
+                        premium.trialDaysLeft
+                    )
+                    PremiumTier.FREE -> stringResource(R.string.premium_row_free)
+                },
+                icon = Icons.Filled.Star,
+                showChevron = true,
+                onClick = {
+                    showMore = false
+                    navController.navigate(Screen.Premium.route)
+                }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.assistant_title),
+                subtitle = if (assistantLocked) stringResource(R.string.premium_locked_assistant) else null,
+                icon = if (assistantLocked) Icons.Filled.Lock else Icons.Filled.SupportAgent,
+                showChevron = true,
+                onClick = {
+                    showMore = false
+                    if (assistantLocked) {
+                        navController.navigate(Screen.Premium.route)
+                    } else if (currentRoute != Screen.Assistant.route) {
+                        openTab(Screen.Assistant.route)
+                    }
+                }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.nav_settings),
+                icon = Icons.Filled.Settings,
+                showChevron = true,
+                onClick = { go(Screen.Settings.route) }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.alerts_title),
+                icon = Icons.Filled.Notifications,
+                showChevron = true,
+                onClick = { go(Screen.DocumentsAlerts.route) }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.maintenance_alerts_title),
+                icon = Icons.Filled.Build,
+                showChevron = true,
+                onClick = { go(Screen.AlertSettings.route) }
+            )
+            com.micarro.ui.components.MiCarroListRow(
+                title = stringResource(R.string.settings_backup),
+                icon = Icons.Filled.Backup,
+                showChevron = true,
+                onClick = { go(Screen.Backup.route) }
+            )
+        }
     }
 }

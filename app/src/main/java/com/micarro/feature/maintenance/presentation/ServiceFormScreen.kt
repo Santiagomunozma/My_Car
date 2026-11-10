@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -49,7 +50,9 @@ import com.micarro.ui.components.MiCarroDropdownField
 import com.micarro.ui.components.MiCarroTextField
 import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.SecondaryButton
-import com.micarro.ui.theme.StatusWarning
+import com.micarro.ui.components.StatusTone
+import com.micarro.ui.components.statusAccent
+import com.micarro.ui.components.statusContainer
 import java.util.Locale
 import kotlin.math.abs
 
@@ -141,7 +144,7 @@ fun ServiceFormScreen(
     if (showMileageConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showMileageConfirmDialog = false },
-            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = StatusWarning) },
+            icon = { Icon(Icons.Default.Warning, contentDescription = stringResource(R.string.service_mileage_warning_title), tint = statusAccent(StatusTone.Warning)) },
             title = { Text(stringResource(R.string.service_mileage_warning_title)) },
             text = { Text(stringResource(R.string.service_mileage_warning, currentMileage, lastMileage)) },
             confirmButton = {
@@ -210,21 +213,22 @@ fun ServiceFormScreen(
                 .padding(padding)
                 .padding(16.dp)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (isMileageLower && currentMileage > 0) {
                 Surface(
-                    color = StatusWarning.copy(alpha = 0.12f),
+                    color = statusContainer(StatusTone.Warning),
                     shape = MaterialTheme.shapes.small,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(modifier = Modifier.padding(12.dp)) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = StatusWarning)
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = statusAccent(StatusTone.Warning))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             stringResource(R.string.service_mileage_banner),
-                            color = StatusWarning,
+                            color = statusAccent(StatusTone.Warning),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }

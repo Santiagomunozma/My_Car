@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -13,16 +15,37 @@ android {
 
     defaultConfig {
         applicationId = "com.micarro"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val geminiApiKey = Properties().run {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) file.inputStream().use { load(it) }
+            (getProperty("GEMINI_API_KEY") ?: "")
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+        }
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+    }
+
+    signingConfigs {
+        // Firma solo para instalar el APK en la ponencia (codigo QR / cable).
+        // No sirve para publicar en Play Store.
+        create("ponencia") {
+            storeFile = rootProject.file("ponencia/micarro-ponencia.keystore")
+            storePassword = "micarro-ponencia"
+            keyAlias = "micarro"
+            keyPassword = "micarro-ponencia"
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("ponencia")
             optimization {
                 enable = false
             }
@@ -35,6 +58,25 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/NOTICE",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE.txt",
+                "META-INF/INDEX.LIST"
+            )
+            pickFirsts += setOf(
+                "META-INF/services/javax.xml.stream.XMLInputFactory",
+                "META-INF/services/javax.xml.stream.XMLOutputFactory",
+                "META-INF/services/javax.xml.stream.XMLEventFactory"
+            )
+        }
     }
 }
 
@@ -78,6 +120,12 @@ dependencies {
     // System Utilities & Coroutines
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    // Apache POI for Excel export (Aalto reemplaza StAX, que no está completo en Android)
+    implementation("org.apache.poi:poi:5.2.5")
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
+    implementation("com.fasterxml:aalto-xml:1.3.2")
+    implementation("com.google.android.gms:play-services-ads:24.5.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

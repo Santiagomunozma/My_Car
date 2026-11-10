@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.micarro.R
 import com.micarro.domain.repository.MaintenanceRepository
 import com.micarro.domain.repository.VehicleRepository
 import com.micarro.domain.usecase.BackupUseCase
@@ -42,16 +43,16 @@ class BackupViewModel @Inject constructor(
 
             val outputStream = context.contentResolver.openOutputStream(uri)
             if (outputStream == null) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "No se pudo abrir el archivo de destino") }
+                _uiState.update { it.copy(isLoading = false, errorMessage = context.getString(R.string.backup_open_error)) }
                 return@launch
             }
 
             backupUseCase.export(outputStream)
                 .onSuccess {
-                    _uiState.update { it.copy(isLoading = false, successMessage = "Respaldo exportado exitosamente") }
+                    _uiState.update { it.copy(isLoading = false, successMessage = context.getString(R.string.backup_export_ok)) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "Error al exportar: ${error.message}") }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = context.getString(R.string.backup_export_error, error.message ?: "")) }
                 }
         }
     }
@@ -62,17 +63,17 @@ class BackupViewModel @Inject constructor(
 
             val inputStream = context.contentResolver.openInputStream(uri)
             if (inputStream == null) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "No se pudo abrir el archivo seleccionado") }
+                _uiState.update { it.copy(isLoading = false, errorMessage = context.getString(R.string.backup_open_error)) }
                 return@launch
             }
 
             backupUseCase.restore(inputStream)
                 .onSuccess {
                     rescheduleRestoredAlerts()
-                    _uiState.update { it.copy(isLoading = false, successMessage = "Copia de seguridad restaurada correctamente") }
+                    _uiState.update { it.copy(isLoading = false, successMessage = context.getString(R.string.backup_restore_ok)) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "Error al restaurar: ${error.message}") }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = context.getString(R.string.backup_restore_error, error.message ?: "")) }
                 }
         }
     }

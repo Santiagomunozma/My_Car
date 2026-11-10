@@ -18,6 +18,9 @@ class VehicleRepositoryImpl @Inject constructor(
     override fun observeAllVehicles(): Flow<List<Vehicle>> =
         dao.observeAll().map { list -> list.map(VehicleEntity::toDomain) }
 
+    override fun observeArchivedVehicles(): Flow<List<Vehicle>> =
+        dao.observeArchived().map { list -> list.map(VehicleEntity::toDomain) }
+
     override suspend fun getVehicleById(id: Long): Vehicle? = dao.getById(id)?.toDomain()
 
     override suspend fun createVehicle(vehicle: Vehicle) = dao.insert(vehicle.toEntity())

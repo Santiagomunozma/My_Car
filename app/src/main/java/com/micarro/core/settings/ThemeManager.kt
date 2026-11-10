@@ -2,13 +2,10 @@ package com.micarro.core.settings
 
 import android.content.Context
 import androidx.core.content.edit
+import com.micarro.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
-enum class ThemeMode {
-    SYSTEM, LIGHT, DARK
-}
 
 class ThemeManager(context: Context) {
     private val prefs = context.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)

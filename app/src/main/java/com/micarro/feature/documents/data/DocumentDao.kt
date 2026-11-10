@@ -28,4 +28,15 @@ interface DocumentDao {
 
     @Query("UPDATE vehicle_documents SET alerts_enabled = :enabled WHERE id = :id")
     suspend fun setAlertsEnabled(id: Long, enabled: Boolean)
+
+    @Query(
+        """
+        UPDATE vehicle_documents
+        SET reminded_month = :month,
+            reminded_fortnight = :fortnight,
+            reminded_expired = :expired
+        WHERE id = :id
+        """
+    )
+    suspend fun markReminders(id: Long, month: Boolean, fortnight: Boolean, expired: Boolean)
 }

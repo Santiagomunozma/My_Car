@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,11 +17,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -29,15 +33,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.micarro.R
 import com.micarro.ui.components.PrimaryButton
 import com.micarro.ui.components.SecondaryButton
+import com.micarro.feature.premium.presentation.PremiumViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackupScreen(
     onBack: () -> Unit,
-    viewModel: BackupViewModel = hiltViewModel()
+    onOpenPremium: () -> Unit = {},
+    viewModel: BackupViewModel = hiltViewModel(),
+    premiumViewModel: PremiumViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val premium by premiumViewModel.status.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
+    var confirmRestore by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let { viewModel.exportToUri(it) }
@@ -75,16 +84,48 @@ fun BackupScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(stringResource(R.string.backup_help), style = MaterialTheme.typography.bodyMedium)
+            if (!premium.hasAccess) {
+                Text(
+                    stringResource(R.string.premium_locked_backup),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.premium_open),
+                    onClick = onOpenPremium
+                )
+            } else {
             PrimaryButton(
                 text = stringResource(R.string.backup_export),
                 enabled = !state.isLoading,
+                loading = state.isLoading,
                 onClick = { exportLauncher.launch("micarro_respaldo.json") }
             )
             SecondaryButton(
                 text = stringResource(R.string.backup_restore),
                 enabled = !state.isLoading,
-                onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) }
+                onClick = { confirmRestore = true }
             )
+            }
         }
+    }
+    if (confirmRestore) {
+        AlertDialog(
+            onDismissRequest = { confirmRestore = false },
+            title = { Text(stringResource(R.string.backup_restore_title)) },
+            text = { Text(stringResource(R.string.backup_restore_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRestore = false
+                    importLauncher.launch(arrayOf("application/json", "*/*"))
+                }) {
+                    Text(stringResource(R.string.action_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestore = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
     }
 }

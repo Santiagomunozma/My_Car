@@ -3,6 +3,7 @@ package com.micarro.core.di
 import android.content.Context
 import androidx.room.Room
 import com.micarro.core.database.AppDatabase
+import com.micarro.core.database.MIGRATION_4_5
 import com.micarro.feature.documents.data.DocumentDao
 import com.micarro.feature.maintenance.data.MaintenancePlanDao
 import com.micarro.feature.maintenance.data.MaintenanceServiceDao
@@ -28,6 +29,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "my_car_db"
         )
+            .addMigrations(MIGRATION_4_5)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }

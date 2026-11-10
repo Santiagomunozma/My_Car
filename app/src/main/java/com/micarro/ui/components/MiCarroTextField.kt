@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
@@ -56,11 +57,13 @@ fun MiCarroTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     suffix: @Composable (() -> Unit)? = null,
+    textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     isError: Boolean = errorMessage != null
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        textStyle = textStyle,
         label = { Text(label) },
         placeholder = placeholder?.let { { Text(it) } },
         isError = isError,

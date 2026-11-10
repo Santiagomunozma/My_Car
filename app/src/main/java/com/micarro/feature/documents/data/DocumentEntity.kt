@@ -20,7 +20,13 @@ data class DocumentEntity(
     @ColumnInfo(name = "expiration_date") val expirationDate: Long,
     val issuer: String?,
     @ColumnInfo(name = "alerts_enabled") val alertsEnabled: Boolean,
-    val notes: String?
+    val notes: String?,
+    @ColumnInfo(name = "reference_number") val referenceNumber: String? = null,
+    @ColumnInfo(name = "file_path") val filePath: String? = null,
+    @ColumnInfo(name = "mime_type") val mimeType: String? = null,
+    @ColumnInfo(name = "reminded_month", defaultValue = "0") val remindedMonth: Boolean = false,
+    @ColumnInfo(name = "reminded_fortnight", defaultValue = "0") val remindedFortnight: Boolean = false,
+    @ColumnInfo(name = "reminded_expired", defaultValue = "0") val remindedExpired: Boolean = false
 )
 
 fun DocumentEntity.toDomain() = VehicleDocument(
@@ -31,7 +37,13 @@ fun DocumentEntity.toDomain() = VehicleDocument(
     expirationDate = DocumentStatusRules.millisToDate(expirationDate),
     issuer = issuer,
     alertsEnabled = alertsEnabled,
-    notes = notes
+    notes = notes,
+    referenceNumber = referenceNumber,
+    filePath = filePath,
+    mimeType = mimeType,
+    remindedMonth = remindedMonth,
+    remindedFortnight = remindedFortnight,
+    remindedExpired = remindedExpired
 )
 
 fun VehicleDocument.toEntity() = DocumentEntity(
@@ -42,5 +54,11 @@ fun VehicleDocument.toEntity() = DocumentEntity(
     expirationDate = DocumentStatusRules.dateToMillis(expirationDate),
     issuer = issuer,
     alertsEnabled = alertsEnabled,
-    notes = notes
+    notes = notes,
+    referenceNumber = referenceNumber,
+    filePath = filePath,
+    mimeType = mimeType,
+    remindedMonth = remindedMonth,
+    remindedFortnight = remindedFortnight,
+    remindedExpired = remindedExpired
 )

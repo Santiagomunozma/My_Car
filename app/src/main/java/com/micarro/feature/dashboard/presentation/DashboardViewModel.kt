@@ -43,8 +43,39 @@ class DashboardViewModel @Inject constructor(
         documentAlertCount
     ) { vehicles, summary, docAlerts ->
         val vehicle = summary?.selectedVehicle
-        val nextMaintenance = summary?.upcomingMaintenances?.firstOrNull()?.title
+        val nextMaintenance = summary?.upcomingMaintenances?.firstOrNull()
         val maintenanceAlerts = summary?.activeAlertsCount ?: 0
+
+        // Generar detalles del próximo mantenimiento
+        val nextMaintenanceDetails = nextMaintenance?.let { plan ->
+            val details = mutableListOf<String>()
+            details.add("Categoría: ${plan.category}")
+            plan.intervalMileage.takeIf { it > 0 }?.let { details.add("Intervalo: $it km") }
+            plan.intervalMonths.takeIf { it > 0 }?.let { details.add("Cada: $it meses") }
+            plan.nextDeadlineDate?.let { details.add("Fecha límite: ${java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(it))}") }
+            if (details.isEmpty()) "No hay información adicional disponible" else details.joinToString("\n")
+        } ?: "No hay mantenimiento programado"
+
+        // Generar detalles de kilometraje
+        val mileageDetails = vehicle?.let { v ->
+            val details = mutableListOf<String>()
+            details.add("Placa: ${v.plate}")
+            details.add("Marca: ${v.brand}")
+            details.add("Modelo: ${v.line.ifEmpty { v.model }}")
+            details.add("Kilometraje actual: ${String.format(java.util.Locale.US, "%,d", v.currentMileage)} km")
+            details.joinToString("\n")
+        } ?: "No hay vehículo seleccionado"
+
+        // Generar detalles de gastos
+        val expensesDetails = if (vehicle != null) {
+            val details = mutableListOf<String>()
+            details.add("Placa: ${vehicle.plate}")
+            details.add("Gastos del mes actual: ${String.format(java.util.Locale.US, "%,.2f", summary?.totalRecentExpenses ?: 0.0)}")
+            details.add("Total de servicios recientes: ${summary?.recentServices?.size ?: 0}")
+            if (details.isEmpty()) "No hay información de gastos disponible" else details.joinToString("\n")
+        } else {
+            "No hay vehículo seleccionado"
+        }
 
         DashboardUiState(
             isLoading = false,
@@ -52,8 +83,11 @@ class DashboardViewModel @Inject constructor(
             allVehicles = vehicles,
             totalActiveAlerts = docAlerts + maintenanceAlerts,
             lastMileage = vehicle?.currentMileage ?: 0L,
-            nextMaintenanceTitle = nextMaintenance,
+            mileageDetails = mileageDetails,
+            nextMaintenanceTitle = nextMaintenance?.title ?: "Sin pendientes",
+            nextMaintenanceDetails = nextMaintenanceDetails,
             currentMonthExpenses = summary?.totalRecentExpenses ?: 0.0,
+            expensesDetails = expensesDetails,
             upcomingMaintenances = summary?.upcomingMaintenances.orEmpty(),
             recentServices = summary?.recentServices.orEmpty()
         )

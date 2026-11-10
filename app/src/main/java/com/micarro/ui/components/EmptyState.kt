@@ -20,7 +20,8 @@ fun EmptyState(
     icon: ImageVector,
     title: String,
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
@@ -33,12 +34,13 @@ fun EmptyState(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = muted,
-            modifier = Modifier.size(64.dp)
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp)
         )
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 16.dp)
         )
         Text(
@@ -48,5 +50,10 @@ fun EmptyState(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp)
         )
+        if (action != null) {
+            Column(modifier = Modifier.padding(top = 24.dp)) {
+                action()
+            }
+        }
     }
 }

@@ -9,6 +9,10 @@ import com.micarro.domain.repository.MileageRepository
 import com.micarro.domain.repository.PartRepository
 import com.micarro.domain.repository.VehicleRepository
 import com.micarro.feature.documents.data.DocumentRepositoryImpl
+import com.micarro.feature.documents.data.GeminiDocumentReader
+import com.micarro.feature.documents.data.LocalDocumentFileStore
+import com.micarro.feature.documents.domain.DocumentFileStore
+import com.micarro.feature.documents.domain.DocumentReader
 import com.micarro.feature.maintenance.data.LocalServiceEvidenceStore
 import com.micarro.feature.maintenance.data.MaintenanceRepositoryImpl
 import com.micarro.feature.maintenance.domain.ServiceEvidenceStore
@@ -38,6 +42,14 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDocumentRepository(impl: DocumentRepositoryImpl): DocumentRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDocumentFileStore(impl: LocalDocumentFileStore): DocumentFileStore
+
+    @Binds
+    @Singleton
+    abstract fun bindDocumentReader(impl: GeminiDocumentReader): DocumentReader
 
     @Binds
     @Singleton

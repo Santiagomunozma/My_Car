@@ -15,7 +15,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
@@ -51,7 +54,7 @@ import com.micarro.domain.model.VehicleType
 import com.micarro.ui.components.EmptyState
 import com.micarro.ui.components.MiCarroCard
 import com.micarro.ui.components.StatusChip
-import com.micarro.ui.theme.StatusSuccess
+import com.micarro.ui.components.StatusTone
 import java.io.File
 
 fun vehicleTypeLabel(type: VehicleType): Int = when (type) {
@@ -192,7 +195,7 @@ private fun VehicleCard(
     onArchive: () -> Unit,
     onReactivate: () -> Unit
 ) {
-    MiCarroCard {
+    MiCarroCard(onClick = onEdit) {
         Row(
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -231,6 +234,57 @@ private fun VehicleCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            com.micarro.ui.components.OverflowMenu(
+                actions = buildList {
+                    add(
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.action_edit),
+                            icon = Icons.Filled.Edit,
+                            onClick = onEdit
+                        )
+                    )
+                    add(
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.vehicle_mileage_button),
+                            icon = Icons.Filled.Speed,
+                            onClick = onMileage
+                        )
+                    )
+                    add(
+                        com.micarro.ui.components.MenuAction(
+                            label = stringResource(R.string.vehicle_documents_button),
+                            icon = Icons.Filled.Description,
+                            onClick = onDocuments
+                        )
+                    )
+                    if (!vehicle.isArchived) {
+                        if (!vehicle.isPrimary) {
+                            add(
+                                com.micarro.ui.components.MenuAction(
+                                    label = stringResource(R.string.vehicle_set_main),
+                                    icon = Icons.Filled.Star,
+                                    onClick = onSetMain
+                                )
+                            )
+                        }
+                        add(
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.vehicle_archive),
+                                icon = Icons.Filled.Archive,
+                                onClick = onArchive
+                            )
+                        )
+                    } else {
+                        add(
+                            com.micarro.ui.components.MenuAction(
+                                label = stringResource(R.string.vehicle_reactivate),
+                                icon = Icons.Filled.Archive,
+                                onClick = onReactivate
+                            )
+                        )
+                    }
+                }
+            )
         }
 
         Row(
@@ -240,44 +294,16 @@ private fun VehicleCard(
             if (vehicle.isPrimary) {
                 StatusChip(
                     text = stringResource(R.string.vehicle_main_badge),
-                    containerColor = StatusSuccess,
+                    tone = StatusTone.Success,
                     icon = Icons.Filled.Star
                 )
             }
             if (vehicle.isArchived) {
                 StatusChip(
                     text = stringResource(R.string.vehicle_archived_badge),
-                    containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tone = StatusTone.Neutral,
                     icon = Icons.Filled.Archive
                 )
-            }
-        }
-
-        FlowRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            TextButton(onClick = onEdit) { Text(stringResource(R.string.action_edit)) }
-            TextButton(onClick = onMileage) {
-                Text(stringResource(R.string.vehicle_mileage_button))
-            }
-            TextButton(onClick = onDocuments) {
-                Text(stringResource(R.string.vehicle_documents_button))
-            }
-            if (!vehicle.isArchived) {
-                if (!vehicle.isPrimary) {
-                    TextButton(onClick = onSetMain) {
-                        Text(stringResource(R.string.vehicle_set_main))
-                    }
-                }
-                TextButton(onClick = onArchive) {
-                    Text(stringResource(R.string.vehicle_archive))
-                }
-            } else {
-                TextButton(onClick = onReactivate) {
-                    Text(stringResource(R.string.vehicle_reactivate))
-                }
             }
         }
     }

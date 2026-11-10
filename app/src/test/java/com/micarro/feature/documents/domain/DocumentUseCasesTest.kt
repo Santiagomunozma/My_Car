@@ -7,6 +7,7 @@ import com.micarro.domain.model.Vehicle
 import com.micarro.domain.model.VehicleDocument
 import com.micarro.domain.model.VehicleType
 import com.micarro.feature.documents.domain.ObserveDocumentAlertsUseCase.Companion.computeAlerts
+import com.micarro.fakes.FakeDocumentFileStore
 import com.micarro.fakes.InMemoryDocumentRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -160,7 +161,7 @@ class DocumentUseCasesTest {
     @Test
     fun `guardar documento valida nombre para tipo OTRO y fecha`() = runTest {
         val repo = InMemoryDocumentRepository()
-        val save = SaveDocumentUseCase(repo)
+        val save = SaveDocumentUseCase(repo, FakeDocumentFileStore())
         val aDate = LocalDate.of(2025, 6, 15)
 
         val noName = save(
@@ -194,7 +195,38 @@ class DocumentUseCasesTest {
         ToggleDocumentAlertsUseCase(repo)(document.id, false)
         assertTrue(!repo.getDocumentById(document.id)!!.alertsEnabled)
 
-        DeleteDocumentUseCase(repo)(document.id)
+        DeleteDocumentUseCase(repo, FakeDocumentFileStore())(document.id)
         assertTrue(repo.observeAllDocuments().first().isEmpty())
+    }
+
+    @Test
+    fun `cambiar la fecha reinicia los avisos y borra el archivo anterior`() = runTest {
+        val repo = InMemoryDocumentRepository()
+        val store = FakeDocumentFileStore()
+        val existing = doc(1L, 40).copy(
+            id = 4L,
+            remindedMonth = true,
+            remindedFortnight = true,
+            filePath = "/old.pdf"
+        )
+        repo.seed(existing)
+
+        val result = SaveDocumentUseCase(repo, store)(
+            DocumentDraft(
+                id = 4L,
+                vehicleId = 1L,
+                type = DocumentType.SOAT,
+                expirationDate = existing.expirationDate.plusDays(5),
+                filePath = "/new.pdf",
+                mimeType = "application/pdf"
+            )
+        )
+
+        assertTrue(result is SaveDocumentResult.Success)
+        val saved = repo.getDocumentById(4L)!!
+        assertEquals(false, saved.remindedMonth)
+        assertEquals(false, saved.remindedFortnight)
+        assertEquals("/new.pdf", saved.filePath)
+        assertEquals(listOf("/old.pdf"), store.deleted)
     }
 }
