@@ -100,7 +100,7 @@
   <main>
     <section class="hero">
       <h1>My Car</h1>
-      <p>Instala la app en el celular para la ponencia. El computador y el teléfono tienen que estar en la misma red Wi-Fi.</p>
+      <p id="lead">Instala la app en el celular para la ponencia.</p>
     </section>
     <section class="layout">
       <article class="card">
@@ -125,8 +125,13 @@
   <script src="qrcode.min.js"></script>
   <script>
     var pageUrl = location.href.split("#")[0];
+    var host = location.hostname;
+    var redLocal = host === "localhost" || host === "127.0.0.1" || /^(\d{1,3}\.){3}\d{1,3}$/.test(host);
     document.getElementById("url").textContent = pageUrl;
-    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    document.getElementById("lead").textContent = redLocal
+      ? "Instala la app en el celular. El computador y el teléfono tienen que estar en la misma red Wi-Fi."
+      : "Instala la app en el celular. Escanea el código con la cámara: sirve con datos móviles o con cualquier Wi-Fi.";
+    if (host === "localhost" || host === "127.0.0.1") {
       document.getElementById("localhost-warn").style.display = "block";
     }
     new QRCode(document.getElementById("qr"), {

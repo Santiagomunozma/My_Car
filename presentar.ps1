@@ -2,7 +2,8 @@
 param(
     [int]$Puerto = 8765,
     [switch]$Compilar,
-    [switch]$SinEspejo
+    [switch]$SinEspejo,
+    [switch]$Local
 )
 
 $ErrorActionPreference = "Stop"
@@ -46,6 +47,131 @@ function Get-LanIPv4 {
         Select-Object -First 1
     if ($fallback) { return $fallback.IPAddress }
     return $null
+}
+
+function Find-Cloudflared {
+    $cmd = Get-Command cloudflared -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.Source -and $cmd.Source -notlike "*WindowsApps*") { return $cmd.Source }
+    $candidates = @(
+        "$env:ProgramFiles\cloudflared\cloudflared.exe",
+        (Join-Path ${env:ProgramFiles(x86)} "cloudflared\cloudflared.exe"),
+        "$env:LOCALAPPDATA\Microsoft\WinGet\Links\cloudflared.exe"
+    )
+    foreach ($candidate in $candidates) {
+        if ($candidate -and (Test-Path $candidate)) { return $candidate }
+    }
+    $packages = Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Packages"
+    if (Test-Path $packages) {
+        $hit = Get-ChildItem $packages -Recurse -Filter cloudflared.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($hit) { return $hit.FullName }
+    }
+    return $null
+}
+
+function Wait-Listen([int]$Port, [int]$TimeoutSec) {
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        $client = $null
+        try {
+            $client = [System.Net.Sockets.TcpClient]::new()
+            $client.Connect("127.0.0.1", $Port)
+            return $true
+        } catch {
+            Start-Sleep -Milliseconds 250
+        } finally {
+            if ($client) { $client.Close() }
+        }
+    }
+    return $false
+}
+
+function Wait-PublicUrl([System.Diagnostics.Process]$Tunnel, [string[]]$Logs, [int]$TimeoutSec) {
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        if ($Tunnel.HasExited) { return $null }
+        foreach ($log in $Logs) {
+            if (-not (Test-Path $log)) { continue }
+            $text = Get-Content $log -Raw -ErrorAction SilentlyContinue
+            if ($text -match "https://[a-z0-9-]+\.trycloudflare\.com") { return $Matches[0] }
+        }
+        Start-Sleep -Milliseconds 400
+    }
+    return $null
+}
+
+function Stop-Presentacion([System.Diagnostics.Process[]]$Processes) {
+    foreach ($proc in $Processes) {
+        if ($proc -and -not $proc.HasExited) {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Enable-KillWithConsole([System.Diagnostics.Process[]]$Processes) {
+    try {
+        if (-not ("ChildJob" -as [type])) {
+            Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class ChildJob {
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    static extern IntPtr CreateJobObject(IntPtr a, string name);
+    [DllImport("kernel32.dll")]
+    static extern bool SetInformationJobObject(IntPtr hJob, int infoClass, IntPtr info, uint len);
+    [DllImport("kernel32.dll")]
+    static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+    [StructLayout(LayoutKind.Sequential)]
+    struct Basic {
+        public long PerProcessUserTimeLimit;
+        public long PerJobUserTimeLimit;
+        public uint LimitFlags;
+        public UIntPtr MinimumWorkingSetSize;
+        public UIntPtr MaximumWorkingSetSize;
+        public uint ActiveProcessLimit;
+        public UIntPtr Affinity;
+        public uint PriorityClass;
+        public uint SchedulingClass;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    struct Counters {
+        public ulong ReadOperationCount, WriteOperationCount, OtherOperationCount;
+        public ulong ReadTransferCount, WriteTransferCount, OtherTransferCount;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    struct Extended {
+        public Basic BasicLimitInformation;
+        public Counters IoInfo;
+        public UIntPtr ProcessMemoryLimit, JobMemoryLimit, PeakProcessMemoryUsed, PeakJobMemoryUsed;
+    }
+    public static IntPtr Create() {
+        IntPtr handle = CreateJobObject(IntPtr.Zero, null);
+        var info = new Extended();
+        info.BasicLimitInformation.LimitFlags = 0x2000;
+        int length = Marshal.SizeOf(typeof(Extended));
+        IntPtr ptr = Marshal.AllocHGlobal(length);
+        try {
+            Marshal.StructureToPtr(info, ptr, false);
+            SetInformationJobObject(handle, 9, ptr, (uint)length);
+        } finally {
+            Marshal.FreeHGlobal(ptr);
+        }
+        return handle;
+    }
+    public static void Add(IntPtr job, IntPtr process) {
+        AssignProcessToJobObject(job, process);
+    }
+}
+"@
+        }
+        $script:PresentacionJob = [ChildJob]::Create()
+        foreach ($proc in $Processes) {
+            if ($proc -and -not $proc.HasExited) {
+                [ChildJob]::Add($script:PresentacionJob, $proc.Handle)
+            }
+        }
+    } catch {
+        Write-Host "Si cierras la ventana con la X, revisa que no quede cloudflared abierto."
+    }
 }
 
 function Find-FreePort([int]$Start) {
@@ -175,11 +301,64 @@ if (-not $SinEspejo) {
 }
 
 Write-Host ""
-Write-Host "Descarga para el publico: $url" -ForegroundColor Green
-Write-Host "Deja esta ventana abierta. El navegador muestra el codigo QR."
-Write-Host "Celulares y computador en el mismo Wi-Fi. Si el salon aisla los equipos, usa el cable para tu telefono."
-Write-Host "Ctrl+C cierra solo la descarga."
-Write-Host ""
 
-Start-Process $url
-& $python (Join-Path $Web "servir.py") "--dir" $Dist "--port" "$Puerto"
+if ($Local) {
+    Write-Host "Descarga en la red local: $url" -ForegroundColor Green
+    Write-Host "Deja esta ventana abierta. El navegador muestra el codigo QR."
+    Write-Host "Celulares y computador en el mismo Wi-Fi."
+    Write-Host "Ctrl+C cierra solo la descarga."
+    Write-Host ""
+    Start-Process $url
+    & $python (Join-Path $Web "servir.py") "--dir" $Dist "--port" "$Puerto"
+    return
+}
+
+$cloudflared = Find-Cloudflared
+if (-not $cloudflared) {
+    Write-Host "Instalando cloudflared para que el QR funcione con datos moviles..."
+    winget install --id Cloudflare.cloudflared -e --accept-package-agreements --accept-source-agreements
+    $cloudflared = Find-Cloudflared
+}
+if (-not $cloudflared) {
+    throw "No se encontro cloudflared. Instala Cloudflare.cloudflared o ejecuta presentar.bat -Local si todos comparten Wi-Fi."
+}
+
+$pyOut = Join-Path $env:TEMP "micarro-servir.out.log"
+$pyErr = Join-Path $env:TEMP "micarro-servir.err.log"
+$py = Start-Process -FilePath $python -ArgumentList @(
+    (Join-Path $Web "servir.py"), "--dir", $Dist, "--port", "$Puerto"
+) -PassThru -WindowStyle Hidden -RedirectStandardOutput $pyOut -RedirectStandardError $pyErr
+
+if (-not (Wait-Listen $Puerto 20)) {
+    Stop-Presentacion @($py)
+    throw "La pagina local no arranco. Revisa $pyErr"
+}
+
+$cfOut = Join-Path $env:TEMP "micarro-tunel.out.log"
+$cfErr = Join-Path $env:TEMP "micarro-tunel.err.log"
+Remove-Item $cfOut, $cfErr -ErrorAction SilentlyContinue
+$cf = Start-Process -FilePath $cloudflared -ArgumentList @(
+    "tunnel", "--url", "http://127.0.0.1:$Puerto", "--no-autoupdate"
+) -PassThru -WindowStyle Hidden -RedirectStandardOutput $cfOut -RedirectStandardError $cfErr
+
+Enable-KillWithConsole @($py, $cf)
+$public = Wait-PublicUrl $cf @($cfOut, $cfErr) 45
+if (-not $public) {
+    Write-Host "El tunel no entrego una direccion. Ultimas lineas:" -ForegroundColor Yellow
+    Get-Content $cfErr, $cfOut -Tail 40 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }
+    Stop-Presentacion @($cf, $py)
+    throw "No se pudo publicar el QR. El computador necesita internet."
+}
+
+Write-Host "Descarga para el publico: $public" -ForegroundColor Green
+Write-Host "Cada celular usa sus datos o el Wi-Fi que tenga. Hace falta internet en el telefono y en este computador."
+Write-Host "Deja esta ventana abierta. Si la cierras, el codigo QR deja de funcionar."
+Write-Host "La direccion cambia cada vez que ejecutas presentar.bat."
+Write-Host "Ctrl+C cierra la descarga."
+Write-Host ""
+Start-Process $public
+try {
+    Wait-Process -Id $cf.Id
+} finally {
+    Stop-Presentacion @($cf, $py)
+}

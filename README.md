@@ -178,7 +178,7 @@ En el salón, con el computador conectado al proyector:
 Eso hace tres cosas:
 
 1. Compila un APK firmado (solo la primera vez, o de nuevo con `.\presentar.bat -Compilar`).
-2. Abre una página en la red local con un código QR. El público, en el **mismo Wi-Fi**, escanea, descarga `MiCarro.apk` y permite instalar desde el navegador.
+2. Publica la página del QR en internet mientras la consola sigue abierta. El público escanea con datos móviles o con cualquier Wi-Fi, descarga `MiCarro.apk` y permite instalar desde el navegador. El computador necesita internet. La primera vez instala cloudflared. `.\presentar.bat -Local` sirve la página solo en la misma Wi-Fi.
 3. Si el celular está conectado por USB con depuración activada, lo instala si aún no tiene la app y abre su pantalla en una ventana (scrcpy) para proyectarla. La primera vez instala scrcpy.
 
 Deja abierta la ventana de la consola mientras quieras que el QR siga funcionando. `Ctrl+C` apaga solo la descarga.

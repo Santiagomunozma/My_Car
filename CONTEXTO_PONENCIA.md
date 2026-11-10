@@ -170,7 +170,7 @@ Con el computador en el proyector:
 ```
 
 1. Compila el APK firmado (la primera vez, o de nuevo con `.\presentar.bat -Compilar`).
-2. Abre una página en la red local (`ponencia/index.html`) con un código QR. Quien esté en el **mismo Wi-Fi** escanea, descarga `MiCarro.apk` y permite instalar desde el navegador.
+2. Publica la página del QR en internet mientras la consola sigue abierta. Quien tenga datos o cualquier Wi-Fi escanea, descarga `MiCarro.apk` y permite instalar desde el navegador. El computador necesita internet. `.\presentar.bat -Local` deja el modo anterior, solo para la misma Wi-Fi.
 3. Si el celular está por USB con depuración, instala la app si no la tiene y abre la pantalla en una ventana (scrcpy) para proyectarla. La primera vez instala scrcpy.
 
 La consola debe quedar abierta para que el QR siga vivo. `Ctrl+C` apaga solo la descarga. También se puede generar el APK en GitHub Actions → **APK ponencia** → artefacto `MiCarro`.
